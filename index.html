@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Portfolio Manager</title>
+  <title>Trade Dashboard v11</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -20,484 +20,1727 @@
       --white: #ffffff;
     }
     * { box-sizing: border-box; }
-    body { margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
-    .wrap { max-width: 100%; margin: 0 auto; padding: 0 0 28px; }
-    .topbar { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding: 8px 16px 16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(15,23,42,0.95); backdrop-filter: blur(8px); z-index:20; }
-    h1 { margin:0; font-size:30px; letter-spacing:1.5px; }
-    .sub { color:var(--muted); margin-top:4px; font-size:18px; }
-    .actions { display:flex; gap:12px; align-items:center; }
-    button { border:1px solid var(--line); background:var(--panel2); color:var(--text); padding:12px 18px; border-radius:10px; cursor:pointer; font-weight:700; font-size:15px; }
-    button.primary { background:#2563eb; border-color:#2563eb; }
-    button:hover { filter:brightness(1.08); }
-    .settings { display:none; margin:16px; padding:16px; border:1px solid var(--line); border-radius:16px; background:var(--panel); }
-    .settings.open { display:block; }
-    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    label { display:block; color:var(--muted); font-weight:700; margin-bottom:6px; }
-    input, select { width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:#020617; color:var(--text); font-size:15px; }
-    .hint { color:var(--muted); font-size:13px; margin-top:8px; }
-    .tabs { display:flex; gap:10px; padding:16px 20px 6px; overflow:auto; }
-    .tab { white-space:nowrap; padding:11px 18px; border-radius:22px; border:1px solid var(--line); background:var(--panel2); font-weight:800; cursor:pointer; }
-    .tab.active { background:#2563eb; border-color:#2563eb; }
-    .panel { display:none; padding:14px 20px 30px; }
-    .panel.active { display:block; }
-    .cards { display:grid; grid-template-columns: repeat(4, minmax(190px, 1fr)); gap:14px; margin:8px 0 16px; }
-    .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; }
-    .k { color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:1.4px; font-weight:900; }
-    .v { font-size:26px; margin-top:8px; font-weight:900; }
-    .good { color:var(--good); }
-    .bad { color:var(--bad); }
-    .warn { color:var(--warn); }
-    .muted { color:var(--muted); }
-    .toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:12px 0 18px; }
-    .search { max-width:480px; }
-    .summaryText { color:var(--muted); font-size:16px; }
-    .tableWrap { border:1px solid var(--line); border-radius:18px; overflow:auto; background:var(--panel); }
-    table { width:100%; border-collapse:collapse; min-width:960px; }
-    th, td { text-align:left; padding:14px 16px; border-bottom:1px solid var(--line); font-size:15px; white-space:nowrap; }
-    th { color:var(--muted); background:#020617; position:sticky; top:0; z-index:1; text-transform:uppercase; letter-spacing:1.5px; font-size:13px; }
-    tr:hover td { background:rgba(255,255,255,0.025); }
-    .badge { display:inline-block; padding:5px 10px; border-radius:999px; font-weight:900; font-size:13px; }
-    .badge.good { color:#86efac; background:#064e3b; border:1px solid #166534; }
-    .badge.bad { color:#fecaca; background:#7f1d1d; border:1px solid #991b1b; }
-    .badge.warn { color:#fde68a; background:#713f12; border:1px solid #854d0e; }
-    .badge.neutral { color:#cbd5e1; background:#334155; border:1px solid #475569; }
-    .chartGrid { display:grid; grid-template-columns: repeat(2, minmax(320px, 1fr)); gap:16px; margin-top:18px; }
-    .chartCard { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:18px; cursor:pointer; min-height:330px; }
-    .chartCard h3 { margin:0 0 8px; font-size:20px; }
-    .chartCard p { margin:0 0 14px; color:var(--muted); line-height:1.35; }
-    .clickHint { float:right; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:1.3px; font-weight:900; }
-    canvas { width:100%; height:230px; display:block; }
-    .modal { display:none; position:fixed; inset:0; background:rgba(2,6,23,0.88); z-index:99; padding:30px; }
-    .modal.open { display:flex; align-items:center; justify-content:center; }
-    .modalInner { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px; width:min(1200px, 96vw); max-height:92vh; overflow:auto; }
-    .modalHead { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-    .modal canvas { height:560px; }
-    .coach { padding: 8px 16px 4px; border-bottom:1px solid var(--line); }
-    .coach h2 { margin:0 0 10px; font-size:30px; letter-spacing:1.5px; }
-    .coachGrid { display:grid; grid-template-columns: minmax(320px, 1fr); gap:16px; align-items:start; }
-    .priorityList { display:grid; gap:10px; }
-    .priority { background:#020617; border:1px solid var(--line); border-radius:14px; padding:14px; display:grid; grid-template-columns: 116px 1fr; gap:14px; align-items:start; }
-    .priority .sym { font-weight:900; background:#334155; display:inline-block; padding:7px 12px; border-radius:999px; width:max-content; }
-    .priority .action { font-weight:900; font-size:16px; line-height:1.35; }
-    .priority .reason { color:var(--muted); margin-top:8px; line-height:1.35; }
-    .coachCards { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-top:14px; }
-    .coachCard { background:#020617; border:1px solid var(--line); border-radius:14px; padding:14px; }
-    .coachCard h4 { margin:0 0 8px; font-size:17px; }
-    .coachCard p { color:var(--muted); margin:8px 0 0; line-height:1.35; }
-    .smallRow { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-    .notice { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.35); color:#fde68a; padding:12px 14px; border-radius:14px; margin:12px 0; }
-    .error { background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.35); color:#fecaca; padding:12px 14px; border-radius:14px; margin:12px 0; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top left, #1e293b, var(--bg) 50%);
+      color: var(--text);
+    }
+    header {
+      padding: 22px 22px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.86);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      backdrop-filter: blur(10px);
+    }
+    .topbar {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0.2px;
+    }
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    button, .filebtn {
+      border: 1px solid var(--line);
+      background: #2563eb;
+      color: var(--white);
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    button.secondary { background: var(--panel2); }
+    button.danger { background: #7f1d1d; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    main { padding: 18px 22px 40px; }
+    .setup {
+      max-width: 850px;
+      margin: 18px auto;
+      background: rgba(17, 24, 39, 0.96);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .setup h2 { margin: 0 0 10px; }
+    .setup p { color: var(--muted); line-height: 1.45; }
+    label {
+      display: block;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    input {
+      width: 100%;
+      margin-top: 6px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      background: #020617;
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .card {
+      background: rgba(17,24,39,0.94);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 82px;
+    }
+    .card .label { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .card .value { font-size: 24px; margin-top: 7px; font-weight: 800; }
+    .card .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .pos { color: var(--good); }
+    .neg { color: var(--bad); }
+    .warn { color: var(--warn); }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 16px 0 12px;
+    }
+    .tab {
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab.active { background: #2563eb; border-color: #60a5fa; }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin: 8px 0 12px;
+    }
+    .search {
+      max-width: 320px;
+      min-width: 220px;
+    }
+    .panel {
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      background: #020617;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    tr:hover td { background: rgba(96, 165, 250, 0.06); }
+    .tablewrap { overflow-x: auto; max-height: 70vh; position: relative; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background: var(--chip);
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .chip.good { background: rgba(34,197,94,.15); color: #86efac; border: 1px solid rgba(34,197,94,.25); }
+    .chip.bad { background: rgba(239,68,68,.15); color: #fecaca; border: 1px solid rgba(239,68,68,.25); }
+    .chip.warn { background: rgba(245,158,11,.15); color: #fde68a; border: 1px solid rgba(245,158,11,.25); }
+    .hidden { display: none !important; }
+    .statusline {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .error {
+      background: rgba(127, 29, 29, .75);
+      border: 1px solid rgba(248, 113, 113, .35);
+      color: #fee2e2;
+      padding: 12px;
+      border-radius: 12px;
+      margin: 12px 0;
+      white-space: pre-wrap;
+    }
+    .empty {
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .section {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .section:last-child { border-bottom: none; }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .section p {
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 6px 0 0;
+    }
+    .miniGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .miniCard {
+      background: rgba(31, 41, 55, .72);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .miniCard .k {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .miniCard .v {
+      font-size: 21px;
+      font-weight: 850;
+      margin-top: 6px;
+    }
+    .miniCard .s {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .twoCol {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .barWrap {
+      height: 12px;
+      background: #020617;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .barFill {
+      height: 100%;
+      width: 0%;
+      background: rgba(96, 165, 250, .9);
+    }
+    .noteBox {
+      background: rgba(2, 6, 23, .55);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+
+
+
+    .coachPanel {
+      background: rgba(17,24,39,0.94);
+      border: 1px solid rgba(96,165,250,.35);
+      border-radius: 18px;
+      padding: 16px;
+      margin: 16px 0 12px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.18);
+    }
+    .coachHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .coachTitle {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: .01em;
+    }
+    .coachSummary {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      margin-top: 5px;
+      max-width: 900px;
+    }
+    .coachMeta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    .coachBadge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid var(--line);
+      background: var(--chip);
+    }
+    .coachBadge.act { background: rgba(239,68,68,.16); color: #fecaca; border-color: rgba(239,68,68,.35); }
+    .coachBadge.watch { background: rgba(245,158,11,.16); color: #fde68a; border-color: rgba(245,158,11,.35); }
+    .coachBadge.hold, .coachBadge.calm { background: rgba(34,197,94,.14); color: #86efac; border-color: rgba(34,197,94,.3); }
+    .coachControls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .coachGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .coachCard {
+      background: rgba(31,41,55,.74);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      min-height: 155px;
+    }
+    .coachCard.act { border-color: rgba(239,68,68,.45); background: rgba(69,10,10,.22); }
+    .coachCard.watch { border-color: rgba(245,158,11,.42); background: rgba(69,46,13,.22); }
+    .coachCard.hold { border-color: rgba(34,197,94,.28); }
+    .coachCardTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .coachSymbol { font-size: 18px; font-weight: 950; }
+    .coachText { color: var(--text); font-size: 13px; line-height: 1.42; margin-top: 7px; }
+    .coachText strong { color: #f8fafc; }
+    .coachMuted { color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 7px; }
+    .coachPriorityList {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .coachPriority {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(2,6,23,.34);
+    }
+    .coachEmpty {
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    .actionPanel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 16px 0 12px;
+    }
+    .actionCard {
+      background: rgba(17,24,39,0.94);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 13px;
+      min-height: 104px;
+    }
+    .actionCard.priority { border-color: rgba(245, 158, 11, .5); background: rgba(69, 46, 13, .28); }
+    .actionCard.goodBorder { border-color: rgba(34, 197, 94, .4); }
+    .actionCard.badBorder { border-color: rgba(239, 68, 68, .45); }
+    .actionCard .aTitle { color: var(--muted); font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
+    .actionCard .aMain { font-size: 20px; font-weight: 900; margin-top: 7px; }
+    .actionCard .aSub { color: var(--muted); font-size: 12px; margin-top: 5px; line-height: 1.35; }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 10px;
+      align-items: end;
+      background: rgba(17, 24, 39, .7);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      margin: 8px 0 14px;
+    }
+    .filters label { margin-top: 0; }
+    .filters input, .filters select {
+      width: 100%;
+      margin-top: 6px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      background: #020617;
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    .filterNote { color: var(--muted); font-size: 12px; line-height: 1.35; align-self: center; }
+
+
+    .chartGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .chartCard {
+      background: rgba(31, 41, 55, .72);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      min-height: 260px;
+      cursor: zoom-in;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      position: relative;
+    }
+    .chartCard:hover {
+      transform: translateY(-1px);
+      border-color: rgba(96, 165, 250, .75);
+      background: rgba(31, 41, 55, .9);
+    }
+    .chartCard::after {
+      content: 'Click to enlarge';
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      opacity: .75;
+    }
+    .chartHead {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .chartTitle {
+      font-size: 15px;
+      font-weight: 850;
+      margin: 0;
+    }
+    .chartSub {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      margin: 2px 0 8px;
+    }
+    .svgChart {
+      width: 100%;
+      height: auto;
+      display: block;
+      overflow: visible;
+    }
+    .axisText, .tickText, .valueText {
+      fill: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .valueText { fill: var(--text); }
+    .gridLine { stroke: rgba(156, 163, 175, .22); stroke-width: 1; }
+    .axisLine { stroke: rgba(156, 163, 175, .45); stroke-width: 1.2; }
+    .linePlot { fill: none; stroke: var(--blue); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .areaPlot { fill: rgba(96, 165, 250, .12); }
+    .pointPlot { fill: var(--blue); stroke: #0f172a; stroke-width: 2; }
+    .multiLineRealised { fill: none; stroke: rgba(34, 197, 94, .95); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .multiLineUnrealised { fill: none; stroke: rgba(96, 165, 250, .95); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .multiLineTotal { fill: none; stroke: rgba(245, 158, 11, .95); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .multiPointRealised { fill: rgba(34, 197, 94, .95); stroke: #0f172a; stroke-width: 2; }
+    .multiPointUnrealised { fill: rgba(96, 165, 250, .95); stroke: #0f172a; stroke-width: 2; }
+    .multiPointTotal { fill: rgba(245, 158, 11, .95); stroke: #0f172a; stroke-width: 2; }
+    .chartLegend { display: flex; gap: 14px; flex-wrap: wrap; margin: 7px 0 2px; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .legendItem { display: inline-flex; align-items: center; gap: 6px; }
+    .legendSwatch { width: 22px; height: 3px; border-radius: 999px; display: inline-block; }
+    .legendRealised { background: rgba(34, 197, 94, .95); }
+    .legendUnrealised { background: rgba(96, 165, 250, .95); }
+    .legendTotal { background: rgba(245, 158, 11, .95); }
+    .barGood { fill: rgba(34, 197, 94, .85); }
+    .barBad { fill: rgba(239, 68, 68, .85); }
+    .barWarn { fill: rgba(245, 158, 11, .85); }
+    .barNeutral { fill: rgba(96, 165, 250, .85); }
+
+    .chartModal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: rgba(2, 6, 23, .82);
+      backdrop-filter: blur(8px);
+    }
+    .chartModal.hidden { display: none; }
+    .chartModalBox {
+      width: min(1180px, 96vw);
+      max-height: 92vh;
+      overflow: auto;
+      background: rgba(15, 23, 42, .98);
+      border: 1px solid rgba(96, 165, 250, .55);
+      border-radius: 18px;
+      box-shadow: 0 24px 90px rgba(0,0,0,.55);
+      padding: 16px;
+    }
+    .chartModalTop {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
+    .chartModalClose { background: var(--panel2); }
+    .chartModalBody .chartCard {
+      min-height: unset;
+      border: 0;
+      background: transparent;
+      cursor: default;
+      transform: none;
+      padding: 0;
+    }
+    .chartModalBody .chartCard::after { content: ''; display: none; }
+    .chartModalBody .chartTitle { font-size: 22px; }
+    .chartModalBody .chartSub { font-size: 14px; }
+    .chartModalBody .svgChart { min-height: 520px; }
+
     @media (max-width: 900px) {
-      .topbar { position:relative; flex-direction:column; }
-      .cards { grid-template-columns: repeat(2, minmax(150px,1fr)); }
-      .grid2 { grid-template-columns: 1fr; }
-      .chartGrid { grid-template-columns: 1fr; }
-      .coachGrid { grid-template-columns:1fr; }
+      .grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+      th { top: 0; }
     }
     @media (max-width: 560px) {
-      h1 { font-size:24px; }
-      .sub { font-size:15px; }
-      .actions { width:100%; }
-      .actions button { flex:1; padding:10px 12px; }
-      .tabs { padding-left:12px; }
-      .panel { padding:10px 12px 24px; }
-      .cards { grid-template-columns:1fr; }
-      .priority { grid-template-columns:1fr; }
-      th, td { padding:12px; font-size:14px; }
-      .coach { padding: 10px 12px; }
-      .coach h2 { font-size:23px; }
+      main, header { padding-left: 14px; padding-right: 14px; }
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 21px; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
+<header>
+  <div class="topbar">
+    <div>
+      <h1>Trade Dashboard</h1>
+      <div class="subtitle" id="subtitle">Read-only dashboard powered by your Google Sheet</div>
+    </div>
+    <div class="btns">
+      <button id="refreshBtn" disabled>Refresh data</button>
+      <button id="settingsBtn" class="secondary">Settings</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="setup" class="setup hidden">
+    <h2>Connect to your Google Sheet feed</h2>
+    <p>Paste the Web app URL and Web app secret from your Google Sheet setup. This dashboard only reads data. It does not write anything back to the sheet.</p>
+    <label for="webUrl">Web app URL</label>
+    <input id="webUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" />
+    <div class="hint">This should end in <strong>/exec</strong>. Do not include <strong>?key=</strong> here.</div>
+    <label for="webSecret">Web app secret</label>
+    <input id="webSecret" placeholder="Paste the random secret from the config tab" autocomplete="off" />
+    <div class="hint">No quotation marks. Paste the secret exactly as it appears in the config tab.</div>
+    <div class="btns" style="margin-top:16px">
+      <button id="saveConnectBtn">Save and connect</button>
+      <button id="clearBtn" class="danger">Clear saved details</button>
+    </div>
+    <div id="setupError" class="error hidden"></div>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div class="grid">
+      <div class="card"><div class="label">Open positions</div><div class="value" id="openCount">-</div><div class="sub" id="openSub">Live holdings</div></div>
+      <div class="card"><div class="label">Open market value</div><div class="value" id="openValue">-</div><div class="sub">Based on latest refreshed close</div></div>
+      <div class="card"><div class="label">Unrealised P&amp;L</div><div class="value" id="unrealised">-</div><div class="sub" id="unrealisedSub">Open trades only</div></div>
+      <div class="card"><div class="label">Realised P&amp;L</div><div class="value" id="realised">-</div><div class="sub">Closed trades in sheet</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div class="label">Total P&amp;L</div><div class="value" id="totalPnl">-</div><div class="sub">Realised plus unrealised</div></div>
+      <div class="card"><div class="label">Open cost basis</div><div class="value" id="costBasis">-</div><div class="sub">From positions tab</div></div>
+      <div class="card"><div class="label">Total stop risk</div><div class="value" id="totalStopRisk">-</div><div class="sub" id="totalStopRiskSub">Current close to stops</div></div>
+      <div class="card"><div class="label">Stops awaiting info</div><div class="value" id="awaitingStops">-</div><div class="sub">Rows still set to Awaiting</div></div>
+      <div class="card"><div class="label">Last stop update</div><div class="value" id="lastStopUpdate" style="font-size:18px">-</div><div class="sub" id="generatedAt">-</div></div>
+    </div>
+
+    <div id="coachPanel" class="coachPanel"></div>
+
+    <div id="actionPanel" class="actionPanel"></div>
+
+    <div class="filters" id="filters" style="display:none">
       <div>
-        <h1>Trade Dashboard</h1>
-        <div class="sub">Read-only dashboard powered by your Google Sheet</div>
+        <label for="dateFrom">From entry date</label>
+        <input id="dateFrom" type="date" />
       </div>
-      <div class="actions">
-        <button class="primary" onclick="loadData()">Refresh data</button>
-        <button onclick="toggleSettings()">Settings</button>
+      <div>
+        <label for="dateTo">To entry date</label>
+        <input id="dateTo" type="date" />
       </div>
+      <div>
+        <label for="statusFilter">Status</label>
+        <select id="statusFilter">
+          <option value="all">All</option>
+          <option value="open">Open only</option>
+          <option value="closed">Closed only</option>
+        </select>
+      </div>
+      <div>
+        <label for="stopTypeFilter">Stop type</label>
+        <select id="stopTypeFilter"><option value="all">All stop types</option></select>
+      </div>
+      <div>
+        <label for="resultFilter">Result</label>
+        <select id="resultFilter">
+          <option value="all">All</option>
+          <option value="winner">Winners</option>
+          <option value="loser">Losers</option>
+          <option value="flat">Flat / no P&amp;L</option>
+        </select>
+      </div>
+      <div>
+        <label for="minPnlFilter">Min P&amp;L $</label>
+        <input id="minPnlFilter" type="number" step="1" placeholder="e.g. -500" />
+      </div>
+      <div>
+        <label for="minRiskFilter">Min stop risk $</label>
+        <input id="minRiskFilter" type="number" step="1" placeholder="e.g. 250" />
+      </div>
+      <div>
+        <button id="resetFiltersBtn" class="secondary" type="button">Reset filters</button>
+      </div>
+      <div class="filterNote">Filters affect the tables and analytics/charts below. The summary cards at the top stay as the full account view.</div>
     </div>
 
-    <div id="settings" class="settings">
-      <div class="grid2">
-        <div>
-          <label>Web app URL</label>
-          <input id="webUrl" placeholder="https://script.google.com/macros/s/.../exec" />
-        </div>
-        <div>
-          <label>Web app secret</label>
-          <input id="webSecret" placeholder="Paste the Web app secret from config" />
-        </div>
-      </div>
-      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="primary" onclick="saveSettingsAndLoad()">Save and load</button>
-        <button onclick="clearSettings()">Clear saved settings</button>
-      </div>
-      <div class="hint">Your Web app secret is saved only in this browser. API keys stay in the Google Sheet backend, not in this webpage.</div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="live">Live trades</button>
+      <button class="tab" data-tab="stops">Stops</button>
+      <button class="tab" data-tab="portfolio">Portfolio performance</button>
+      <button class="tab" data-tab="strategy">Strategy analytics</button>
+      <button class="tab" data-tab="closed">Closed trades</button>
+      <button class="tab" data-tab="fills">Clean fills</button>
     </div>
 
-    <section class="coach" id="coachSection" style="display:none;">
-      <div class="coachGrid">
-        <div>
-          <h2>Today’s coach priorities</h2>
-          <div id="coachPriorities" class="priorityList"></div>
-        </div>
-      </div>
-      <div id="coachDetails" class="coachCards"></div>
-    </section>
+    <div class="toolbar">
+      <input id="search" class="search" placeholder="Search symbol..." />
+      <div class="statusline" id="statusline">Not loaded yet</div>
+    </div>
 
-    <div class="tabs" id="tabs"></div>
+    <div id="mainError" class="error hidden"></div>
+    <div id="tablePanel" class="panel"><div class="empty">Loading...</div></div>
+  </section>
+</main>
 
-    <div id="panel-live" class="panel"></div>
-    <div id="panel-stops" class="panel"></div>
-    <div id="panel-portfolio" class="panel"></div>
-    <div id="panel-strategy" class="panel"></div>
-    <div id="panel-closed" class="panel"></div>
-    <div id="panel-clean" class="panel"></div>
+<div id="chartModal" class="chartModal hidden" aria-hidden="true">
+  <div class="chartModalBox" role="dialog" aria-modal="true" aria-label="Expanded chart">
+    <div class="chartModalTop"><button id="chartModalClose" class="chartModalClose">Close</button></div>
+    <div id="chartModalBody" class="chartModalBody"></div>
   </div>
-
-  <div id="chartModal" class="modal" onclick="modalBackdrop(event)">
-    <div class="modalInner">
-      <div class="modalHead"><h2 id="modalTitle" style="margin:0;"></h2><button onclick="closeChartModal()">Close</button></div>
-      <p id="modalDesc" class="muted" style="margin-top:0;"></p>
-      <canvas id="modalCanvas"></canvas>
-    </div>
-  </div>
+</div>
 
 <script>
-const START_BALANCE = 183330.61;
-const STORAGE = 'portfolioManager.settings.v1';
-let DATA = null;
-let ACTIVE = 'live';
-let CHARTS = {};
+(function () {
+  const STORAGE_KEY = 'tradeDashboard.feedSettings.v1';
+  const BASELINE_BALANCE = 183330.61;
+  let state = { data: null, tab: 'live', search: '', filters: { dateFrom: '', dateTo: '', status: 'all', stopType: 'all', result: 'all', minPnl: '', minRisk: '' } };
 
-const TABS = [
-  ['live','Live trades'],
-  ['stops','Stops'],
-  ['portfolio','Portfolio performance'],
-  ['strategy','Strategy analytics'],
-  ['closed','Closed trades'],
-  ['clean','Clean fills']
-];
+  const el = id => document.getElementById(id);
+  const setup = el('setup');
+  const dashboard = el('dashboard');
+  const refreshBtn = el('refreshBtn');
+  const settingsBtn = el('settingsBtn');
+  const saveConnectBtn = el('saveConnectBtn');
+  const clearBtn = el('clearBtn');
+  const setupError = el('setupError');
+  const mainError = el('mainError');
+  const search = el('search');
+  const dateFrom = el('dateFrom');
+  const dateTo = el('dateTo');
+  const statusFilter = el('statusFilter');
+  const stopTypeFilter = el('stopTypeFilter');
+  const resultFilter = el('resultFilter');
+  const minPnlFilter = el('minPnlFilter');
+  const minRiskFilter = el('minRiskFilter');
+  const resetFiltersBtn = el('resetFiltersBtn');
 
-function $(id){ return document.getElementById(id); }
-function n(v){ const x = Number(String(v ?? '').replace(/[$,% ,]/g,'')); return isFinite(x) ? x : 0; }
-function maybeNum(v){ const x = Number(String(v ?? '').replace(/[$,% ,]/g,'')); return isFinite(x) ? x : null; }
-function money(v){ const x = n(v); return (x<0?'-':'') + '$' + Math.abs(x).toLocaleString(undefined,{maximumFractionDigits:0}); }
-function money2(v){ const x = n(v); return (x<0?'-':'') + '$' + Math.abs(x).toLocaleString(undefined,{maximumFractionDigits:2}); }
-function pct(v){ const x=n(v); return (x>=0?'+':'') + x.toFixed(2) + '%'; }
-function cls(v){ return n(v)>=0?'good':'bad'; }
-function byDate(a,b){ return String(a.entryDate||a.entry||a.Date||'').localeCompare(String(b.entryDate||b.entry||b.Date||'')); }
-function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-function toggleSettings(){ $('settings').classList.toggle('open'); }
-function saveSettings(){ localStorage.setItem(STORAGE, JSON.stringify({url:$('webUrl').value.trim(), secret:$('webSecret').value.trim()})); }
-function loadSettings(){ try { const s=JSON.parse(localStorage.getItem(STORAGE)||'{}'); if(s.url) $('webUrl').value=s.url; if(s.secret) $('webSecret').value=s.secret; } catch(e){} }
-function clearSettings(){ localStorage.removeItem(STORAGE); $('webUrl').value=''; $('webSecret').value=''; }
-function saveSettingsAndLoad(){ saveSettings(); loadData(); }
-
-function endpoint(action){
-  const url = $('webUrl').value.trim();
-  const secret = $('webSecret').value.trim();
-  if(!url || !secret) throw new Error('Add your Web app URL and Web app secret in Settings first.');
-  const sep = url.includes('?') ? '&' : '?';
-  return url + sep + 'key=' + encodeURIComponent(secret) + (action ? '&action=' + encodeURIComponent(action) : '');
-}
-
-async function loadData(){
-  try{
-    saveSettings();
-    const res = await fetch(endpoint(''));
-    const data = await res.json();
-    if(!data.ok) throw new Error(data.error || 'The feed did not return ok=true.');
-    DATA = data;
-    renderAll();
-  } catch(e){
-    document.body.insertAdjacentHTML('afterbegin', `<div class="error" style="margin:16px;">${esc(e.message)}</div>`);
-    $('settings').classList.add('open');
+  function money(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return '$' + v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
-}
-
-async function generateCoach(){
-  try{
-    const btn = event && event.target ? event.target : null;
-    if(btn){ btn.disabled=true; btn.textContent='Generating…'; }
-    const res = await fetch(endpoint('coach'));
-    const data = await res.json();
-    if(!data.ok) throw new Error(data.error || 'Coach generation failed.');
-    await loadData();
-  } catch(e){ alert(e.message); }
-  finally{
-    const buttons = document.querySelectorAll('[data-coach-button]');
-    buttons.forEach(b => { b.disabled=false; b.textContent='Generate new coach report'; });
+  function num(n) {
+    if (n === null || n === undefined || n === '') return null;
+    const v = Number(String(n).replace(/[$,\s]/g, ''));
+    return isFinite(v) ? v : null;
   }
-}
+  function pct(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return v.toFixed(2) + '%';
+  }
+  function cls(n) {
+    const v = Number(n);
+    if (!isFinite(v) || v === 0) return '';
+    return v > 0 ? 'pos' : 'neg';
+  }
+  function setText(id, value, className) {
+    const node = el(id);
+    node.textContent = value;
+    node.className = 'value' + (className ? ' ' + className : '');
+  }
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+  }
+  function chip(text, type) {
+    return `<span class="chip ${type || ''}">${escapeHtml(text)}</span>`;
+  }
+  function rowFilterSymbol(obj) {
+    if (!state.search) return true;
+    const q = state.search.toUpperCase();
+    return String(obj.symbol || '').toUpperCase().includes(q);
+  }
+  function datePass(dateStr) {
+    const d = String(dateStr || '').slice(0, 10);
+    if (state.filters.dateFrom && d < state.filters.dateFrom) return false;
+    if (state.filters.dateTo && d > state.filters.dateTo) return false;
+    return true;
+  }
+  function pnlPass(value) {
+    const result = state.filters.result || 'all';
+    const v = Number(value);
+    if (result === 'winner' && !(isFinite(v) && v > 0)) return false;
+    if (result === 'loser' && !(isFinite(v) && v < 0)) return false;
+    if (result === 'flat' && !(isFinite(v) && Math.abs(v) < 0.0001)) return false;
+    const minPnl = num(state.filters.minPnl);
+    if (minPnl != null && !(isFinite(v) && v >= minPnl)) return false;
+    return true;
+  }
+  function stopRiskForOpen(p) {
+    const stop = num(p.stop?.stopPrice);
+    const lastClose = num(p.stop?.lastClose);
+    if (stop != null && lastClose != null && p.shares) return Math.max(0, (lastClose - stop) * p.shares);
+    return null;
+  }
+  function riskPass(risk) {
+    const minRisk = num(state.filters.minRisk);
+    if (minRisk == null) return true;
+    return risk != null && Number(risk) >= minRisk;
+  }
+  function stopTypePass(type) {
+    const wanted = state.filters.stopType || 'all';
+    return wanted === 'all' || String(type || 'Awaiting') === wanted;
+  }
+  function filterOpenRow(p) {
+    if ((state.filters.status || 'all') === 'closed') return false;
+    return rowFilterSymbol(p) && datePass(p.entryDate) && stopTypePass(p.stop?.stopType || 'Awaiting') && pnlPass(p.pnl || 0) && riskPass(stopRiskForOpen(p));
+  }
+  function filterClosedRow(p) {
+    if ((state.filters.status || 'all') === 'open') return false;
+    if ((state.filters.stopType || 'all') !== 'all') return false;
+    if ((state.filters.minRisk || '') !== '') return false;
+    return rowFilterSymbol(p) && datePass(p.entryDate) && pnlPass(num(p.realizedUsd) || 0);
+  }
+  function filterFillRow(f) {
+    return rowFilterSymbol(f) && datePass(f.date);
+  }
+  function filteredOpenPositions() { return enrichOpen().filter(filterOpenRow); }
+  function filteredClosedPositions() { return getClosedPositions().filter(filterClosedRow); }
+  function currentFilterDescription() {
+    const parts = [];
+    if (state.search) parts.push('symbol contains "' + state.search + '"');
+    if (state.filters.dateFrom) parts.push('from ' + state.filters.dateFrom);
+    if (state.filters.dateTo) parts.push('to ' + state.filters.dateTo);
+    if (state.filters.status !== 'all') parts.push(state.filters.status + ' trades');
+    if (state.filters.stopType !== 'all') parts.push('stop type ' + state.filters.stopType);
+    if (state.filters.result !== 'all') parts.push(state.filters.result + 's');
+    if (state.filters.minPnl !== '') parts.push('P&L >= ' + money(state.filters.minPnl));
+    if (state.filters.minRisk !== '') parts.push('risk >= ' + money(state.filters.minRisk));
+    return parts.length ? 'Filtered: ' + parts.join(' · ') : 'No filters applied';
+  }
+  function updateFiltersFromInputs() {
+    state.filters.dateFrom = dateFrom.value || '';
+    state.filters.dateTo = dateTo.value || '';
+    state.filters.status = statusFilter.value || 'all';
+    state.filters.stopType = stopTypeFilter.value || 'all';
+    state.filters.result = resultFilter.value || 'all';
+    state.filters.minPnl = minPnlFilter.value || '';
+    state.filters.minRisk = minRiskFilter.value || '';
+    renderTable();
+  }
+  function resetFilters() {
+    search.value = ''; state.search = '';
+    dateFrom.value = ''; dateTo.value = ''; statusFilter.value = 'all'; stopTypeFilter.value = 'all'; resultFilter.value = 'all'; minPnlFilter.value = ''; minRiskFilter.value = '';
+    updateFiltersFromInputs();
+  }
+  function renderFilterOptions() {
+    const selected = stopTypeFilter.value || 'all';
+    const types = Array.from(new Set((state.data?.stops || []).map(s => String(s.stopType || 'Awaiting')))).sort();
+    stopTypeFilter.innerHTML = '<option value="all">All stop types</option>' + types.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    stopTypeFilter.value = types.includes(selected) ? selected : 'all';
+    state.filters.stopType = stopTypeFilter.value;
+  }
+  function getSettings() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function saveSettings(settings) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+  function normaliseUrl(url) {
+    return String(url || '').trim().replace(/\?.*$/, '');
+  }
+  function showSetup() {
+    const settings = getSettings();
+    el('webUrl').value = settings.webUrl || '';
+    el('webSecret').value = settings.webSecret || '';
+    setup.classList.remove('hidden');
+    dashboard.classList.add('hidden');
+    refreshBtn.disabled = true;
+  }
+  function showDashboard() {
+    setup.classList.add('hidden');
+    dashboard.classList.remove('hidden');
+    refreshBtn.disabled = false;
+  }
+  function showErr(node, msg) {
+    node.textContent = msg;
+    node.classList.remove('hidden');
+  }
+  function hideErr(node) {
+    node.textContent = '';
+    node.classList.add('hidden');
+  }
 
-function renderTabs(){
-  $('tabs').innerHTML = TABS.map(([id,label]) => `<div class="tab ${ACTIVE===id?'active':''}" onclick="setTab('${id}')">${label}</div>`).join('');
-}
-function setTab(id){ ACTIVE=id; renderAll(false); }
+  function loadData(action) {
+    const settings = getSettings();
+    hideErr(mainError);
+    hideErr(setupError);
 
-function renderAll(full=true){
-  renderTabs();
-  TABS.forEach(([id]) => $('panel-'+id).classList.toggle('active', ACTIVE===id));
-  renderCoach();
-  renderLive();
-  renderStops();
-  renderPortfolio();
-  renderStrategy();
-  renderClosed();
-  renderClean();
-}
+    if (!settings.webUrl || !settings.webSecret) {
+      showSetup();
+      return;
+    }
+    showDashboard();
+    const isCoachAction = action === 'coach';
+    el('statusline').textContent = isCoachAction ? 'Generating Trade Coach...' : 'Loading from Google Sheet...';
+    refreshBtn.disabled = true;
 
-function positions(){ return DATA?.positions || []; }
-function openPositions(){ return positions().filter(p => String(p.status).toUpperCase()==='OPEN'); }
-function closedPositions(){ return positions().filter(p => String(p.status).toUpperCase()==='CLOSED'); }
-function stops(){ return DATA?.stops || []; }
-function clean(){ return DATA?.clean || []; }
-function coach(){ return DATA?.coach || []; }
+    const callbackName = 'tradeDashCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    const script = document.createElement('script');
+    const sep = settings.webUrl.includes('?') ? '&' : '?';
+    const actionPart = action ? '&action=' + encodeURIComponent(action) : '';
+    script.src = normaliseUrl(settings.webUrl) + sep + 'key=' + encodeURIComponent(settings.webSecret) + actionPart + '&callback=' + encodeURIComponent(callbackName) + '&_=' + Date.now();
 
-function stopById(){ const m={}; stops().forEach(s => m[s.id]=s); return m; }
-function enrichedOpen(){
-  const sm = stopById();
-  return openPositions().map(p => {
-    const s = sm[p.id] || {};
-    const last = maybeNum(s.lastClose);
-    const stop = maybeNum(s.stopPrice);
-    const shares = n(p.shares);
-    const entry = n(p.avgEntry);
-    const market = last!==null ? last*shares : n(p.costBasisUsd || p.cost || 0);
-    const cost = entry*shares;
-    const openPnl = market - cost;
-    const risk = (last!==null && stop!==null) ? Math.max(0,(last-stop)*shares) : null;
-    return {...p, stop:s, lastClose:last, stopPrice:stop, marketValue:market, costValue:cost, openPnl, riskToStop:risk};
-  });
-}
+    let timer = setTimeout(() => {
+      cleanup();
+      showErr(mainError, isCoachAction ? 'The Trade Coach took too long to respond. It may still have completed in the Google Sheet. Refresh the dashboard in a moment, or check the Apps Script execution log.' : 'The dashboard could not load the Google Sheet feed. Check the Web app URL, the Web app secret, and that the Apps Script deployment is still set to Anyone.');
+      el('statusline').textContent = 'Load failed';
+      refreshBtn.disabled = false;
+    }, isCoachAction ? 70000 : 20000);
 
-function metrics(){
-  const open = enrichedOpen();
-  const closed = closedPositions();
-  const realised = closed.reduce((a,p)=>a+n(p.realisedUsd ?? p.realized ?? p.realised),0);
-  const unreal = open.reduce((a,p)=>a+n(p.openPnl),0);
-  const openValue = open.reduce((a,p)=>a+n(p.marketValue),0);
-  const openCost = open.reduce((a,p)=>a+n(p.costValue),0);
-  const stopRisk = open.reduce((a,p)=>a+(p.riskToStop??0),0);
-  const currentEquity = START_BALANCE + realised + unreal;
-  const cash = START_BALANCE + realised - openCost;
-  const wins = closed.filter(p=>n(p.realisedUsd ?? p.realized ?? p.realised)>0);
-  const losses = closed.filter(p=>n(p.realisedUsd ?? p.realized ?? p.realised)<0);
-  const avgWin = wins.length ? wins.reduce((a,p)=>a+n(p.realisedUsd ?? p.realized ?? p.realised),0)/wins.length : 0;
-  const avgLoss = losses.length ? losses.reduce((a,p)=>a+n(p.realisedUsd ?? p.realized ?? p.realised),0)/losses.length : 0;
-  const grossWin = wins.reduce((a,p)=>a+n(p.realisedUsd ?? p.realized ?? p.realised),0);
-  const grossLoss = Math.abs(losses.reduce((a,p)=>a+n(p.realisedUsd ?? p.realized ?? p.realised),0));
-  return {open, closed, realised, unreal, openValue, openCost, stopRisk, currentEquity, cash, wins, losses, avgWin, avgLoss, grossWin, grossLoss};
-}
+    function cleanup() {
+      clearTimeout(timer);
+      try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
 
-function renderCoach(){
-  const rows = coach();
-  if(!rows.length){ $('coachSection').style.display='block'; $('coachPriorities').innerHTML = `<div class="notice">No coach report yet. <button data-coach-button onclick="generateCoach()">Generate new coach report</button></div>`; $('coachDetails').innerHTML=''; return; }
-  $('coachSection').style.display='block';
-  const sorted = [...rows].sort((a,b)=> priorityRank(a.status)-priorityRank(b.status));
-  const top = sorted.slice(0,6);
-  $('coachPriorities').innerHTML = top.map(r => `<div class="priority">
-    <div><span class="sym">${esc(r.symbol)}</span></div>
-    <div><div class="action">${esc(r.suggestedAction || r.action || '')}</div><div class="reason">${esc(r.reason || '')}</div></div>
-  </div>`).join('') + `<div style="margin-top:8px;"><button class="primary" data-coach-button onclick="generateCoach()">Generate new coach report</button></div>`;
-  $('coachDetails').innerHTML = sorted.map(r => `<div class="coachCard">
-    <h4>${esc(r.symbol)} <span class="badge ${badgeFor(r.status)}">${esc(r.status||'Watch')}</span></h4>
-    <div><strong>${esc(r.suggestedAction || r.action || '')}</strong></div>
-    <p>${esc(r.reason || '')}</p>
-    <div class="smallRow">
-      <span class="badge neutral">Stop: ${esc(r.suggestedStop || '')}</span>
-      <span class="badge neutral">Confidence: ${esc(r.confidence || '')}</span>
+    window[callbackName] = function (data) {
+      cleanup();
+      refreshBtn.disabled = false;
+      if (!data || !data.ok) {
+        showErr(mainError, data && data.error ? data.error : 'The feed returned an unknown error.');
+        el('statusline').textContent = 'Feed error';
+        return;
+      }
+      state.data = data;
+      render();
+    };
+    script.onerror = function () {
+      cleanup();
+      refreshBtn.disabled = false;
+      showErr(mainError, 'The dashboard could not reach the Google Apps Script URL. Re-check the Web app URL.');
+      el('statusline').textContent = 'Load failed';
+    };
+    document.body.appendChild(script);
+  }
+
+  function getOpenPositions() {
+    const positions = state.data?.positions || [];
+    return positions.filter(p => String(p.status || '').toUpperCase() === 'OPEN');
+  }
+  function getClosedPositions() {
+    const positions = state.data?.positions || [];
+    return positions.filter(p => String(p.status || '').toUpperCase() === 'CLOSED');
+  }
+  function stopsById() {
+    const map = {};
+    (state.data?.stops || []).forEach(s => { if (s.id) map[s.id] = s; });
+    return map;
+  }
+  function enrichOpen() {
+    const smap = stopsById();
+    return getOpenPositions().map(p => {
+      const s = smap[p.id] || {};
+      const shares = num(p.shares) || 0;
+      const avgEntry = num(p.avgEntry) || 0;
+      const lastClose = num(s.lastClose);
+      const cost = num(p.costBasisUsd) ?? shares * avgEntry;
+      const value = lastClose != null ? shares * lastClose : null;
+      const pnl = value != null ? value - cost : null;
+      const pnlPct = cost ? (pnl / cost) * 100 : null;
+      return { ...p, stop: s, shares, avgEntry, lastClose, cost, value, pnl, pnlPct };
+    });
+  }
+
+  function render() {
+    if (!state.data) return;
+    const open = enrichOpen();
+    const closed = getClosedPositions();
+    const summary = state.data.summary || {};
+
+    const openValue = open.reduce((a, p) => a + (p.value || 0), 0);
+    const openCost = open.reduce((a, p) => a + (p.cost || 0), 0);
+    const unrealised = open.reduce((a, p) => a + (p.pnl || 0), 0);
+    const realised = num(summary.realisedUsd) || closed.reduce((a, p) => a + (num(p.realizedUsd) || 0), 0);
+    const total = unrealised + realised;
+    const awaiting = (state.data.stops || []).filter(s => String(s.stopType || '').toLowerCase() === 'awaiting').length;
+    const smap = stopsById();
+    let totalStopRisk = 0;
+    let riskedStops = 0;
+    open.forEach(p => {
+      const s = smap[p.id] || {};
+      const stop = num(s.stopPrice);
+      const lastClose = num(s.lastClose);
+      if (stop != null && lastClose != null && p.shares) {
+        totalStopRisk += Math.max(0, (lastClose - stop) * p.shares);
+        riskedStops++;
+      }
+    });
+
+    setText('openCount', String(open.length));
+    setText('openValue', money(openValue));
+    setText('unrealised', money(unrealised), cls(unrealised));
+    el('unrealisedSub').textContent = openCost ? pct((unrealised / openCost) * 100) + ' on open cost' : 'Open trades only';
+    setText('realised', money(realised), cls(realised));
+    setText('totalPnl', money(total), cls(total));
+    setText('costBasis', money(openCost));
+    setText('totalStopRisk', money(totalStopRisk), totalStopRisk ? 'warn' : 'pos');
+    el('totalStopRiskSub').textContent = riskedStops + ' priced stop' + (riskedStops === 1 ? '' : 's');
+    setText('awaitingStops', String(awaiting), awaiting ? 'warn' : 'pos');
+    setText('lastStopUpdate', summary.latestStopUpdate || '-');
+    el('generatedAt').textContent = 'Feed generated: ' + (state.data.generatedAt || '-');
+    el('statusline').textContent = `${open.length} open · ${closed.length} closed · ${state.data.clean?.length || 0} clean fills`;
+    el('subtitle').textContent = 'Read-only dashboard powered by your Google Sheet';
+    renderFilterOptions();
+    renderCoachPanel();
+    renderActionPanel(open);
+
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
+    renderTable();
+  }
+
+
+  function coachRatingClass(rating) {
+    const r = String(rating || '').toLowerCase();
+    if (r === 'act' || r === 'high') return 'act';
+    if (r === 'watch' || r === 'medium') return 'watch';
+    if (r === 'hold' || r === 'calm' || r === 'low') return 'hold';
+    return '';
+  }
+  function renderCoachPanel() {
+    const panel = el('coachPanel');
+    if (!panel) return;
+    const rows = state.data?.coach || [];
+    const overall = rows.find(r => String(r.type || '').toLowerCase() === 'overall');
+    const priorities = rows.filter(r => String(r.type || '').toLowerCase() === 'priority').sort((a,b)=>(num(a.rank)||0)-(num(b.rank)||0));
+    const positions = rows.filter(r => String(r.type || '').toLowerCase() === 'position').sort((a,b)=>String(a.symbol||'').localeCompare(String(b.symbol||'')));
+
+    if (!rows.length || !overall) {
+      panel.innerHTML = `<div class="coachHeader">
+        <div>
+          <h2 class="coachTitle">Trade Coach</h2>
+          <div class="coachSummary">No coach report has been generated yet. This will use your Google Sheet positions, stop settings, Twelve Data market data and the OpenAI API key stored privately in the sheet config.</div>
+          <div class="coachMeta">It analyses existing open trades only. It does not suggest new buys.</div>
+        </div>
+        <div class="coachControls"><button id="generateCoachBtn" type="button">Generate Trade Coach</button></div>
+      </div>`;
+      return;
+    }
+
+    const overallRating = overall.rating || 'Watch';
+    const priorityHtml = priorities.length ? `<div class="coachPriorityList">${priorities.slice(0,5).map(p => `
+      <div class="coachPriority">
+        <div>${chip(p.symbol || 'Portfolio', coachRatingClass(p.priority || 'Medium'))}</div>
+        <div><div class="coachText"><strong>${escapeHtml(p.suggestedAction || p.action || '-')}</strong></div><div class="coachMuted">${escapeHtml(p.reason || '')}</div></div>
+      </div>`).join('')}</div>` : '<div class="coachEmpty">No priority actions flagged in the latest report.</div>';
+
+    const positionHtml = positions.length ? `<div class="coachGrid">${positions.map(p => {
+      const rc = coachRatingClass(p.rating);
+      return `<div class="coachCard ${rc}">
+        <div class="coachCardTop"><div class="coachSymbol">${escapeHtml(p.symbol || '-')}</div><span class="coachBadge ${rc}">${escapeHtml(p.rating || '-')}</span></div>
+        <div class="coachText"><strong>Action:</strong> ${escapeHtml(p.suggestedAction || '-')}</div>
+        <div class="coachText"><strong>Stop:</strong> ${escapeHtml(p.suggestedStop || '-')}</div>
+        <div class="coachMuted">${escapeHtml(p.reason || '')}</div>
+        <div class="coachMuted"><strong>Risk:</strong> ${escapeHtml(p.riskNote || '-')}</div>
+        ${p.dataWarning ? `<div class="coachMuted warn"><strong>Data:</strong> ${escapeHtml(p.dataWarning)}</div>` : ''}
+      </div>`;
+    }).join('')}</div>` : '<div class="coachEmpty">No position coach cards available.</div>';
+
+    panel.innerHTML = `<div class="coachHeader">
+      <div>
+        <h2 class="coachTitle">Trade Coach <span class="coachBadge ${coachRatingClass(overallRating)}">${escapeHtml(overallRating)}</span></h2>
+      </div>
+      <div class="coachControls"><button id="generateCoachBtn" type="button">Generate new coach report</button></div>
     </div>
-    ${r.riskNote ? `<p><strong>Risk:</strong> ${esc(r.riskNote)}</p>` : ''}
-  </div>`).join('');
-}
-function priorityRank(s){ s=String(s||'').toLowerCase(); if(s.includes('act')||s.includes('exit')||s.includes('sell')) return 0; if(s.includes('watch')) return 1; return 2; }
-function badgeFor(s){ s=String(s||'').toLowerCase(); if(s.includes('act')||s.includes('exit')||s.includes('sell')) return 'bad'; if(s.includes('watch')) return 'warn'; return 'good'; }
+    <div>
+      <h2>Today’s coach priorities</h2>
+      ${priorityHtml}
+    </div>
+    ${positionHtml}`;
+  }
 
-function summaryCards(items){ return `<div class="cards">${items.map(x=>`<div class="card"><div class="k">${x[0]}</div><div class="v ${x[2]||''}">${x[1]}</div>${x[3]?`<div class="hint">${x[3]}</div>`:''}</div>`).join('')}</div>`; }
+  function renderActionPanel(open) {
+    const rows = open || [];
+    const awaiting = rows.filter(p => String(p.stop?.stopType || '').toLowerCase() === 'awaiting');
+    const priced = rows.map(p => ({ p, dist: num(p.stop?.stopDistancePct), risk: stopRiskForOpen(p) })).filter(x => x.dist != null || x.risk != null);
+    const closest = priced.filter(x => x.dist != null).sort((a, b) => a.dist - b.dist)[0];
+    const biggestRisk = priced.filter(x => x.risk != null).sort((a, b) => b.risk - a.risk)[0];
+    const best = rows.slice().filter(p => p.pnl != null).sort((a, b) => (b.pnl || 0) - (a.pnl || 0))[0];
+    const worst = rows.slice().filter(p => p.pnl != null).sort((a, b) => (a.pnl || 0) - (b.pnl || 0))[0];
+    const missingClose = rows.filter(p => p.lastClose == null).length;
+    const noPricedStop = rows.filter(p => stopRiskForOpen(p) == null).length;
+    const warnings = [];
+    if (awaiting.length) warnings.push(awaiting.length + ' stop' + (awaiting.length === 1 ? '' : 's') + ' awaiting info');
+    if (missingClose) warnings.push(missingClose + ' missing latest close');
+    if (noPricedStop) warnings.push(noPricedStop + ' without priced stop risk');
+    if (!warnings.length) warnings.push('No obvious data warnings');
 
-function renderLive(){
-  const m = metrics();
-  const rows = m.open;
-  $('panel-live').innerHTML = summaryCards([
-    ['Open positions', rows.length, ''],
-    ['Open market value', money(m.openValue), ''],
-    ['Open P&L', money(m.unreal), cls(m.unreal)],
-    ['Total stop risk', money(m.stopRisk), 'warn']
-  ]) + toolbar(rows.length) + table(['Symbol','Entry date','Shares','Avg entry','Last close','Market value','Open P&L','Stop type','Risk to stop'], rows.map(p=>[
-    p.symbol, p.entryDate, p.shares, money2(p.avgEntry), p.lastClose!==null?money2(p.lastClose):'-', money(p.marketValue), `<span class="${cls(p.openPnl)}">${money(p.openPnl)}</span>`, p.stop?.stopType||'-', p.riskToStop!==null?money(p.riskToStop):'-'
-  ]));
-}
+    el('actionPanel').innerHTML = `
+      <div class="actionCard ${awaiting.length ? 'priority' : 'goodBorder'}"><div class="aTitle">Stops missing</div><div class="aMain ${awaiting.length ? 'warn' : 'pos'}">${awaiting.length}</div><div class="aSub">${awaiting.slice(0, 4).map(p => escapeHtml(p.symbol)).join(', ') || 'All open trades have a selected stop type.'}</div></div>
+      <div class="actionCard ${closest && closest.dist < 3 ? 'badBorder' : 'priority'}"><div class="aTitle">Closest to stop</div><div class="aMain ${closest && closest.dist < 3 ? 'neg' : 'warn'}">${closest ? escapeHtml(closest.p.symbol) : '-'}</div><div class="aSub">${closest ? pct(closest.dist) + ' above stop · ' + money(closest.risk || 0) + ' risk' : 'No priced stops yet.'}</div></div>
+      <div class="actionCard priority"><div class="aTitle">Largest cash risk</div><div class="aMain warn">${biggestRisk ? escapeHtml(biggestRisk.p.symbol) : '-'}</div><div class="aSub">${biggestRisk ? money(biggestRisk.risk || 0) + ' risk to selected stop' : 'No priced stop risk yet.'}</div></div>
+      <div class="actionCard goodBorder"><div class="aTitle">Best open winner</div><div class="aMain pos">${best ? escapeHtml(best.symbol) : '-'}</div><div class="aSub">${best ? signedMoney(best.pnl || 0) + ' · ' + pct(best.pnlPct || 0) : 'No open P&L yet.'}</div></div>
+      <div class="actionCard badBorder"><div class="aTitle">Worst open trade</div><div class="aMain ${worst && (worst.pnl || 0) < 0 ? 'neg' : ''}">${worst ? escapeHtml(worst.symbol) : '-'}</div><div class="aSub">${worst ? signedMoney(worst.pnl || 0) + ' · ' + pct(worst.pnlPct || 0) : 'No open P&L yet.'}</div></div>
+      <div class="actionCard ${warnings.length && warnings[0] !== 'No obvious data warnings' ? 'priority' : 'goodBorder'}"><div class="aTitle">Data warnings</div><div class="aMain ${warnings[0] === 'No obvious data warnings' ? 'pos' : 'warn'}">${warnings[0] === 'No obvious data warnings' ? 'Clear' : warnings.length}</div><div class="aSub">${warnings.map(escapeHtml).join(' · ')}</div></div>`;
+  }
 
-function renderStops(){
-  const m = metrics();
-  $('panel-stops').innerHTML = summaryCards([
-    ['Priced stops', m.open.filter(p=>p.riskToStop!==null).length + ' / ' + m.open.length, ''],
-    ['Total stop risk', money(m.stopRisk), 'warn'],
-    ['Largest stop risk', money(Math.max(0,...m.open.map(p=>p.riskToStop||0))), 'warn'],
-    ['Awaiting stops', m.open.filter(p=>String(p.stop?.stopType||'').toLowerCase()==='awaiting').length, 'warn']
-  ]) + toolbar(m.open.length) + table(['Symbol','Entry date','Stop type','Stop price','Last close','Distance','Risk to stop','Updated'], m.open.map(p=>[
-    p.symbol, p.entryDate, badgeStop(p.stop?.stopType), p.stopPrice!==null?money2(p.stopPrice):esc(p.stop?.stopPrice||'-'), p.lastClose!==null?money2(p.lastClose):'-', p.stop?.stopDistancePct!=='' && p.stop?.stopDistancePct!=null ? pct(p.stop.stopDistancePct) : '-', p.riskToStop!==null?money(p.riskToStop):'-', p.stop?.updated||'-'
-  ])) + `<div class="chartGrid">${chartCard('riskByPosition','Risk concentration by position','Which open trades account for the most downside to their stop.')}${chartCard('riskByStopType','Stop risk by stop type','How downside risk is grouped by your chosen stop method.')}</div>`;
-  setTimeout(()=>{ drawRiskByPosition(); drawRiskByStopType(); },0);
-}
-function badgeStop(t){ t=String(t||''); const c=t==='Awaiting'?'warn':(t.includes('MA')||t.includes('Break')?'good':'neutral'); return `<span class="badge ${c}">${esc(t||'-')}</span>`; }
+  function renderTable() {
+    if (!state.data) return;
+    if (state.tab === 'live') return renderLive();
+    if (state.tab === 'stops') return renderStops();
+    if (state.tab === 'portfolio') return renderPortfolio();
+    if (state.tab === 'strategy') return renderStrategy();
+    if (state.tab === 'closed') return renderClosed();
+    if (state.tab === 'fills') return renderFills();
+  }
 
-function renderPortfolio(){
-  const m = metrics();
-  $('panel-portfolio').innerHTML = summaryCards([
-    ['Starting balance', money(START_BALANCE), ''],
-    ['Current equity estimate', money(m.currentEquity), cls(m.currentEquity-START_BALANCE)],
-    ['Total P&L', money(m.realised + m.unreal), cls(m.realised+m.unreal)],
-    ['Return', pct((m.currentEquity-START_BALANCE)/START_BALANCE*100), cls(m.currentEquity-START_BALANCE)],
-    ['Realised P&L', money(m.realised), cls(m.realised)],
-    ['Unrealised P&L', money(m.unreal), cls(m.unreal)],
-    ['Estimated cash', money(m.cash), ''],
-    ['Equity if stops hit', money(m.currentEquity - m.stopRisk), 'warn']
-  ]) + `<div class="chartGrid">
-    ${chartCard('equityRealised','Realised equity trend','Starting balance plus realised trade outcomes over time. Open trades are not dumped into one final spike.')}
-    ${chartCard('pnlLines','P&L lines by opening date','Cumulative realised, unrealised and total P&L using trade opening dates as a proxy.')}
-    ${chartCard('pnlBridge','P&L and risk bridge','How realised P&L, unrealised P&L and stop risk currently move the account from baseline.')}
-    ${chartCard('openPnl','Open P&L by position','Current unrealised contribution from each open trade.')}
-    ${chartCard('monthlyPnl','Monthly realised P&L','Closed trade P&L grouped by exit month.')}
-    ${chartCard('riskByPosition2','Stop risk concentration','Open positions ranked by cash risk to their current stop.')}
-  </div>`;
-  setTimeout(()=>{ drawEquityRealised(); drawPnlLines('pnlLines'); drawPnlBridge(); drawOpenPnl(); drawMonthlyPnl(); drawRiskByPosition('riskByPosition2'); },0);
-}
+  function table(headers, rows) {
+    if (!rows.length) {
+      el('tablePanel').innerHTML = '<div class="empty">No rows to show.</div>';
+      return;
+    }
+    el('tablePanel').innerHTML = `<div class="tablewrap"><table><thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+  }
 
-function renderStrategy(){
-  const m = metrics();
-  const winRate = m.closed.length ? m.wins.length/m.closed.length*100 : 0;
-  const profitFactor = m.grossLoss ? m.grossWin/m.grossLoss : 0;
-  const expectancy = m.closed.length ? m.realised/m.closed.length : 0;
-  const best = Math.max(0,...m.closed.map(p=>n(p.realisedUsd ?? p.realized ?? p.realised)));
-  const worst = Math.min(0,...m.closed.map(p=>n(p.realisedUsd ?? p.realized ?? p.realised)));
-  $('panel-strategy').innerHTML = summaryCards([
-    ['Closed trades', m.closed.length, ''],
-    ['Win rate', winRate.toFixed(1)+'%', winRate>=40?'good':'warn'],
-    ['Profit factor', profitFactor ? profitFactor.toFixed(2) : '-', profitFactor>=1?'good':'bad'],
-    ['Expectancy / trade', money(expectancy), cls(expectancy)],
-    ['Average win', money(m.avgWin), 'good'],
-    ['Average loss', money(m.avgLoss), 'bad'],
-    ['Best trade', money(best), 'good'],
-    ['Worst trade', money(worst), 'bad']
-  ]) + `<div class="notice">R-multiple is not calculated yet because it needs the original initial stop captured consistently for each trade.</div>
-  <div class="chartGrid">
-    ${chartCard('cumRealised','Cumulative realised P&L','Closed trades accumulated by exit date.')}
-    ${chartCard('strategyPnlLines','Strategy P&L by opening date','Realised, unrealised and total P&L using opening dates as the proxy.')}
-    ${chartCard('recentClosed','Recent closed trade P&L','Latest closed round-trips, newest first.')}
-    ${chartCard('distribution','Closed trade distribution','Number of closed trades by P&L bucket.')}
-    ${chartCard('contributors','Top and bottom contributors','Best and worst closed trades by realised P&L.')}
-    ${chartCard('riskByStopType2','Risk by stop type','Current downside risk grouped by stop method.')}
-  </div>`;
-  setTimeout(()=>{ drawCumRealised(); drawPnlLines('strategyPnlLines'); drawRecentClosed(); drawDistribution(); drawContributors(); drawRiskByStopType('riskByStopType2'); },0);
-}
+  function renderLive() {
+    const rows = filteredOpenPositions().map(p => {
+      const pnlType = p.pnl == null ? '' : (p.pnl >= 0 ? 'pos' : 'neg');
+      return `<tr>
+        <td><strong>${escapeHtml(p.symbol)}</strong></td>
+        <td>${escapeHtml(p.entryDate)}</td>
+        <td>${p.shares.toLocaleString('en-GB')}</td>
+        <td>${money(p.avgEntry)}</td>
+        <td>${p.lastClose == null ? '-' : money(p.lastClose)}</td>
+        <td>${p.value == null ? '-' : money(p.value)}</td>
+        <td class="${pnlType}">${p.pnl == null ? '-' : money(p.pnl)}</td>
+        <td class="${pnlType}">${p.pnlPct == null ? '-' : pct(p.pnlPct)}</td>
+        <td>${chip(p.stop.stopType || 'Awaiting', p.stop.stopType === 'Awaiting' ? 'warn' : 'good')}</td>
+      </tr>`;
+    });
+    table(['Symbol','Entry date','Shares','Avg entry','Last close','Value','P&L','P&L %','Stop type'], rows);
+  }
 
-function renderClosed(){
-  const rows = closedPositions();
-  $('panel-closed').innerHTML = toolbar(rows.length) + table(['Symbol','Entry date','Exit date','Shares','Avg entry','Avg exit','Partials','Realised P&L'], rows.map(p=>[
-    p.symbol, p.entryDate, p.exitDate, p.shares, money2(p.avgEntry), money2(p.avgExit), p.partials, `<span class="${cls(p.realisedUsd ?? p.realized ?? p.realised)}">${money(p.realisedUsd ?? p.realized ?? p.realised)}</span>`
-  ]));
-}
-function renderClean(){
-  const rows = clean().slice().reverse();
-  $('panel-clean').innerHTML = toolbar(rows.length) + table(['Date','Symbol','Side','Shares','Price','Cash','Fee'], rows.map(r=>[
-    r.date, r.symbol, r.side, r.shares, money2(r.price), money2(r.cash), money2(r.fee)
-  ]));
-}
+  function renderStops() {
+    const openMap = {};
+    getOpenPositions().forEach(p => { if (p.id) openMap[p.id] = p; });
 
-function toolbar(count){ return `<div class="toolbar"><input class="search" placeholder="Search symbol..." oninput="filterTables(this.value)"><div class="summaryText">${count} rows</div></div>`; }
-function filterTables(q){
-  q=String(q||'').toUpperCase();
-  document.querySelectorAll('tbody tr').forEach(tr=>{ tr.style.display = tr.innerText.toUpperCase().includes(q) ? '' : 'none'; });
-}
-function table(headers, rows){ return `<div class="tableWrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; }
+    const rows = (state.data.stops || []).filter(s => {
+      const p = openMap[s.id] || {};
+      const shares = num(p.shares) || 0;
+      const stop = num(s.stopPrice);
+      const lastClose = num(s.lastClose);
+      const riskCash = (stop != null && lastClose != null && shares) ? Math.max(0, (lastClose - stop) * shares) : null;
+      const pnlValue = p ? ((num(s.lastClose) != null && num(p.avgEntry) != null && shares) ? (num(s.lastClose) - num(p.avgEntry)) * shares : 0) : 0;
+      return rowFilterSymbol(s) && datePass(s.entryDate) && (state.filters.status !== 'closed') && stopTypePass(s.stopType || 'Awaiting') && pnlPass(pnlValue) && riskPass(riskCash);
+    }).map(s => {
+      const dist = num(s.stopDistancePct);
+      let distType = '';
+      if (dist != null) distType = dist < 3 ? 'bad' : dist < 8 ? 'warn' : 'good';
+      const awaiting = String(s.stopType || '').toLowerCase() === 'awaiting';
+      const p = openMap[s.id] || {};
+      const shares = num(p.shares) || 0;
+      const stop = num(s.stopPrice);
+      const lastClose = num(s.lastClose);
+      const riskCash = (stop != null && lastClose != null && shares) ? (lastClose - stop) * shares : null;
+      const riskClass = riskCash == null ? '' : (riskCash <= 0 ? 'pos' : 'warn');
+      return `<tr>
+        <td><strong>${escapeHtml(s.symbol)}</strong></td>
+        <td>${escapeHtml(s.entryDate)}</td>
+        <td>${chip(s.stopType || 'Awaiting', awaiting ? 'warn' : 'good')}</td>
+        <td>${escapeHtml(s.stopPrice || '-')}</td>
+        <td>${s.lastClose ? money(s.lastClose) : '-'}</td>
+        <td>${dist == null ? '-' : chip(pct(dist), distType)}</td>
+        <td class="${riskClass}">${riskCash == null ? '-' : money(riskCash)}</td>
+        <td>${escapeHtml(s.updated || '-')}</td>
+      </tr>`;
+    });
+    table(['Symbol','Entry date','Stop type','Stop price','Last close','Distance','Risk to stop','Updated'], rows);
+  }
 
-function chartCard(id,title,desc){ return `<div class="chartCard" onclick="openChartModal('${id}')"><span class="clickHint">Click to enlarge</span><h3>${title}</h3><p>${desc}</p><canvas id="${id}"></canvas></div>`; }
+  function renderClosed() {
+    const rows = filteredClosedPositions().map(p => {
+      const realised = num(p.realizedUsd) || 0;
+      return `<tr>
+        <td><strong>${escapeHtml(p.symbol)}</strong></td>
+        <td>${escapeHtml(p.entryDate)}</td>
+        <td>${escapeHtml(p.exitDate)}</td>
+        <td>${Number(p.shares || 0).toLocaleString('en-GB')}</td>
+        <td>${money(p.avgEntry)}</td>
+        <td>${money(p.avgExit)}</td>
+        <td>${escapeHtml(p.partials || 0)}</td>
+        <td class="${cls(realised)}">${money(realised)}</td>
+      </tr>`;
+    });
+    table(['Symbol','Entry date','Exit date','Shares','Avg entry','Avg exit','Partials','Realised'], rows);
+  }
 
-function chartData(id, cfg){ CHARTS[id]=cfg; }
-function getCanvas(id){ return $(id); }
-function drawLine(id, labels, series, opts={}){
-  const c=getCanvas(id); if(!c) return; const ctx=prep(c); const pad=36; const w=c.width, h=c.height;
-  const vals=series.flatMap(s=>s.data).filter(v=>isFinite(v)); if(!vals.length) return;
-  let min=Math.min(...vals), max=Math.max(...vals); if(min===max){min-=1;max+=1;} const y0=min>0?Math.min(0,min):min; min=y0;
-  axes(ctx,w,h,pad,min,max,labels);
-  const colours=['#60a5fa','#22c55e','#f59e0b','#ef4444'];
-  series.forEach((s,si)=>{ ctx.strokeStyle=colours[si%colours.length]; ctx.fillStyle=colours[si%colours.length]; ctx.lineWidth=2; ctx.beginPath(); s.data.forEach((v,i)=>{ const x=pad+(w-pad*1.2-pad)*(labels.length<=1?0:i/(labels.length-1)); const y=mapY(v,min,max,h,pad); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }); ctx.stroke(); s.data.forEach((v,i)=>{ const x=pad+(w-pad*1.2-pad)*(labels.length<=1?0:i/(labels.length-1)); const y=mapY(v,min,max,h,pad); ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill(); }); });
-  legend(ctx, series.map(s=>s.name), colours, pad, 14);
-  chartData(id,{type:'line',labels,series});
-}
-function drawBar(id, labels, values, opts={}){
-  const c=getCanvas(id); if(!c) return; const ctx=prep(c); const pad=42; const w=c.width, h=c.height;
-  const vals=values.filter(v=>isFinite(v)); if(!vals.length) return;
-  let min=Math.min(0,...vals), max=Math.max(0,...vals); if(min===max){min-=1;max+=1;} axes(ctx,w,h,pad,min,max,labels, true);
-  const innerW=w-pad*1.4-pad, step=innerW/labels.length, bw=Math.max(8, step*0.62); const zero=mapY(0,min,max,h,pad);
-  values.forEach((v,i)=>{ const x=pad+i*step+step/2-bw/2; const y=mapY(v,min,max,h,pad); ctx.fillStyle=v>=0?'#22c55e':'#ef4444'; ctx.fillRect(x,Math.min(y,zero),bw,Math.abs(zero-y)); });
-  chartData(id,{type:'bar',labels,values});
-}
-function drawHBar(id, labels, values){
-  const c=getCanvas(id); if(!c) return; const ctx=prep(c); const padL=90, padR=24, padT=20, padB=24; const w=c.width,h=c.height;
-  if(!values.length) return; const max=Math.max(1,...values.map(v=>Math.abs(v))); const step=(h-padT-padB)/values.length; ctx.font='12px sans-serif';
-  values.forEach((v,i)=>{ const y=padT+i*step+step*0.18; const bw=(w-padL-padR)*(Math.abs(v)/max); ctx.fillStyle=v>=0?'#22c55e':'#ef4444'; ctx.fillText(labels[i].slice(0,10),8,y+step*0.35); ctx.fillRect(padL,y,bw,Math.max(8,step*0.56)); ctx.fillStyle='#cbd5e1'; ctx.fillText(money(v),padL+bw+6,y+step*0.35); });
-  chartData(id,{type:'hbar',labels,values});
-}
-function prep(c){ const dpr=window.devicePixelRatio||1; const rect=c.getBoundingClientRect(); c.width=rect.width*dpr; c.height=rect.height*dpr; const ctx=c.getContext('2d'); ctx.scale(dpr,dpr); c.width=rect.width; c.height=rect.height; ctx.clearRect(0,0,c.width,c.height); ctx.font='12px sans-serif'; return ctx; }
-function mapY(v,min,max,h,pad){ return h-pad - ((v-min)/(max-min))*(h-pad*2); }
-function axes(ctx,w,h,pad,min,max,labels,bar=false){
-  ctx.strokeStyle='#334155'; ctx.fillStyle='#94a3b8'; ctx.lineWidth=1; ctx.beginPath();
-  for(let i=0;i<4;i++){ const v=min+(max-min)*i/3; const y=mapY(v,min,max,h,pad); ctx.moveTo(pad,y); ctx.lineTo(w-pad*1.2,y); ctx.fillText(money(v).replace('.00',''),6,y+4); }
-  ctx.stroke(); const ticks=Math.min(6, labels.length); if(labels.length){ for(let i=0;i<ticks;i++){ const idx=Math.round(i*(labels.length-1)/(ticks-1||1)); const x=pad+(w-pad*1.2-pad)*(labels.length<=1?0:idx/(labels.length-1)); ctx.fillText(labels[idx],x-12,h-10); } }
-}
-function legend(ctx,names,colours,x,y){ names.forEach((name,i)=>{ ctx.fillStyle=colours[i%colours.length]; ctx.fillRect(x+i*150,y,10,10); ctx.fillStyle='#cbd5e1'; ctx.fillText(name,x+i*150+14,y+10); }); }
 
-function realisedSeries(){
-  const closed=[...closedPositions()].sort((a,b)=>String(a.exitDate).localeCompare(String(b.exitDate))); let cum=START_BALANCE;
-  const labels=['Start'], vals=[START_BALANCE]; closed.forEach(p=>{ cum+=n(p.realisedUsd ?? p.realized ?? p.realised); labels.push(shortDate(p.exitDate)); vals.push(cum); }); return {labels, vals};
-}
-function drawEquityRealised(){ const s=realisedSeries(); drawLine('equityRealised',s.labels,[{name:'Realised equity',data:s.vals}]); }
-function drawCumRealised(){ const s=realisedSeries(); const vals=s.vals.map(v=>v-START_BALANCE); drawLine('cumRealised',s.labels,[{name:'Realised P&L',data:vals}]); }
-function drawPnlLines(id){
-  const rows=[]; closedPositions().forEach(p=>rows.push({date:p.entryDate, realised:n(p.realisedUsd ?? p.realized ?? p.realised), unreal:0})); enrichedOpen().forEach(p=>rows.push({date:p.entryDate, realised:0, unreal:n(p.openPnl)}));
-  rows.sort((a,b)=>String(a.date).localeCompare(String(b.date))); let r=0,u=0; const labels=['Start'], rs=[0], us=[0], ts=[0]; rows.forEach(x=>{ r+=x.realised; u+=x.unreal; labels.push(shortDate(x.date)); rs.push(r); us.push(u); ts.push(r+u); });
-  drawLine(id,labels,[{name:'Realised',data:rs},{name:'Unrealised',data:us},{name:'Total',data:ts}]);
-}
-function drawPnlBridge(){ const m=metrics(); drawBar('pnlBridge',['Realised','Unrealised','Stop risk'],[m.realised,m.unreal,-m.stopRisk]); }
-function drawOpenPnl(){ const rows=enrichedOpen().sort((a,b)=>n(b.openPnl)-n(a.openPnl)); drawHBar('openPnl', rows.map(p=>p.symbol), rows.map(p=>p.openPnl)); }
-function drawMonthlyPnl(){
-  const map={}; closedPositions().forEach(p=>{ const k=String(p.exitDate||'').slice(0,7)||'Unknown'; map[k]=(map[k]||0)+n(p.realisedUsd ?? p.realized ?? p.realised); }); const labels=Object.keys(map).sort(); drawBar('monthlyPnl', labels, labels.map(k=>map[k]));
-}
-function drawRiskByPosition(id='riskByPosition'){ const rows=enrichedOpen().filter(p=>p.riskToStop!==null).sort((a,b)=>b.riskToStop-a.riskToStop).slice(0,10); drawHBar(id, rows.map(p=>p.symbol), rows.map(p=>p.riskToStop)); }
-function drawRiskByStopType(id='riskByStopType'){
-  const map={}; enrichedOpen().forEach(p=>{ const k=p.stop?.stopType||'Unknown'; map[k]=(map[k]||0)+(p.riskToStop||0); }); const labels=Object.keys(map).sort(); drawBar(id, labels, labels.map(k=>map[k]));
-}
-function drawRecentClosed(){ const rows=[...closedPositions()].slice(0,12).reverse(); drawBar('recentClosed', rows.map(p=>p.symbol), rows.map(p=>n(p.realisedUsd ?? p.realized ?? p.realised))); }
-function drawDistribution(){
-  const buckets={'Big loss':0,'Small loss':0,'Flat':0,'Small win':0,'Big win':0}; closedPositions().forEach(p=>{ const v=n(p.realisedUsd ?? p.realized ?? p.realised); if(v<=-1000)buckets['Big loss']++; else if(v<0)buckets['Small loss']++; else if(v===0)buckets['Flat']++; else if(v<1000)buckets['Small win']++; else buckets['Big win']++; }); const labels=Object.keys(buckets); drawBar('distribution',labels,labels.map(k=>buckets[k]));
-}
-function drawContributors(){ const rows=[...closedPositions()].sort((a,b)=>n(b.realisedUsd ?? b.realized ?? b.realised)-n(a.realisedUsd ?? a.realized ?? a.realised)); const picked=[...rows.slice(0,5),...rows.slice(-5)]; drawHBar('contributors', picked.map(p=>p.symbol), picked.map(p=>n(p.realisedUsd ?? p.realized ?? p.realised))); }
+  function daysBetween(a, b) {
+    if (!a || !b) return null;
+    const da = new Date(String(a) + 'T00:00:00');
+    const db = new Date(String(b) + 'T00:00:00');
+    if (isNaN(da.getTime()) || isNaN(db.getTime())) return null;
+    return Math.max(0, Math.round((db - da) / 86400000));
+  }
+  function avg(arr) {
+    const vals = arr.map(Number).filter(isFinite);
+    if (!vals.length) return null;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+  }
+  function signedMoney(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return (v >= 0 ? '+' : '') + money(v);
+  }
+  function signedPct(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return (v >= 0 ? '+' : '') + pct(v);
+  }
+  function metricCard(label, value, sub, className) {
+    return `<div class="miniCard"><div class="k">${escapeHtml(label)}</div><div class="v ${className || ''}">${escapeHtml(value)}</div><div class="s">${escapeHtml(sub || '')}</div></div>`;
+  }
+  function simpleRows(rows) {
+    return `<div class="tablewrap" style="max-height:none"><table><tbody>${rows.map(r => `<tr><th style="position:static">${escapeHtml(r[0])}</th><td>${r[1]}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  function strategyStats() {
+    const open = filteredOpenPositions();
+    const closed = filteredClosedPositions();
+    const closedPnl = closed.map(p => num(p.realizedUsd) || 0);
+    const wins = closedPnl.filter(v => v > 0);
+    const losses = closedPnl.filter(v => v < 0);
+    const flats = closedPnl.filter(v => v === 0);
+    const realised = closedPnl.reduce((a, b) => a + b, 0);
+    const unrealised = open.reduce((a, p) => a + (p.pnl || 0), 0);
+    const total = realised + unrealised;
+    const grossWin = wins.reduce((a, b) => a + b, 0);
+    const grossLoss = losses.reduce((a, b) => a + Math.abs(b), 0);
+    const openWinners = open.filter(p => (p.pnl || 0) > 0).length;
+    const openLosers = open.filter(p => (p.pnl || 0) < 0).length;
+    const avgHold = avg(closed.map(p => daysBetween(p.entryDate, p.exitDate)).filter(v => v != null));
+    const best = closed.slice().sort((a,b)=>(num(b.realizedUsd)||0)-(num(a.realizedUsd)||0))[0];
+    const worst = closed.slice().sort((a,b)=>(num(a.realizedUsd)||0)-(num(b.realizedUsd)||0))[0];
+    const partialTrades = closed.filter(p => Number(p.partials || 0) > 0).length;
+    const totalStopRisk = open.reduce((acc, p) => {
+      const stop = num(p.stop?.stopPrice);
+      const lastClose = num(p.stop?.lastClose);
+      if (stop != null && lastClose != null && p.shares) return acc + Math.max(0, (lastClose - stop) * p.shares);
+      return acc;
+    }, 0);
+    return { open, closed, closedPnl, wins, losses, flats, realised, unrealised, total, grossWin, grossLoss, openWinners, openLosers, avgHold, best, worst, partialTrades, totalStopRisk };
+  }
 
-function shortDate(s){ if(!s) return ''; const d=String(s); if(d==='Start') return 'Start'; const parts=d.split('-'); return parts.length===3 ? (parts[2]+'/'+parts[1]) : d; }
-function openChartModal(id){
-  const cfg=CHARTS[id]; if(!cfg) return; const card=$(id).closest('.chartCard'); $('modalTitle').textContent=card.querySelector('h3').textContent; $('modalDesc').textContent=card.querySelector('p').textContent; $('chartModal').classList.add('open');
-  setTimeout(()=>{ const old=document.getElementById('modalCanvas'); const c=old.cloneNode(); old.parentNode.replaceChild(c,old); c.id='modalCanvas'; if(cfg.type==='line') drawLineToCanvas(c,cfg.labels,cfg.series); else if(cfg.type==='bar') drawBarToCanvas(c,cfg.labels,cfg.values); else if(cfg.type==='hbar') drawHBarToCanvas(c,cfg.labels,cfg.values); },0);
-}
-function drawLineToCanvas(c,labels,series){ const oldId=c.id; c.id='__modalTmp'; CHARTS['__modalTmp']={}; const realGet=getCanvas; window.__dummy=1; drawLine('__modalTmp',labels,series); c.id=oldId; }
-function drawBarToCanvas(c,labels,values){ c.id='__modalTmp'; drawBar('__modalTmp',labels,values); c.id='modalCanvas'; }
-function drawHBarToCanvas(c,labels,values){ c.id='__modalTmp'; drawHBar('__modalTmp',labels,values); c.id='modalCanvas'; }
-function closeChartModal(){ $('chartModal').classList.remove('open'); }
-function modalBackdrop(e){ if(e.target.id==='chartModal') closeChartModal(); }
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeChartModal(); });
 
-loadSettings();
-renderTabs();
-if($('webUrl').value && $('webSecret').value) loadData(); else $('settings').classList.add('open');
+  function compactMoney(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    const sign = v < 0 ? '-' : '';
+    const a = Math.abs(v);
+    if (a >= 1000000) return sign + '$' + (a / 1000000).toFixed(1) + 'm';
+    if (a >= 1000) return sign + '$' + (a / 1000).toFixed(0) + 'k';
+    return sign + '$' + a.toFixed(0);
+  }
+  function compactNumber(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    const sign = v < 0 ? '-' : '';
+    const a = Math.abs(v);
+    if (a >= 1000000) return sign + (a / 1000000).toFixed(1) + 'm';
+    if (a >= 1000) return sign + (a / 1000).toFixed(0) + 'k';
+    return sign + a.toFixed(0);
+  }
+  function fmtValue(n, kind) {
+    if (kind === 'pct') return pct(n);
+    if (kind === 'number') return compactNumber(n);
+    return compactMoney(n);
+  }
+  function shortDateLabel(s) {
+    if (!s) return '';
+    const d = new Date(String(s) + 'T00:00:00');
+    if (isNaN(d.getTime())) return String(s);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  function chartCard(title, subtitle, svg, footer) {
+    return `<div class="chartCard"><div class="chartHead"><h3 class="chartTitle">${escapeHtml(title)}</h3></div><div class="chartSub">${escapeHtml(subtitle || '')}</div>${svg}${footer ? `<div class="chartSub">${escapeHtml(footer)}</div>` : ''}</div>`;
+  }
+  function niceExtent(values, forceZero) {
+    const vals = values.map(Number).filter(isFinite);
+    if (!vals.length) return { min: 0, max: 1 };
+    let min = Math.min(...vals), max = Math.max(...vals);
+    if (forceZero) { min = Math.min(0, min); max = Math.max(0, max); }
+    if (min === max) {
+      const pad = Math.abs(max) || 1;
+      min -= pad * 0.1;
+      max += pad * 0.1;
+    }
+    const span = max - min;
+    return { min: min - span * 0.06, max: max + span * 0.06 };
+  }
+  function lineChart(title, subtitle, data, kind) {
+    const rows = (data || []).filter(d => isFinite(Number(d.value)));
+    if (!rows.length) return chartCard(title, subtitle, '<div class="empty">No chart data yet.</div>');
+    const w = 720, h = 260, l = 70, r = 24, t = 18, b = 46;
+    const plotW = w - l - r, plotH = h - t - b;
+    const ext = niceExtent(rows.map(d => d.value), false);
+    const x = i => rows.length === 1 ? l + plotW / 2 : l + (i / (rows.length - 1)) * plotW;
+    const y = v => t + ((ext.max - v) / (ext.max - ext.min)) * plotH;
+    const pts = rows.map((d, i) => `${x(i).toFixed(1)},${y(Number(d.value)).toFixed(1)}`).join(' ');
+    const area = `${l},${t + plotH} ${pts} ${x(rows.length - 1).toFixed(1)},${t + plotH}`;
+    const ticks = [];
+    for (let i = 0; i <= 4; i++) {
+      const val = ext.min + (ext.max - ext.min) * (i / 4);
+      const yy = y(val);
+      ticks.push(`<line class="gridLine" x1="${l}" y1="${yy.toFixed(1)}" x2="${w-r}" y2="${yy.toFixed(1)}"></line><text class="tickText" x="${l-8}" y="${yy+4}" text-anchor="end">${escapeHtml(fmtValue(val, kind))}</text>`);
+    }
+    const labelEvery = Math.max(1, Math.ceil(rows.length / 6));
+    const xlabels = rows.map((d, i) => {
+      if (i !== 0 && i !== rows.length - 1 && i % labelEvery !== 0) return '';
+      return `<text class="tickText" x="${x(i).toFixed(1)}" y="${h-16}" text-anchor="middle">${escapeHtml(d.label)}</text>`;
+    }).join('');
+    const points = rows.map((d, i) => `<circle class="pointPlot" cx="${x(i).toFixed(1)}" cy="${y(Number(d.value)).toFixed(1)}" r="4"><title>${escapeHtml(d.label + ': ' + fmtValue(d.value, kind))}</title></circle>`).join('');
+    const svg = `<svg class="svgChart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(title)}"><polygon class="areaPlot" points="${area}"></polygon>${ticks.join('')}<line class="axisLine" x1="${l}" y1="${t+plotH}" x2="${w-r}" y2="${t+plotH}"></line><polyline class="linePlot" points="${pts}"></polyline>${points}${xlabels}</svg>`;
+    return chartCard(title, subtitle, svg);
+  }
+  function multiLineChart(title, subtitle, data, series, kind) {
+    const rows = (data || []).filter(d => (series || []).some(s => isFinite(Number(d[s.key]))));
+    const defs = (series || []).filter(s => rows.some(d => isFinite(Number(d[s.key]))));
+    if (!rows.length || !defs.length) return chartCard(title, subtitle, '<div class="empty">No chart data yet.</div>');
+    const w = 720, h = 280, l = 70, r = 24, t = 20, b = 50;
+    const plotW = w - l - r, plotH = h - t - b;
+    const allValues = [];
+    rows.forEach(d => defs.forEach(s => { const v = Number(d[s.key]); if (isFinite(v)) allValues.push(v); }));
+    const ext = niceExtent(allValues, true);
+    const x = i => rows.length === 1 ? l + plotW / 2 : l + (i / (rows.length - 1)) * plotW;
+    const y = v => t + ((ext.max - v) / (ext.max - ext.min)) * plotH;
+    const ticks = [];
+    for (let i = 0; i <= 4; i++) {
+      const val = ext.min + (ext.max - ext.min) * (i / 4);
+      const yy = y(val);
+      ticks.push(`<line class="gridLine" x1="${l}" y1="${yy.toFixed(1)}" x2="${w-r}" y2="${yy.toFixed(1)}"></line><text class="tickText" x="${l-8}" y="${yy+4}" text-anchor="end">${escapeHtml(fmtValue(val, kind))}</text>`);
+    }
+    const zeroY = (ext.min < 0 && ext.max > 0) ? `<line class="axisLine" x1="${l}" y1="${y(0).toFixed(1)}" x2="${w-r}" y2="${y(0).toFixed(1)}"></line>` : '';
+    const labelEvery = Math.max(1, Math.ceil(rows.length / 6));
+    const xlabels = rows.map((d, i) => {
+      if (i !== 0 && i !== rows.length - 1 && i % labelEvery !== 0) return '';
+      return `<text class="tickText" x="${x(i).toFixed(1)}" y="${h-17}" text-anchor="middle">${escapeHtml(d.label)}</text>`;
+    }).join('');
+    const lines = defs.map(def => {
+      const pts = rows.map((d, i) => {
+        const v = Number(d[def.key]);
+        return isFinite(v) ? `${x(i).toFixed(1)},${y(v).toFixed(1)}` : '';
+      }).filter(Boolean).join(' ');
+      const circles = rows.map((d, i) => {
+        const v = Number(d[def.key]);
+        if (!isFinite(v)) return '';
+        return `<circle class="${def.pointClass}" cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3.7"><title>${escapeHtml(def.label + ' · ' + d.label + ': ' + fmtValue(v, kind))}</title></circle>`;
+      }).join('');
+      return `<polyline class="${def.lineClass}" points="${pts}"></polyline>${circles}`;
+    }).join('');
+    const legend = `<div class="chartLegend">${defs.map(d => `<span class="legendItem"><span class="legendSwatch ${d.legendClass}"></span>${escapeHtml(d.label)}</span>`).join('')}</div>`;
+    const svg = `<svg class="svgChart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(title)}">${ticks.join('')}${zeroY}<line class="axisLine" x1="${l}" y1="${t+plotH}" x2="${w-r}" y2="${t+plotH}"></line>${lines}${xlabels}</svg>`;
+    return chartCard(title, subtitle, legend + svg);
+  }
+
+  function barChart(title, subtitle, data, opts) {
+    const options = opts || {};
+    const rows = (data || []).filter(d => isFinite(Number(d.value)));
+    if (!rows.length) return chartCard(title, subtitle, '<div class="empty">No chart data yet.</div>');
+    const w = 720, l = 150, r = 95, t = 22, rowH = 34, b = 26;
+    const h = Math.max(210, t + b + rows.length * rowH);
+    const plotW = w - l - r;
+    const values = rows.map(d => Number(d.value));
+    const diverging = !!options.diverging;
+    const ext = niceExtent(values, !diverging);
+    const x = v => l + ((v - ext.min) / (ext.max - ext.min)) * plotW;
+    const zeroX = diverging ? x(0) : l;
+    const axis = diverging ? `<line class="axisLine" x1="${zeroX.toFixed(1)}" y1="${t-8}" x2="${zeroX.toFixed(1)}" y2="${h-b+4}"></line>` : '';
+    const bars = rows.map((d, i) => {
+      const v = Number(d.value);
+      const y = t + i * rowH;
+      const x1 = diverging ? Math.min(zeroX, x(v)) : l;
+      const bw = Math.max(2, Math.abs((diverging ? x(v) - zeroX : x(v) - l)));
+      const clsName = d.kind || (v < 0 ? 'barBad' : v > 0 ? 'barGood' : 'barNeutral');
+      const valueX = diverging ? (v >= 0 ? x1 + bw + 6 : x1 - 6) : x1 + bw + 6;
+      const anchor = diverging && v < 0 ? 'end' : 'start';
+      return `<text class="axisText" x="${l-10}" y="${y+18}" text-anchor="end">${escapeHtml(d.label)}</text><rect class="${clsName}" x="${x1.toFixed(1)}" y="${y+5}" width="${bw.toFixed(1)}" height="18" rx="6"><title>${escapeHtml(d.label + ': ' + fmtValue(v, options.kind || 'money'))}</title></rect><text class="valueText" x="${valueX.toFixed(1)}" y="${y+19}" text-anchor="${anchor}">${escapeHtml(fmtValue(v, options.kind || 'money'))}</text>`;
+    }).join('');
+    const svg = `<svg class="svgChart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(title)}"><line class="axisLine" x1="${l}" y1="${h-b}" x2="${w-r}" y2="${h-b}"></line>${axis}${bars}</svg>`;
+    return chartCard(title, subtitle, svg, options.footer || '');
+  }
+  function portfolioEquityTrend(st) {
+    const closed = st.closed.slice().filter(p => p.exitDate).sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol).localeCompare(String(b.symbol)));
+    let equity = BASELINE_BALANCE;
+    const rows = [{ label: 'Start', value: equity }];
+    closed.forEach(p => {
+      equity += num(p.realizedUsd) || 0;
+      rows.push({ label: shortDateLabel(p.exitDate), value: equity });
+    });
+    return rows;
+  }
+  function portfolioPnlBridge(st) {
+    return [
+      { label: 'Realised P&L', value: st.realised || 0, kind: (st.realised || 0) >= 0 ? 'barGood' : 'barBad' },
+      { label: 'Unrealised P&L', value: st.unrealised || 0, kind: (st.unrealised || 0) >= 0 ? 'barGood' : 'barBad' },
+      { label: 'Total stop risk', value: -(st.totalStopRisk || 0), kind: 'barWarn' }
+    ];
+  }
+  function cumulativeRealisedTrend(st) {
+    const closed = st.closed.slice().filter(p => p.exitDate).sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol).localeCompare(String(b.symbol)));
+    let total = 0;
+    const rows = [{ label: 'Start', value: 0 }];
+    closed.forEach(p => {
+      total += num(p.realizedUsd) || 0;
+      rows.push({ label: shortDateLabel(p.exitDate), value: total });
+    });
+    return rows;
+  }
+  function realisedDrawdownTrend(st) {
+    const eq = portfolioEquityTrend(st);
+    let peak = -Infinity;
+    return eq.map(d => {
+      const value = Number(d.value);
+      if (isFinite(value)) peak = Math.max(peak, value);
+      return { label: d.label, value: isFinite(value) && isFinite(peak) ? value - peak : 0 };
+    });
+  }
+  function monthKey(dateStr) {
+    const d = new Date(String(dateStr || '') + 'T00:00:00');
+    if (isNaN(d.getTime())) return 'Unknown';
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+  function monthLabel(key) {
+    if (key === 'Unknown') return key;
+    const d = new Date(key + '-01T00:00:00');
+    return d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+  }
+  function monthlyPnlBars(st) {
+    const map = {};
+    st.closed.forEach(p => {
+      const k = monthKey(p.exitDate);
+      map[k] = (map[k] || 0) + (num(p.realizedUsd) || 0);
+    });
+    return Object.keys(map).sort().map(k => ({ label: monthLabel(k), value: map[k], kind: map[k] >= 0 ? 'barGood' : 'barBad' }));
+  }
+  function closedTradeDistribution(st) {
+    const buckets = [
+      { label: 'Big loss < -$1k', min: -Infinity, max: -1000, count: 0, kind: 'barBad' },
+      { label: 'Small loss', min: -1000, max: -0.0001, count: 0, kind: 'barBad' },
+      { label: 'Flat', min: -0.0001, max: 0.0001, count: 0, kind: 'barNeutral' },
+      { label: 'Small win', min: 0.0001, max: 1000, count: 0, kind: 'barGood' },
+      { label: 'Big win > $1k', min: 1000, max: Infinity, count: 0, kind: 'barGood' }
+    ];
+    st.closed.forEach(p => {
+      const v = num(p.realizedUsd) || 0;
+      const b = buckets.find(x => v >= x.min && v < x.max);
+      if (b) b.count++;
+    });
+    return buckets.map(b => ({ label: b.label, value: b.count, kind: b.kind }));
+  }
+  function topBottomContributors(st) {
+    const ranked = st.closed.slice().sort((a, b) => (num(b.realizedUsd)||0) - (num(a.realizedUsd)||0));
+    const top = ranked.slice(0, 5);
+    const bottom = ranked.slice(-5).reverse();
+    return top.concat(bottom).map(p => {
+      const v = num(p.realizedUsd) || 0;
+      return { label: String(p.symbol || '') + ' ' + shortDateLabel(p.exitDate), value: v, kind: v >= 0 ? 'barGood' : 'barBad' };
+    });
+  }
+  function riskByPosition(st) {
+    return st.open.map(p => {
+      const risk = stopRiskForOpen(p) || 0;
+      return { label: p.symbol, value: risk, kind: risk ? 'barWarn' : 'barNeutral' };
+    }).sort((a, b) => b.value - a.value);
+  }
+  function pnlByOpeningDate(st) {
+    const byDate = {};
+    function bucket(date) {
+      const key = String(date || '').slice(0, 10) || 'Unknown';
+      if (!byDate[key]) byDate[key] = { realised: 0, unrealised: 0 };
+      return byDate[key];
+    }
+    (st.closed || []).forEach(p => {
+      bucket(p.entryDate).realised += num(p.realizedUsd) || 0;
+    });
+    (st.open || []).forEach(p => {
+      bucket(p.entryDate).unrealised += p.pnl || 0;
+    });
+    const dates = Object.keys(byDate).filter(d => d !== 'Unknown').sort();
+    let realised = 0, unrealised = 0;
+    const rows = [{ label: 'Start', realised: 0, unrealised: 0, total: 0 }];
+    dates.forEach(d => {
+      realised += byDate[d].realised || 0;
+      unrealised += byDate[d].unrealised || 0;
+      rows.push({ label: shortDateLabel(d), realised, unrealised, total: realised + unrealised });
+    });
+    return rows;
+  }
+  function pnlLineDefs() {
+    return [
+      { key: 'realised', label: 'Realised P&L', lineClass: 'multiLineRealised', pointClass: 'multiPointRealised', legendClass: 'legendRealised' },
+      { key: 'unrealised', label: 'Unrealised P&L', lineClass: 'multiLineUnrealised', pointClass: 'multiPointUnrealised', legendClass: 'legendUnrealised' },
+      { key: 'total', label: 'Total P&L', lineClass: 'multiLineTotal', pointClass: 'multiPointTotal', legendClass: 'legendTotal' }
+    ];
+  }
+
+  function currentPositionPnlBars(open) {
+    return open.slice().sort((a, b) => (b.pnl || 0) - (a.pnl || 0)).map(p => ({ label: p.symbol, value: p.pnl || 0, kind: (p.pnl || 0) >= 0 ? 'barGood' : 'barBad' }));
+  }
+  function stopRiskByType(st) {
+    const map = {};
+    st.open.forEach(p => {
+      const type = String(p.stop?.stopType || 'Awaiting');
+      const stop = num(p.stop?.stopPrice), lastClose = num(p.stop?.lastClose);
+      const risk = (stop != null && lastClose != null && p.shares) ? Math.max(0, (lastClose - stop) * p.shares) : 0;
+      map[type] = (map[type] || 0) + risk;
+    });
+    return Object.entries(map).map(([label, value]) => ({ label, value, kind: label === 'Awaiting' ? 'barWarn' : 'barNeutral' })).sort((a, b) => b.value - a.value);
+  }
+
+  function renderPortfolio() {
+    const st = strategyStats();
+    const openValue = st.open.reduce((a, p) => a + (p.value || 0), 0);
+    const openCost = st.open.reduce((a, p) => a + (p.cost || 0), 0);
+    const currentEquity = BASELINE_BALANCE + st.total;
+    const returnPct = BASELINE_BALANCE ? (st.total / BASELINE_BALANCE) * 100 : 0;
+    const realisedPct = BASELINE_BALANCE ? (st.realised / BASELINE_BALANCE) * 100 : 0;
+    const unrealisedPct = BASELINE_BALANCE ? (st.unrealised / BASELINE_BALANCE) * 100 : 0;
+    const cashEstimate = currentEquity - openValue;
+    const exposurePct = currentEquity ? (openValue / currentEquity) * 100 : 0;
+    const stopRiskPct = currentEquity ? (st.totalStopRisk / currentEquity) * 100 : 0;
+    const equityAfterStops = currentEquity - st.totalStopRisk;
+    const afterStopsReturn = BASELINE_BALANCE ? ((equityAfterStops - BASELINE_BALANCE) / BASELINE_BALANCE) * 100 : 0;
+    const progress = Math.max(0, Math.min(100, exposurePct));
+    const portfolioCharts = `<div class="section">
+      <h2>Portfolio charts</h2>
+      <div class="chartGrid">
+        ${lineChart('Realised equity trend', 'Closed-trade equity only. Open P&L is shown separately so it is not dumped into one final spike.', portfolioEquityTrend(st), 'money')}
+        ${multiLineChart('P&L lines by opening date', 'Realised and current unrealised P&L plotted against each trade opening date as a proxy.', pnlByOpeningDate(st), pnlLineDefs(), 'money')}
+        ${barChart('Monthly realised P&L', 'Realised profit or loss grouped by exit month.', monthlyPnlBars(st), { kind: 'money', diverging: true })}
+        ${barChart('P&L and risk bridge', 'Realised P&L, current unrealised P&L and the cash risk if priced stops were hit.', portfolioPnlBridge(st), { kind: 'money', diverging: true })}
+        ${barChart('Current account split', 'Estimated cash, open market value and cash risk to priced stops.', [
+          { label: 'Estimated cash', value: cashEstimate, kind: 'barNeutral' },
+          { label: 'Open market value', value: openValue, kind: 'barGood' },
+          { label: 'Stop risk', value: st.totalStopRisk, kind: 'barWarn' }
+        ], { kind: 'money' })}
+        ${barChart('Open P&L by position', 'Unrealised profit or loss on each currently open position.', currentPositionPnlBars(st.open), { kind: 'money', diverging: true })}
+        ${barChart('Risk concentration by position', 'Which open trades account for the most current cash risk to stop.', riskByPosition(st), { kind: 'money' })}
+      </div>
+    </div>`;
+
+    el('tablePanel').innerHTML = `<div class="section">
+      <h2>Portfolio performance</h2>
+      <p>This is measured against the hard-coded starting balance before your first trade: <strong>${money(BASELINE_BALANCE)}</strong>. It uses realised P&amp;L from closed trades plus unrealised P&amp;L from the latest refreshed closes. The realised equity chart stays closed-trade only; the separate P&amp;L line chart uses each trade's opening date as a proxy for where the realised or unrealised profit belongs on the timeline.</p>
+      <div class="miniGrid">
+        ${metricCard('Starting balance', money(BASELINE_BALANCE), 'Hard-coded baseline')}
+        ${metricCard('Current equity estimate', money(currentEquity), 'Baseline + realised + unrealised', cls(currentEquity - BASELINE_BALANCE))}
+        ${metricCard('Total portfolio P&L', signedMoney(st.total), signedPct(returnPct), cls(st.total))}
+        ${metricCard('Return %', signedPct(returnPct), 'Total return versus baseline', cls(returnPct))}
+        ${metricCard('Realised P&L', signedMoney(st.realised), signedPct(realisedPct), cls(st.realised))}
+        ${metricCard('Unrealised P&L', signedMoney(st.unrealised), signedPct(unrealisedPct), cls(st.unrealised))}
+        ${metricCard('Open market value', money(openValue), 'Latest close × shares')}
+        ${metricCard('Estimated cash', money(cashEstimate), 'Equity estimate less open value', cashEstimate < 0 ? 'warn' : '')}
+        ${metricCard('Open exposure', pct(exposurePct), money(openValue) + ' currently invested', exposurePct > 80 ? 'warn' : '')}
+        ${metricCard('Total stop risk', money(st.totalStopRisk), pct(stopRiskPct) + ' of current equity', st.totalStopRisk ? 'warn' : 'pos')}
+        ${metricCard('Equity if stopped', money(equityAfterStops), signedPct(afterStopsReturn) + ' versus baseline', cls(equityAfterStops - BASELINE_BALANCE))}
+        ${metricCard('Open cost basis', money(openCost), 'Original cost of current open trades')}
+      </div>
+    </div>
+    ${portfolioCharts}
+    <div class="section">
+      <h2>Exposure view</h2>
+      <div class="noteBox">Open exposure shows how much of the estimated account equity is currently invested in open positions. The remaining amount is the estimated cash balance, so this is a strategy-level view rather than a broker-grade cash reconciliation.</div>
+      <div class="barWrap"><div class="barFill" style="width:${progress}%"></div></div>
+      <p><strong>${pct(exposurePct)}</strong> invested · <strong>${pct(Math.max(0, 100 - exposurePct))}</strong> estimated cash/uninvested.</p>
+    </div>
+    <div class="section">
+      <h2>Portfolio calculation</h2>
+      ${simpleRows([
+        ['Starting balance', money(BASELINE_BALANCE)],
+        ['Plus realised P&L', `<span class="${cls(st.realised)}">${signedMoney(st.realised)}</span>`],
+        ['Plus unrealised P&L', `<span class="${cls(st.unrealised)}">${signedMoney(st.unrealised)}</span>`],
+        ['Current equity estimate', `<strong>${money(currentEquity)}</strong>`],
+        ['Less stop risk', `<span class="warn">-${money(st.totalStopRisk).replace('$','')}</span>`],
+        ['Equity estimate if all priced stops hit', `<strong class="${cls(equityAfterStops - BASELINE_BALANCE)}">${money(equityAfterStops)}</strong>`]
+      ])}
+    </div>`;
+  }
+
+  function renderStrategy() {
+    const st = strategyStats();
+    const winRate = st.closed.length ? (st.wins.length / st.closed.length) * 100 : 0;
+    const lossRate = st.closed.length ? (st.losses.length / st.closed.length) * 100 : 0;
+    const avgWin = avg(st.wins) || 0;
+    const avgLoss = avg(st.losses) || 0;
+    const profitFactor = st.grossLoss ? st.grossWin / st.grossLoss : null;
+    const expectancy = st.closed.length ? st.realised / st.closed.length : 0;
+    const combinedPnl = st.total;
+    const openWinRate = st.open.length ? (st.openWinners / st.open.length) * 100 : 0;
+    const awaitingStops = st.open.filter(p => String(p.stop?.stopType || '').toLowerCase() === 'awaiting').length;
+
+    const stopTypeMap = {};
+    st.open.forEach(p => {
+      const type = String(p.stop?.stopType || 'Awaiting');
+      const risk = stopRiskForOpen(p) || 0;
+      if (!stopTypeMap[type]) stopTypeMap[type] = { count: 0, risk: 0 };
+      stopTypeMap[type].count++;
+      stopTypeMap[type].risk += risk;
+    });
+    const stopTypeRows = Object.entries(stopTypeMap).map(([type, item]) => {
+      return `<tr><td>${chip(type, type === 'Awaiting' ? 'warn' : 'good')}</td><td>${item.count}</td><td>${money(item.risk)}</td></tr>`;
+    }).join('');
+
+    const topClosed = st.closed.slice().sort((a,b)=>(num(b.realizedUsd)||0)-(num(a.realizedUsd)||0)).slice(0,5).map(p => {
+      const r = num(p.realizedUsd)||0;
+      return `<tr><td><strong>${escapeHtml(p.symbol)}</strong></td><td>${escapeHtml(p.entryDate)}</td><td>${escapeHtml(p.exitDate)}</td><td class="${cls(r)}">${money(r)}</td></tr>`;
+    }).join('');
+    const bottomClosed = st.closed.slice().sort((a,b)=>(num(a.realizedUsd)||0)-(num(b.realizedUsd)||0)).slice(0,5).map(p => {
+      const r = num(p.realizedUsd)||0;
+      return `<tr><td><strong>${escapeHtml(p.symbol)}</strong></td><td>${escapeHtml(p.entryDate)}</td><td>${escapeHtml(p.exitDate)}</td><td class="${cls(r)}">${money(r)}</td></tr>`;
+    }).join('');
+
+    const recentTradeBars = st.closed.slice()
+      .filter(p => p.exitDate)
+      .sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol).localeCompare(String(b.symbol)))
+      .slice(-30)
+      .map(p => ({ label: String(p.symbol || '') + ' ' + shortDateLabel(p.exitDate), value: num(p.realizedUsd) || 0, kind: (num(p.realizedUsd) || 0) >= 0 ? 'barGood' : 'barBad' }));
+    const strategyCharts = `<div class="section">
+      <h2>Strategy charts</h2>
+      <div class="chartGrid">
+        ${lineChart('Cumulative realised P&L trend', 'Running realised profit or loss from closed trades only.', cumulativeRealisedTrend(st), 'money')}
+        ${multiLineChart('Strategy P&L by opening date', 'Realised and current unrealised P&L shown as separate cumulative lines, using each trade opening date as a proxy.', pnlByOpeningDate(st), pnlLineDefs(), 'money')}
+        ${barChart('Monthly realised P&L', 'Realised profit or loss grouped by exit month.', monthlyPnlBars(st), { kind: 'money', diverging: true })}
+        ${barChart('Closed trade distribution', 'Number of trades in loss/win size buckets. This helps show whether the strategy relies on a few big winners.', closedTradeDistribution(st), { kind: 'number' })}
+        ${barChart('Top and bottom contributors', 'Best five and worst five closed trades by realised P&L.', topBottomContributors(st), { kind: 'money', diverging: true })}
+        ${barChart('Recent closed trade P&L', 'Last 30 closed trades by exit date. Green bars are winners, red bars are losers.', recentTradeBars, { kind: 'money', diverging: true })}
+        ${barChart('Stop risk by stop type', 'Current cash risk grouped by the stop style selected on open trades.', stopRiskByType(st), { kind: 'money' })}
+        ${barChart('Risk concentration by position', 'Which open trades account for the most current cash risk to stop.', riskByPosition(st), { kind: 'money' })}
+      </div>
+    </div>`;
+
+    el('tablePanel').innerHTML = `<div class="section">
+      <h2>Trade strategy analytics</h2>
+      <p>This page is focused on the trading strategy itself: closed-trade batting average, realised profit, open-trade position, expectancy and current stop risk.</p>
+      <div class="miniGrid">
+        ${metricCard('Closed trades', String(st.closed.length), `${st.wins.length} winners · ${st.losses.length} losers · ${st.flats.length} flat`)}
+        ${metricCard('Win rate', pct(winRate), pct(lossRate) + ' loss rate', winRate >= 40 ? 'pos' : winRate >= 30 ? 'warn' : 'neg')}
+        ${metricCard('Realised P&L', signedMoney(st.realised), 'Closed trades only', cls(st.realised))}
+        ${metricCard('Unrealised P&L', signedMoney(st.unrealised), `${st.openWinners} open winners · ${st.openLosers} open losers`, cls(st.unrealised))}
+        ${metricCard('Total strategy P&L', signedMoney(combinedPnl), 'Realised plus unrealised', cls(combinedPnl))}
+        ${metricCard('Average win', money(avgWin), `${st.wins.length} winning trades`, 'pos')}
+        ${metricCard('Average loss', money(avgLoss), `${st.losses.length} losing trades`, 'neg')}
+        ${metricCard('Profit factor', profitFactor == null ? 'n/a' : profitFactor.toFixed(2), 'Gross wins ÷ gross losses', profitFactor != null && profitFactor >= 1 ? 'pos' : 'neg')}
+        ${metricCard('Expectancy', signedMoney(expectancy), 'Average realised P&L per closed trade', cls(expectancy))}
+        ${metricCard('Average hold', st.avgHold == null ? '-' : st.avgHold.toFixed(1) + ' days', 'Entry date to exit date')}
+        ${metricCard('Open batting average', pct(openWinRate), `${st.openWinners} of ${st.open.length} open trades currently positive`, openWinRate >= 50 ? 'pos' : 'warn')}
+        ${metricCard('Stop coverage', String(st.open.length - awaitingStops) + ' / ' + st.open.length, awaitingStops + ' still Awaiting', awaitingStops ? 'warn' : 'pos')}
+      </div>
+    </div>
+    ${strategyCharts}
+    <div class="section">
+      <h2>R-multiple readiness</h2>
+      <div class="noteBox">R-multiple is not calculated yet because the dashboard does not currently have a stable original initial-stop field for every trade. Once the sheet captures the initial stop at entry, this page can add average R, best/worst R, expectancy in R and R-distribution without guessing.</div>
+    </div>
+    <div class="section twoCol">
+      <div>
+        <h2>Stop style mix</h2>
+        <div class="tablewrap" style="max-height:none"><table><thead><tr><th>Stop type</th><th>Trades</th><th>Risk to stop</th></tr></thead><tbody>${stopTypeRows || '<tr><td colspan="3">No stop data.</td></tr>'}</tbody></table></div>
+      </div>
+      <div>
+        <h2>Best and worst</h2>
+        ${simpleRows([
+          ['Best closed trade', st.best ? `<strong>${escapeHtml(st.best.symbol)}</strong> · <span class="pos">${money(num(st.best.realizedUsd)||0)}</span>` : '-'],
+          ['Worst closed trade', st.worst ? `<strong>${escapeHtml(st.worst.symbol)}</strong> · <span class="neg">${money(num(st.worst.realizedUsd)||0)}</span>` : '-'],
+          ['Trades with partial exits', String(st.partialTrades)],
+          ['Current total stop risk', `<span class="warn">${money(st.totalStopRisk)}</span>`]
+        ])}
+      </div>
+    </div>
+    <div class="section twoCol">
+      <div>
+        <h2>Top 5 closed winners</h2>
+        <div class="tablewrap" style="max-height:none"><table><thead><tr><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L</th></tr></thead><tbody>${topClosed || '<tr><td colspan="4">No closed winners yet.</td></tr>'}</tbody></table></div>
+      </div>
+      <div>
+        <h2>Top 5 closed losers</h2>
+        <div class="tablewrap" style="max-height:none"><table><thead><tr><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L</th></tr></thead><tbody>${bottomClosed || '<tr><td colspan="4">No closed losers yet.</td></tr>'}</tbody></table></div>
+      </div>
+    </div>`;
+  }
+
+  function renderFills() {
+    const rows = (state.data.clean || []).filter(filterFillRow).slice().reverse().map(f => {
+      const side = String(f.side || '').toUpperCase();
+      return `<tr>
+        <td>${escapeHtml(f.date)}</td>
+        <td><strong>${escapeHtml(f.symbol)}</strong></td>
+        <td>${chip(side, side === 'BUY' ? 'good' : 'bad')}</td>
+        <td>${Number(f.shares || 0).toLocaleString('en-GB')}</td>
+        <td>${money(f.price)}</td>
+        <td>${money(f.cash)}</td>
+        <td>${money(f.fee)}</td>
+      </tr>`;
+    });
+    table(['Date','Symbol','Side','Shares','Price','Cash','Fee'], rows);
+  }
+
+
+
+  function openChartModal(card) {
+    const modal = el('chartModal');
+    const body = el('chartModalBody');
+    if (!modal || !body || !card) return;
+    body.innerHTML = card.outerHTML;
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeChartModal() {
+    const modal = el('chartModal');
+    const body = el('chartModalBody');
+    if (!modal || !body) return;
+    body.innerHTML = '';
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  saveConnectBtn.addEventListener('click', () => {
+    const webUrl = normaliseUrl(el('webUrl').value);
+    const webSecret = String(el('webSecret').value || '').trim();
+    hideErr(setupError);
+    if (!webUrl || !webUrl.startsWith('https://script.google.com/macros/s/') || !webUrl.endsWith('/exec')) {
+      showErr(setupError, 'The Web app URL should start with https://script.google.com/macros/s/ and end with /exec');
+      return;
+    }
+    if (!webSecret) {
+      showErr(setupError, 'Paste the Web app secret from the config tab.');
+      return;
+    }
+    saveSettings({ webUrl, webSecret });
+    loadData();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    state.data = null;
+    showSetup();
+  });
+  settingsBtn.addEventListener('click', showSetup);
+  refreshBtn.addEventListener('click', loadData);
+  search.addEventListener('input', () => {
+    state.search = search.value.trim();
+    renderTable();
+  });
+  [dateFrom, dateTo, statusFilter, stopTypeFilter, resultFilter, minPnlFilter, minRiskFilter].forEach(node => {
+    node.addEventListener('input', updateFiltersFromInputs);
+    node.addEventListener('change', updateFiltersFromInputs);
+  });
+  resetFiltersBtn.addEventListener('click', resetFilters);
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      state.tab = t.dataset.tab;
+      render();
+    });
+  });
+
+
+
+  dashboard.addEventListener('click', e => {
+    if (e.target && e.target.id === 'generateCoachBtn') {
+      loadData('coach');
+    }
+  });
+
+  el('tablePanel').addEventListener('click', e => {
+    const card = e.target.closest('.chartCard');
+    if (card && el('tablePanel').contains(card)) openChartModal(card);
+  });
+  el('chartModalClose').addEventListener('click', closeChartModal);
+  el('chartModal').addEventListener('click', e => {
+    if (e.target === el('chartModal')) closeChartModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeChartModal();
+  });
+  if (getSettings().webUrl && getSettings().webSecret) loadData();
+  else showSetup();
+})();
 </script>
 </body>
 </html>
