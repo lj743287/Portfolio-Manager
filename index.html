@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Portfolio Manager</title>
+  <title>Trade Dashboard v11</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -25,17 +25,6 @@
       font-family: Arial, Helvetica, sans-serif;
       background: radial-gradient(circle at top left, #1e293b, var(--bg) 50%);
       color: var(--text);
-    }
-    body.market-negative {
-      --bg: #2a0f12;
-      --panel: #1f1113;
-      --panel2: #2a171a;
-      --line: #7f1d1d;
-      background: radial-gradient(circle at top left, #7f1d1d, #2a0f12 52%, #120608 100%);
-    }
-    body.market-negative header {
-      background: rgba(42, 15, 18, 0.94);
-      border-bottom-color: rgba(248, 113, 113, .55);
     }
     header {
       padding: 22px 22px 12px;
@@ -230,182 +219,310 @@
       line-height: 1.45;
       margin: 6px 0 0;
     }
+    .miniGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .miniCard {
+      background: rgba(31, 41, 55, .72);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .miniCard .k {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .miniCard .v {
+      font-size: 21px;
+      font-weight: 850;
+      margin-top: 6px;
+    }
+    .miniCard .s {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .twoCol {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .barWrap {
+      height: 12px;
+      background: #020617;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .barFill {
+      height: 100%;
+      width: 0%;
+      background: rgba(96, 165, 250, .9);
+    }
     .noteBox {
-      background: rgba(96,165,250,.08);
-      border: 1px solid rgba(96,165,250,.22);
+      background: rgba(2, 6, 23, .55);
+      border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
       color: var(--muted);
       line-height: 1.45;
-      margin: 14px 0;
     }
-    .actionPanel {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 12px;
-      margin: 16px 0;
-    }
-    .actionCard {
-      background: rgba(17,24,39,.94);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-    }
-    .actionCard.priority { border-color: rgba(245,158,11,.45); }
-    .actionCard.badBorder { border-color: rgba(239,68,68,.45); }
-    .actionCard.goodBorder { border-color: rgba(34,197,94,.35); }
-    .aTitle { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; }
-    .aMain { font-size: 22px; font-weight: 850; margin-top: 6px; }
-    .aSub { color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.35; }
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      align-items: end;
-      margin: 16px 0;
-      background: rgba(17,24,39,.78);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-    }
-    .filters select {
-      width: 100%;
-      margin-top: 6px;
-      padding: 11px 12px;
-      border: 1px solid var(--line);
-      background: #020617;
-      color: var(--text);
-      border-radius: 10px;
-      font-size: 14px;
-    }
-    .filterNote { color: var(--muted); font-size: 12px; line-height: 1.35; }
 
-    .chartGrid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 14px;
-      margin: 16px;
-    }
-    .chartCard {
-      position: relative;
-      background: rgba(15,23,42,.6);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-      min-height: 310px;
-      cursor: zoom-in;
-      transition: transform .12s ease, border-color .12s ease;
-    }
-    .chartCard:hover { transform: translateY(-1px); border-color: rgba(96,165,250,.6); }
-    .chartCard::after {
-      content: 'Click to enlarge';
-      position: absolute;
-      top: 12px;
-      right: 14px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-    }
-    .chartTitle { font-weight: 800; font-size: 16px; margin-bottom: 6px; padding-right: 120px; }
-    .chartSub { color: var(--muted); font-size: 12px; line-height: 1.35; margin-bottom: 10px; min-height: 34px; }
-    .svgChart { width: 100%; min-height: 220px; }
-    .axisText { fill: var(--muted); font-size: 10px; }
-    .gridLine { stroke: rgba(148,163,184,.16); stroke-width: 1; }
-    .lineA { fill: none; stroke: #60a5fa; stroke-width: 2.4; }
-    .lineB { fill: none; stroke: #22c55e; stroke-width: 2.1; }
-    .lineC { fill: none; stroke: #f59e0b; stroke-width: 2.1; }
-    .point { fill: #60a5fa; stroke: #0f172a; stroke-width: 1; }
-    .barGood { fill: rgba(34,197,94,.72); }
-    .barBad { fill: rgba(239,68,68,.72); }
-    .barWarn { fill: rgba(245,158,11,.76); }
-    .barNeutral { fill: rgba(96,165,250,.74); }
-    .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12px; margin-top: 8px; }
-    .legendItem { display: flex; align-items: center; gap: 6px; }
-    .legendSwatch { width: 10px; height: 10px; border-radius: 999px; background: #60a5fa; display: inline-block; }
-    .legendSwatch.b { background: #22c55e; }
-    .legendSwatch.c { background: #f59e0b; }
+
+
 
     .coachPanel {
-      margin: 16px 0;
-      border: 1px solid rgba(96,165,250,.25);
-      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(17,24,39,.9));
+      background: rgba(17,24,39,0.94);
+      border: 1px solid rgba(96,165,250,.35);
       border-radius: 18px;
-      overflow: hidden;
+      padding: 16px;
+      margin: 16px 0 12px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.18);
     }
     .coachHeader {
       display: flex;
       justify-content: space-between;
-      gap: 14px;
       align-items: flex-start;
-      padding: 16px;
-      border-bottom: 1px solid rgba(96,165,250,.18);
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
     }
-    .coachTitle { margin: 0; font-size: 20px; display: flex; gap: 10px; align-items: center; }
-    .coachSummary { color: var(--text); font-size: 14px; line-height: 1.45; margin-top: 8px; max-width: 1100px; }
-    .coachMeta { color: var(--muted); font-size: 12px; margin-top: 8px; }
-    .coachControls { white-space: nowrap; }
+    .coachTitle {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: .01em;
+    }
+    .coachSummary {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      margin-top: 5px;
+      max-width: 900px;
+    }
+    .coachMeta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
     .coachBadge {
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      padding: 4px 8px;
+      padding: 5px 10px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
       border: 1px solid var(--line);
-      color: var(--muted);
-      background: rgba(15,23,42,.6);
+      background: var(--chip);
     }
-    .coachBadge.act, .coachBadge.high { color: #fecaca; background: rgba(127,29,29,.5); border-color: rgba(248,113,113,.4); }
-    .coachBadge.watch, .coachBadge.medium { color: #fde68a; background: rgba(120,53,15,.5); border-color: rgba(245,158,11,.4); }
-    .coachBadge.hold, .coachBadge.low { color: #bbf7d0; background: rgba(20,83,45,.45); border-color: rgba(34,197,94,.35); }
-    .coachPriorityList { display: grid; gap: 10px; padding: 16px; }
-    .coachPriority {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 12px;
-      align-items: start;
-      background: rgba(2,6,23,.45);
-      border: 1px solid rgba(148,163,184,.18);
-      border-radius: 14px;
-      padding: 12px;
-    }
+    .coachBadge.act { background: rgba(239,68,68,.16); color: #fecaca; border-color: rgba(239,68,68,.35); }
+    .coachBadge.watch { background: rgba(245,158,11,.16); color: #fde68a; border-color: rgba(245,158,11,.35); }
+    .coachBadge.hold, .coachBadge.calm { background: rgba(34,197,94,.14); color: #86efac; border-color: rgba(34,197,94,.3); }
+    .coachControls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .coachGrid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 12px;
-      padding: 16px;
-      border-top: 1px solid rgba(96,165,250,.16);
+      margin-top: 12px;
     }
     .coachCard {
-      background: rgba(2,6,23,.45);
-      border: 1px solid rgba(148,163,184,.16);
+      background: rgba(31,41,55,.74);
+      border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
+      min-height: 155px;
     }
-    .coachCard.act { border-color: rgba(248,113,113,.35); }
-    .coachCard.watch { border-color: rgba(245,158,11,.35); }
-    .coachCard.hold { border-color: rgba(34,197,94,.25); }
-    .coachCardTop { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 8px; }
-    .coachSymbol { font-weight: 900; font-size: 16px; }
-    .coachText { font-size: 13px; line-height: 1.4; margin-top: 6px; }
-    .coachMuted { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 6px; }
-    .coachEmpty { padding: 16px; color: var(--muted); }
+    .coachCard.act { border-color: rgba(239,68,68,.45); background: rgba(69,10,10,.22); }
+    .coachCard.watch { border-color: rgba(245,158,11,.42); background: rgba(69,46,13,.22); }
+    .coachCard.hold { border-color: rgba(34,197,94,.28); }
+    .coachCardTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .coachSymbol { font-size: 18px; font-weight: 950; }
+    .coachText { color: var(--text); font-size: 13px; line-height: 1.42; margin-top: 7px; }
+    .coachText strong { color: #f8fafc; }
+    .coachMuted { color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 7px; }
+    .coachPriorityList {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .coachPriority {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(2,6,23,.34);
+    }
+    .coachEmpty {
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    .actionPanel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 16px 0 12px;
+    }
+    .actionCard {
+      background: rgba(17,24,39,0.94);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 13px;
+      min-height: 104px;
+    }
+    .actionCard.priority { border-color: rgba(245, 158, 11, .5); background: rgba(69, 46, 13, .28); }
+    .actionCard.goodBorder { border-color: rgba(34, 197, 94, .4); }
+    .actionCard.badBorder { border-color: rgba(239, 68, 68, .45); }
+    .actionCard .aTitle { color: var(--muted); font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
+    .actionCard .aMain { font-size: 20px; font-weight: 900; margin-top: 7px; }
+    .actionCard .aSub { color: var(--muted); font-size: 12px; margin-top: 5px; line-height: 1.35; }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 10px;
+      align-items: end;
+      background: rgba(17, 24, 39, .7);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      margin: 8px 0 14px;
+    }
+    .filters label { margin-top: 0; }
+    .filters input, .filters select {
+      width: 100%;
+      margin-top: 6px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      background: #020617;
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    .filterNote { color: var(--muted); font-size: 12px; line-height: 1.35; align-self: center; }
+
+
+    .chartGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .chartCard {
+      background: rgba(31, 41, 55, .72);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      min-height: 260px;
+      cursor: zoom-in;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      position: relative;
+    }
+    .chartCard:hover {
+      transform: translateY(-1px);
+      border-color: rgba(96, 165, 250, .75);
+      background: rgba(31, 41, 55, .9);
+    }
+    .chartCard::after {
+      content: 'Click to enlarge';
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      opacity: .75;
+    }
+    .chartHead {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .chartTitle {
+      font-size: 15px;
+      font-weight: 850;
+      margin: 0;
+    }
+    .chartSub {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      margin: 2px 0 8px;
+    }
+    .svgChart {
+      width: 100%;
+      height: auto;
+      display: block;
+      overflow: visible;
+    }
+    .axisText, .tickText, .valueText {
+      fill: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .valueText { fill: var(--text); }
+    .gridLine { stroke: rgba(156, 163, 175, .22); stroke-width: 1; }
+    .axisLine { stroke: rgba(156, 163, 175, .45); stroke-width: 1.2; }
+    .linePlot { fill: none; stroke: var(--blue); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .areaPlot { fill: rgba(96, 165, 250, .12); }
+    .pointPlot { fill: var(--blue); stroke: #0f172a; stroke-width: 2; }
+    .multiLineRealised { fill: none; stroke: rgba(34, 197, 94, .95); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .multiLineUnrealised { fill: none; stroke: rgba(96, 165, 250, .95); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .multiLineTotal { fill: none; stroke: rgba(245, 158, 11, .95); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .multiPointRealised { fill: rgba(34, 197, 94, .95); stroke: #0f172a; stroke-width: 2; }
+    .multiPointUnrealised { fill: rgba(96, 165, 250, .95); stroke: #0f172a; stroke-width: 2; }
+    .multiPointTotal { fill: rgba(245, 158, 11, .95); stroke: #0f172a; stroke-width: 2; }
+    .chartLegend { display: flex; gap: 14px; flex-wrap: wrap; margin: 7px 0 2px; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .legendItem { display: inline-flex; align-items: center; gap: 6px; }
+    .legendSwatch { width: 22px; height: 3px; border-radius: 999px; display: inline-block; }
+    .legendRealised { background: rgba(34, 197, 94, .95); }
+    .legendUnrealised { background: rgba(96, 165, 250, .95); }
+    .legendTotal { background: rgba(245, 158, 11, .95); }
+    .multiLineYou { fill: none; stroke: rgba(96, 165, 250, .98); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .multiLineBench { fill: none; stroke: rgba(148, 163, 184, .95); stroke-width: 2.5; stroke-dasharray: 7 5; stroke-linecap: round; stroke-linejoin: round; }
+    .multiPointYou { fill: rgba(96, 165, 250, .98); stroke: #0f172a; stroke-width: 2; }
+    .multiPointBench { fill: rgba(148, 163, 184, .95); stroke: #0f172a; stroke-width: 1.5; }
+    .legendYou { background: rgba(96, 165, 250, .98); }
+    .legendBench { background: rgba(148, 163, 184, .95); }
+    .barGood { fill: rgba(34, 197, 94, .85); }
+    .barBad { fill: rgba(239, 68, 68, .85); }
+    .barWarn { fill: rgba(245, 158, 11, .85); }
+    .barNeutral { fill: rgba(96, 165, 250, .85); }
 
     .chartModal {
       position: fixed;
       inset: 0;
-      z-index: 20;
-      background: rgba(2,6,23,.82);
-      padding: 22px;
+      z-index: 50;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 22px;
+      background: rgba(2, 6, 23, .82);
+      backdrop-filter: blur(8px);
     }
+    .chartModal.hidden { display: none; }
     .chartModalBox {
       width: min(1180px, 96vw);
-      max-height: 94vh;
+      max-height: 92vh;
       overflow: auto;
       background: rgba(15, 23, 42, .98);
       border: 1px solid rgba(96, 165, 250, .55);
@@ -432,50 +549,12 @@
     .chartModalBody .chartSub { font-size: 14px; }
     .chartModalBody .svgChart { min-height: 520px; }
 
-    .marketBanner {
-      margin: 0;
-      padding: 14px 22px;
-      border-bottom: 1px solid rgba(248, 113, 113, .55);
-      background: linear-gradient(90deg, rgba(127, 29, 29, .98), rgba(153, 27, 27, .92));
-      color: #fee2e2;
-      position: sticky;
-      top: 81px;
-      z-index: 4;
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
-    }
-    .marketBannerTitle {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: .02em;
-      margin-bottom: 4px;
-    }
-    .marketBannerText {
-      font-size: 14px;
-      line-height: 1.4;
-      color: #fecaca;
-    }
-    .marketBanner .marketStats {
-      display: inline-flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-    .marketBanner .marketStat {
-      border: 1px solid rgba(254, 202, 202, .35);
-      background: rgba(2, 6, 23, .22);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
     @media (max-width: 900px) {
       .grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
       th { top: 0; }
     }
     @media (max-width: 560px) {
       main, header { padding-left: 14px; padding-right: 14px; }
-      .marketBanner { padding-left: 14px; padding-right: 14px; top: 78px; }
       .grid { grid-template-columns: 1fr; }
       h1 { font-size: 21px; }
     }
@@ -494,8 +573,6 @@
     </div>
   </div>
 </header>
-
-<div id="marketBanner" class="marketBanner hidden"></div>
 
 <main>
   <section id="setup" class="setup hidden">
@@ -620,7 +697,6 @@
   const clearBtn = el('clearBtn');
   const setupError = el('setupError');
   const mainError = el('mainError');
-  const marketBanner = el('marketBanner');
   const search = el('search');
   const dateFrom = el('dateFrom');
   const dateTo = el('dateTo');
@@ -648,45 +724,105 @@
   }
   function cls(n) {
     const v = Number(n);
-    return v > 0 ? 'pos' : v < 0 ? 'neg' : '';
-  }
-  function signedMoney(n) {
-    const v = Number(n);
-    if (!isFinite(v)) return '-';
-    return (v > 0 ? '+' : '') + money(v);
-  }
-  function signedPct(n) {
-    const v = Number(n);
-    if (!isFinite(v)) return '-';
-    return (v > 0 ? '+' : '') + pct(v);
-  }
-  function escapeHtml(v) {
-    return String(v ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    if (!isFinite(v) || v === 0) return '';
+    return v > 0 ? 'pos' : 'neg';
   }
   function setText(id, value, className) {
     const node = el(id);
     node.textContent = value;
     node.className = 'value' + (className ? ' ' + className : '');
   }
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+  }
   function chip(text, type) {
     return `<span class="chip ${type || ''}">${escapeHtml(text)}</span>`;
   }
-  function metricCard(label, value, sub, className) {
-    return `<div class="card"><div class="label">${escapeHtml(label)}</div><div class="value ${className || ''}">${value}</div><div class="sub">${escapeHtml(sub || '')}</div></div>`;
+  function rowFilterSymbol(obj) {
+    if (!state.search) return true;
+    const q = state.search.toUpperCase();
+    return String(obj.symbol || '').toUpperCase().includes(q);
   }
-  function dateKey(v) { return String(v || '').slice(0, 10); }
-  function monthKey(v) { return String(v || '').slice(0, 7) || 'Unknown'; }
-  function shortDate(v) {
-    const s = String(v || '');
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s.slice(5);
-    return s || '-';
+  function datePass(dateStr) {
+    const d = String(dateStr || '').slice(0, 10);
+    if (state.filters.dateFrom && d < state.filters.dateFrom) return false;
+    if (state.filters.dateTo && d > state.filters.dateTo) return false;
+    return true;
   }
-  function shortMonth(v) {
-    const s = String(v || '');
-    if (/^\d{4}-\d{2}$/.test(s)) return s.slice(5) + '/' + s.slice(2,4);
-    return s || '-';
+  function pnlPass(value) {
+    const result = state.filters.result || 'all';
+    const v = Number(value);
+    if (result === 'winner' && !(isFinite(v) && v > 0)) return false;
+    if (result === 'loser' && !(isFinite(v) && v < 0)) return false;
+    if (result === 'flat' && !(isFinite(v) && Math.abs(v) < 0.0001)) return false;
+    const minPnl = num(state.filters.minPnl);
+    if (minPnl != null && !(isFinite(v) && v >= minPnl)) return false;
+    return true;
   }
-
+  function stopRiskForOpen(p) {
+    const stop = num(p.stop?.stopPrice);
+    const lastClose = num(p.stop?.lastClose);
+    if (stop != null && lastClose != null && p.shares) return Math.max(0, (lastClose - stop) * p.shares);
+    return null;
+  }
+  function riskPass(risk) {
+    const minRisk = num(state.filters.minRisk);
+    if (minRisk == null) return true;
+    return risk != null && Number(risk) >= minRisk;
+  }
+  function stopTypePass(type) {
+    const wanted = state.filters.stopType || 'all';
+    return wanted === 'all' || String(type || 'Awaiting') === wanted;
+  }
+  function filterOpenRow(p) {
+    if ((state.filters.status || 'all') === 'closed') return false;
+    return rowFilterSymbol(p) && datePass(p.entryDate) && stopTypePass(p.stop?.stopType || 'Awaiting') && pnlPass(p.pnl || 0) && riskPass(stopRiskForOpen(p));
+  }
+  function filterClosedRow(p) {
+    if ((state.filters.status || 'all') === 'open') return false;
+    if ((state.filters.stopType || 'all') !== 'all') return false;
+    if ((state.filters.minRisk || '') !== '') return false;
+    return rowFilterSymbol(p) && datePass(p.entryDate) && pnlPass(num(p.realizedUsd) || 0);
+  }
+  function filterFillRow(f) {
+    return rowFilterSymbol(f) && datePass(f.date);
+  }
+  function filteredOpenPositions() { return enrichOpen().filter(filterOpenRow); }
+  function filteredClosedPositions() { return getClosedPositions().filter(filterClosedRow); }
+  function currentFilterDescription() {
+    const parts = [];
+    if (state.search) parts.push('symbol contains "' + state.search + '"');
+    if (state.filters.dateFrom) parts.push('from ' + state.filters.dateFrom);
+    if (state.filters.dateTo) parts.push('to ' + state.filters.dateTo);
+    if (state.filters.status !== 'all') parts.push(state.filters.status + ' trades');
+    if (state.filters.stopType !== 'all') parts.push('stop type ' + state.filters.stopType);
+    if (state.filters.result !== 'all') parts.push(state.filters.result + 's');
+    if (state.filters.minPnl !== '') parts.push('P&L >= ' + money(state.filters.minPnl));
+    if (state.filters.minRisk !== '') parts.push('risk >= ' + money(state.filters.minRisk));
+    return parts.length ? 'Filtered: ' + parts.join(' · ') : 'No filters applied';
+  }
+  function updateFiltersFromInputs() {
+    state.filters.dateFrom = dateFrom.value || '';
+    state.filters.dateTo = dateTo.value || '';
+    state.filters.status = statusFilter.value || 'all';
+    state.filters.stopType = stopTypeFilter.value || 'all';
+    state.filters.result = resultFilter.value || 'all';
+    state.filters.minPnl = minPnlFilter.value || '';
+    state.filters.minRisk = minRiskFilter.value || '';
+    renderTable();
+  }
+  function resetFilters() {
+    search.value = ''; state.search = '';
+    dateFrom.value = ''; dateTo.value = ''; statusFilter.value = 'all'; stopTypeFilter.value = 'all'; resultFilter.value = 'all'; minPnlFilter.value = ''; minRiskFilter.value = '';
+    updateFiltersFromInputs();
+  }
+  function renderFilterOptions() {
+    const selected = stopTypeFilter.value || 'all';
+    const types = Array.from(new Set((state.data?.stops || []).map(s => String(s.stopType || 'Awaiting')))).sort();
+    stopTypeFilter.innerHTML = '<option value="all">All stop types</option>' + types.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    stopTypeFilter.value = types.includes(selected) ? selected : 'all';
+    state.filters.stopType = stopTypeFilter.value;
+  }
   function getSettings() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
     catch (e) { return {}; }
@@ -698,8 +834,6 @@
     return String(url || '').trim().replace(/\?.*$/, '');
   }
   function showSetup() {
-    document.body.classList.remove('market-negative');
-    if (marketBanner) { marketBanner.classList.add('hidden'); marketBanner.innerHTML = ''; }
     const settings = getSettings();
     el('webUrl').value = settings.webUrl || '';
     el('webSecret').value = settings.webSecret || '';
@@ -801,120 +935,6 @@
       return { ...p, stop: s, shares, avgEntry, lastClose, cost, value, pnl, pnlPct };
     });
   }
-  function stopRiskForOpen(p) {
-    const stop = num(p.stop?.stopPrice);
-    if (stop == null || p.lastClose == null || !p.shares) return null;
-    return Math.max(0, (p.lastClose - stop) * p.shares);
-  }
-
-  function rowFilterSymbol(row) {
-    const q = state.search.trim().toUpperCase();
-    if (!q) return true;
-    return String(row.symbol || row.sym || '').toUpperCase().includes(q);
-  }
-  function datePass(date) {
-    const d = dateKey(date);
-    if (state.filters.dateFrom && d < state.filters.dateFrom) return false;
-    if (state.filters.dateTo && d > state.filters.dateTo) return false;
-    return true;
-  }
-  function resultPass(value) {
-    const v = num(value) || 0;
-    if (state.filters.result === 'winner') return v > 0;
-    if (state.filters.result === 'loser') return v < 0;
-    if (state.filters.result === 'flat') return v === 0;
-    return true;
-  }
-  function minPnlPass(value) {
-    if (state.filters.minPnl === '') return true;
-    return (num(value) || 0) >= (num(state.filters.minPnl) || 0);
-  }
-  function minRiskPass(value) {
-    if (state.filters.minRisk === '') return true;
-    return (num(value) || 0) >= (num(state.filters.minRisk) || 0);
-  }
-  function filterOpenRow(p) {
-    const risk = stopRiskForOpen(p);
-    return rowFilterSymbol(p) && datePass(p.entryDate) && (state.filters.status === 'all' || state.filters.status === 'open') &&
-      (state.filters.stopType === 'all' || String(p.stop?.stopType || 'Awaiting') === state.filters.stopType) &&
-      resultPass(p.pnl) && minPnlPass(p.pnl) && minRiskPass(risk);
-  }
-  function filterClosedRow(p) {
-    return rowFilterSymbol(p) && datePass(p.entryDate) && (state.filters.status === 'all' || state.filters.status === 'closed') &&
-      resultPass(p.realizedUsd) && minPnlPass(p.realizedUsd);
-  }
-  function filterFillRow(f) {
-    return rowFilterSymbol(f) && datePass(f.date);
-  }
-  function filteredOpenPositions() { return enrichOpen().filter(filterOpenRow); }
-  function filteredClosedPositions() { return getClosedPositions().filter(filterClosedRow); }
-  function currentFilterDescription() {
-    const parts = [];
-    if (state.search) parts.push('symbol contains "' + state.search + '"');
-    if (state.filters.dateFrom) parts.push('from ' + state.filters.dateFrom);
-    if (state.filters.dateTo) parts.push('to ' + state.filters.dateTo);
-    if (state.filters.status !== 'all') parts.push(state.filters.status + ' trades');
-    if (state.filters.stopType !== 'all') parts.push('stop type ' + state.filters.stopType);
-    if (state.filters.result !== 'all') parts.push(state.filters.result + 's');
-    if (state.filters.minPnl !== '') parts.push('P&L >= ' + money(state.filters.minPnl));
-    if (state.filters.minRisk !== '') parts.push('risk >= ' + money(state.filters.minRisk));
-    return parts.length ? 'Filtered: ' + parts.join(' · ') : 'No filters applied';
-  }
-  function updateFiltersFromInputs() {
-    state.filters.dateFrom = dateFrom.value || '';
-    state.filters.dateTo = dateTo.value || '';
-    state.filters.status = statusFilter.value || 'all';
-    state.filters.stopType = stopTypeFilter.value || 'all';
-    state.filters.result = resultFilter.value || 'all';
-    state.filters.minPnl = minPnlFilter.value || '';
-    state.filters.minRisk = minRiskFilter.value || '';
-    renderTable();
-  }
-  function resetFilters() {
-    search.value = ''; state.search = '';
-    dateFrom.value = ''; dateTo.value = ''; statusFilter.value = 'all'; stopTypeFilter.value = 'all'; resultFilter.value = 'all'; minPnlFilter.value = ''; minRiskFilter.value = '';
-    updateFiltersFromInputs();
-  }
-  function renderFilterOptions() {
-    const selected = stopTypeFilter.value || 'all';
-    const types = Array.from(new Set((state.data?.stops || []).map(s => String(s.stopType || 'Awaiting')))).sort();
-    stopTypeFilter.innerHTML = '<option value="all">All stop types</option>' + types.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
-    stopTypeFilter.value = types.includes(selected) ? selected : 'all';
-    state.filters.stopType = stopTypeFilter.value;
-  }
-
-  function renderMarketCondition() {
-    const mc = state.data?.marketCondition || null;
-    const status = String(mc?.status || '').toLowerCase();
-
-    document.body.classList.toggle('market-negative', status === 'negative');
-
-    if (!marketBanner) return;
-    if (status !== 'negative') {
-      marketBanner.classList.add('hidden');
-      marketBanner.innerHTML = '';
-      return;
-    }
-
-    const fastDays = mc.fastDays || 10;
-    const slowDays = mc.slowDays || 20;
-    const proxy = mc.proxy || 'ONEQ';
-    const fast = num(mc.fastMa);
-    const slow = num(mc.slowMa);
-    const close = num(mc.close);
-
-    marketBanner.classList.remove('hidden');
-    marketBanner.innerHTML = `
-      <div class="marketBannerTitle">⚠ Market conditions negative</div>
-      <div class="marketBannerText">${escapeHtml(mc.message || `${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression and respect sell signals.`)}</div>
-      <div class="marketStats">
-        <span class="marketStat">Proxy: ${escapeHtml(proxy)}</span>
-        <span class="marketStat">${fastDays}MA: ${fast != null ? money(fast) : '-'}</span>
-        <span class="marketStat">${slowDays}MA: ${slow != null ? money(slow) : '-'}</span>
-        <span class="marketStat">Close: ${close != null ? money(close) : '-'}</span>
-        <span class="marketStat">Updated: ${escapeHtml(mc.latestDate || state.data?.generatedAt || '-')}</span>
-      </div>`;
-  }
 
   function render() {
     if (!state.data) return;
@@ -955,7 +975,6 @@
     el('generatedAt').textContent = 'Feed generated: ' + (state.data.generatedAt || '-');
     el('statusline').textContent = `${open.length} open · ${closed.length} closed · ${state.data.clean?.length || 0} clean fills`;
     el('subtitle').textContent = 'Read-only dashboard powered by your Google Sheet';
-    renderMarketCondition();
     renderFilterOptions();
     renderCoachPanel();
     renderActionPanel(open);
@@ -1056,349 +1075,667 @@
     if (state.tab === 'portfolio') return renderPortfolio();
     if (state.tab === 'strategy') return renderStrategy();
     if (state.tab === 'closed') return renderClosed();
-    return renderFills();
+    if (state.tab === 'fills') return renderFills();
   }
 
   function table(headers, rows) {
-    if (!rows.length) return '<div class="empty">No rows to show.</div>';
-    return `<div class="tablewrap"><table><thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    if (!rows.length) {
+      el('tablePanel').innerHTML = '<div class="empty">No rows to show.</div>';
+      return;
+    }
+    el('tablePanel').innerHTML = `<div class="tablewrap"><table><thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
   }
 
   function renderLive() {
-    const rows = filteredOpenPositions();
-    el('tablePanel').innerHTML = table(['Symbol','Entry date','Shares','Avg entry','Last close','Open P&L','Open P&L %','Stop type','Risk to stop'], rows.map(p => {
-      const risk = stopRiskForOpen(p);
-      return [
-        `<strong>${escapeHtml(p.symbol)}</strong>`,
-        escapeHtml(p.entryDate || ''),
-        escapeHtml(p.shares),
-        money(p.avgEntry),
-        p.lastClose == null ? '-' : money(p.lastClose),
-        `<span class="${cls(p.pnl)}">${signedMoney(p.pnl || 0)}</span>`,
-        `<span class="${cls(p.pnlPct)}">${signedPct(p.pnlPct || 0)}</span>`,
-        chip(p.stop?.stopType || 'Awaiting', String(p.stop?.stopType || '').toLowerCase() === 'awaiting' ? 'warn' : 'good'),
-        risk == null ? '-' : money(risk)
-      ];
-    }));
+    const rows = filteredOpenPositions().map(p => {
+      const pnlType = p.pnl == null ? '' : (p.pnl >= 0 ? 'pos' : 'neg');
+      return `<tr>
+        <td><strong>${escapeHtml(p.symbol)}</strong></td>
+        <td>${escapeHtml(p.entryDate)}</td>
+        <td>${p.shares.toLocaleString('en-GB')}</td>
+        <td>${money(p.avgEntry)}</td>
+        <td>${p.lastClose == null ? '-' : money(p.lastClose)}</td>
+        <td>${p.value == null ? '-' : money(p.value)}</td>
+        <td class="${pnlType}">${p.pnl == null ? '-' : money(p.pnl)}</td>
+        <td class="${pnlType}">${p.pnlPct == null ? '-' : pct(p.pnlPct)}</td>
+        <td>${chip(p.stop.stopType || 'Awaiting', p.stop.stopType === 'Awaiting' ? 'warn' : 'good')}</td>
+      </tr>`;
+    });
+    table(['Symbol','Entry date','Shares','Avg entry','Last close','Value','P&L','P&L %','Stop type'], rows);
   }
 
   function renderStops() {
-    const rows = filteredOpenPositions();
-    el('tablePanel').innerHTML = table(['Symbol','Entry date','Stop type','Stop price','Last close','Stop distance','Risk to stop','Updated'], rows.map(p => {
-      const s = p.stop || {};
-      const risk = stopRiskForOpen(p);
-      return [
-        `<strong>${escapeHtml(p.symbol)}</strong>`,
-        escapeHtml(p.entryDate || ''),
-        chip(s.stopType || 'Awaiting', String(s.stopType || '').toLowerCase() === 'awaiting' ? 'warn' : 'good'),
-        escapeHtml(s.stopPrice || '-'),
-        s.lastClose === '' || s.lastClose == null ? '-' : money(s.lastClose),
-        s.stopDistancePct === '' || s.stopDistancePct == null ? '-' : pct(s.stopDistancePct),
-        risk == null ? '-' : money(risk),
-        escapeHtml(s.updated || '-')
-      ];
-    }));
+    const openMap = {};
+    getOpenPositions().forEach(p => { if (p.id) openMap[p.id] = p; });
+
+    const rows = (state.data.stops || []).filter(s => {
+      const p = openMap[s.id] || {};
+      const shares = num(p.shares) || 0;
+      const stop = num(s.stopPrice);
+      const lastClose = num(s.lastClose);
+      const riskCash = (stop != null && lastClose != null && shares) ? Math.max(0, (lastClose - stop) * shares) : null;
+      const pnlValue = p ? ((num(s.lastClose) != null && num(p.avgEntry) != null && shares) ? (num(s.lastClose) - num(p.avgEntry)) * shares : 0) : 0;
+      return rowFilterSymbol(s) && datePass(s.entryDate) && (state.filters.status !== 'closed') && stopTypePass(s.stopType || 'Awaiting') && pnlPass(pnlValue) && riskPass(riskCash);
+    }).map(s => {
+      const dist = num(s.stopDistancePct);
+      let distType = '';
+      if (dist != null) distType = dist < 3 ? 'bad' : dist < 8 ? 'warn' : 'good';
+      const awaiting = String(s.stopType || '').toLowerCase() === 'awaiting';
+      const p = openMap[s.id] || {};
+      const shares = num(p.shares) || 0;
+      const stop = num(s.stopPrice);
+      const lastClose = num(s.lastClose);
+      const riskCash = (stop != null && lastClose != null && shares) ? (lastClose - stop) * shares : null;
+      const riskClass = riskCash == null ? '' : (riskCash <= 0 ? 'pos' : 'warn');
+      return `<tr>
+        <td><strong>${escapeHtml(s.symbol)}</strong></td>
+        <td>${escapeHtml(s.entryDate)}</td>
+        <td>${chip(s.stopType || 'Awaiting', awaiting ? 'warn' : 'good')}</td>
+        <td>${escapeHtml(s.stopPrice || '-')}</td>
+        <td>${s.lastClose ? money(s.lastClose) : '-'}</td>
+        <td>${dist == null ? '-' : chip(pct(dist), distType)}</td>
+        <td class="${riskClass}">${riskCash == null ? '-' : money(riskCash)}</td>
+        <td>${escapeHtml(s.updated || '-')}</td>
+      </tr>`;
+    });
+    table(['Symbol','Entry date','Stop type','Stop price','Last close','Distance','Risk to stop','Updated'], rows);
   }
 
   function renderClosed() {
-    const rows = filteredClosedPositions();
-    el('tablePanel').innerHTML = table(['Symbol','Entry date','Exit date','Shares','Avg entry','Avg exit','Realised $','Partials'], rows.map(p => [
-      `<strong>${escapeHtml(p.symbol)}</strong>`,
-      escapeHtml(p.entryDate || ''),
-      escapeHtml(p.exitDate || ''),
-      escapeHtml(p.shares || ''),
-      money(p.avgEntry),
-      money(p.avgExit),
-      `<span class="${cls(p.realizedUsd)}">${signedMoney(p.realizedUsd || 0)}</span>`,
-      escapeHtml(p.partials || 0)
-    ]));
+    const rows = filteredClosedPositions().map(p => {
+      const realised = num(p.realizedUsd) || 0;
+      return `<tr>
+        <td><strong>${escapeHtml(p.symbol)}</strong></td>
+        <td>${escapeHtml(p.entryDate)}</td>
+        <td>${escapeHtml(p.exitDate)}</td>
+        <td>${Number(p.shares || 0).toLocaleString('en-GB')}</td>
+        <td>${money(p.avgEntry)}</td>
+        <td>${money(p.avgExit)}</td>
+        <td>${escapeHtml(p.partials || 0)}</td>
+        <td class="${cls(realised)}">${money(realised)}</td>
+      </tr>`;
+    });
+    table(['Symbol','Entry date','Exit date','Shares','Avg entry','Avg exit','Partials','Realised'], rows);
   }
 
-  function renderFills() {
-    const fills = (state.data?.clean || []).filter(filterFillRow).slice().reverse();
-    el('tablePanel').innerHTML = table(['Date','Symbol','Side','Shares','Price','Cash','Fee'], fills.map(f => [
-      escapeHtml(f.date || ''),
-      `<strong>${escapeHtml(f.symbol)}</strong>`,
-      chip(f.side || ''),
-      escapeHtml(f.shares || ''),
-      money(f.price),
-      money(f.cash),
-      money(f.fee)
-    ]));
+
+  function daysBetween(a, b) {
+    if (!a || !b) return null;
+    const da = new Date(String(a) + 'T00:00:00');
+    const db = new Date(String(b) + 'T00:00:00');
+    if (isNaN(da.getTime()) || isNaN(db.getTime())) return null;
+    return Math.max(0, Math.round((db - da) / 86400000));
+  }
+  function avg(arr) {
+    const vals = arr.map(Number).filter(isFinite);
+    if (!vals.length) return null;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+  }
+  function signedMoney(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return (v >= 0 ? '+' : '') + money(v);
+  }
+  function signedPct(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return (v >= 0 ? '+' : '') + pct(v);
+  }
+  function metricCard(label, value, sub, className) {
+    return `<div class="miniCard"><div class="k">${escapeHtml(label)}</div><div class="v ${className || ''}">${escapeHtml(value)}</div><div class="s">${escapeHtml(sub || '')}</div></div>`;
+  }
+  function simpleRows(rows) {
+    return `<div class="tablewrap" style="max-height:none"><table><tbody>${rows.map(r => `<tr><th style="position:static">${escapeHtml(r[0])}</th><td>${r[1]}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  function strategyStats() {
+    const open = filteredOpenPositions();
+    const closed = filteredClosedPositions();
+    const closedPnl = closed.map(p => num(p.realizedUsd) || 0);
+    const wins = closedPnl.filter(v => v > 0);
+    const losses = closedPnl.filter(v => v < 0);
+    const flats = closedPnl.filter(v => v === 0);
+    const realised = closedPnl.reduce((a, b) => a + b, 0);
+    const unrealised = open.reduce((a, p) => a + (p.pnl || 0), 0);
+    const total = realised + unrealised;
+    const grossWin = wins.reduce((a, b) => a + b, 0);
+    const grossLoss = losses.reduce((a, b) => a + Math.abs(b), 0);
+    const openWinners = open.filter(p => (p.pnl || 0) > 0).length;
+    const openLosers = open.filter(p => (p.pnl || 0) < 0).length;
+    const avgHold = avg(closed.map(p => daysBetween(p.entryDate, p.exitDate)).filter(v => v != null));
+    const best = closed.slice().sort((a,b)=>(num(b.realizedUsd)||0)-(num(a.realizedUsd)||0))[0];
+    const worst = closed.slice().sort((a,b)=>(num(a.realizedUsd)||0)-(num(b.realizedUsd)||0))[0];
+    const partialTrades = closed.filter(p => Number(p.partials || 0) > 0).length;
+    const totalStopRisk = open.reduce((acc, p) => {
+      const stop = num(p.stop?.stopPrice);
+      const lastClose = num(p.stop?.lastClose);
+      if (stop != null && lastClose != null && p.shares) return acc + Math.max(0, (lastClose - stop) * p.shares);
+      return acc;
+    }, 0);
+    return { open, closed, closedPnl, wins, losses, flats, realised, unrealised, total, grossWin, grossLoss, openWinners, openLosers, avgHold, best, worst, partialTrades, totalStopRisk };
   }
 
-  function cumulativeRealisedSeries(closed) {
-    const sorted = closed.slice().sort((a,b) => dateKey(a.exitDate).localeCompare(dateKey(b.exitDate)));
-    let running = BASELINE_BALANCE;
-    const out = [{ label: 'Start', value: running }];
-    sorted.forEach(p => { running += num(p.realizedUsd) || 0; out.push({ label: shortDate(p.exitDate), value: running, rawDate: p.exitDate }); });
-    return out;
+
+  function compactMoney(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    const sign = v < 0 ? '-' : '';
+    const a = Math.abs(v);
+    if (a >= 1000000) return sign + '$' + (a / 1000000).toFixed(1) + 'm';
+    if (a >= 1000) return sign + '$' + (a / 1000).toFixed(0) + 'k';
+    return sign + '$' + a.toFixed(0);
+  }
+  function compactNumber(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    const sign = v < 0 ? '-' : '';
+    const a = Math.abs(v);
+    if (a >= 1000000) return sign + (a / 1000000).toFixed(1) + 'm';
+    if (a >= 1000) return sign + (a / 1000).toFixed(0) + 'k';
+    return sign + a.toFixed(0);
+  }
+  function fmtValue(n, kind) {
+    if (kind === 'pct') return pct(n);
+    if (kind === 'number') return compactNumber(n);
+    return compactMoney(n);
+  }
+  function shortDateLabel(s) {
+    if (!s) return '';
+    const d = new Date(String(s) + 'T00:00:00');
+    if (isNaN(d.getTime())) return String(s);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  function chartCard(title, subtitle, svg, footer) {
+    return `<div class="chartCard"><div class="chartHead"><h3 class="chartTitle">${escapeHtml(title)}</h3></div><div class="chartSub">${escapeHtml(subtitle || '')}</div>${svg}${footer ? `<div class="chartSub">${escapeHtml(footer)}</div>` : ''}</div>`;
+  }
+  function niceExtent(values, forceZero) {
+    const vals = values.map(Number).filter(isFinite);
+    if (!vals.length) return { min: 0, max: 1 };
+    let min = Math.min(...vals), max = Math.max(...vals);
+    if (forceZero) { min = Math.min(0, min); max = Math.max(0, max); }
+    if (min === max) {
+      const pad = Math.abs(max) || 1;
+      min -= pad * 0.1;
+      max += pad * 0.1;
+    }
+    const span = max - min;
+    return { min: min - span * 0.06, max: max + span * 0.06 };
+  }
+  function lineChart(title, subtitle, data, kind) {
+    const rows = (data || []).filter(d => isFinite(Number(d.value)));
+    if (!rows.length) return chartCard(title, subtitle, '<div class="empty">No chart data yet.</div>');
+    const w = 720, h = 260, l = 70, r = 24, t = 18, b = 46;
+    const plotW = w - l - r, plotH = h - t - b;
+    const ext = niceExtent(rows.map(d => d.value), false);
+    const x = i => rows.length === 1 ? l + plotW / 2 : l + (i / (rows.length - 1)) * plotW;
+    const y = v => t + ((ext.max - v) / (ext.max - ext.min)) * plotH;
+    const pts = rows.map((d, i) => `${x(i).toFixed(1)},${y(Number(d.value)).toFixed(1)}`).join(' ');
+    const area = `${l},${t + plotH} ${pts} ${x(rows.length - 1).toFixed(1)},${t + plotH}`;
+    const ticks = [];
+    for (let i = 0; i <= 4; i++) {
+      const val = ext.min + (ext.max - ext.min) * (i / 4);
+      const yy = y(val);
+      ticks.push(`<line class="gridLine" x1="${l}" y1="${yy.toFixed(1)}" x2="${w-r}" y2="${yy.toFixed(1)}"></line><text class="tickText" x="${l-8}" y="${yy+4}" text-anchor="end">${escapeHtml(fmtValue(val, kind))}</text>`);
+    }
+    const labelEvery = Math.max(1, Math.ceil(rows.length / 6));
+    const xlabels = rows.map((d, i) => {
+      if (i !== 0 && i !== rows.length - 1 && i % labelEvery !== 0) return '';
+      return `<text class="tickText" x="${x(i).toFixed(1)}" y="${h-16}" text-anchor="middle">${escapeHtml(d.label)}</text>`;
+    }).join('');
+    const points = rows.map((d, i) => `<circle class="pointPlot" cx="${x(i).toFixed(1)}" cy="${y(Number(d.value)).toFixed(1)}" r="4"><title>${escapeHtml(d.label + ': ' + fmtValue(d.value, kind))}</title></circle>`).join('');
+    const svg = `<svg class="svgChart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(title)}"><polygon class="areaPlot" points="${area}"></polygon>${ticks.join('')}<line class="axisLine" x1="${l}" y1="${t+plotH}" x2="${w-r}" y2="${t+plotH}"></line><polyline class="linePlot" points="${pts}"></polyline>${points}${xlabels}</svg>`;
+    return chartCard(title, subtitle, svg);
+  }
+  function multiLineChart(title, subtitle, data, series, kind, opts) {
+    const rows = (data || []).filter(d => (series || []).some(s => isFinite(Number(d[s.key]))));
+    const defs = (series || []).filter(s => rows.some(d => isFinite(Number(d[s.key]))));
+    if (!rows.length || !defs.length) return chartCard(title, subtitle, '<div class="empty">No chart data yet.</div>');
+    const w = 720, h = 280, l = 70, r = 24, t = 20, b = 50;
+    const plotW = w - l - r, plotH = h - t - b;
+    const allValues = [];
+    rows.forEach(d => defs.forEach(s => { const v = Number(d[s.key]); if (isFinite(v)) allValues.push(v); }));
+    const forceZero = !(opts && opts.forceZero === false);
+    const ext = niceExtent(allValues, forceZero);
+    const x = i => rows.length === 1 ? l + plotW / 2 : l + (i / (rows.length - 1)) * plotW;
+    const y = v => t + ((ext.max - v) / (ext.max - ext.min)) * plotH;
+    const ticks = [];
+    for (let i = 0; i <= 4; i++) {
+      const val = ext.min + (ext.max - ext.min) * (i / 4);
+      const yy = y(val);
+      ticks.push(`<line class="gridLine" x1="${l}" y1="${yy.toFixed(1)}" x2="${w-r}" y2="${yy.toFixed(1)}"></line><text class="tickText" x="${l-8}" y="${yy+4}" text-anchor="end">${escapeHtml(fmtValue(val, kind))}</text>`);
+    }
+    const zeroY = (ext.min < 0 && ext.max > 0) ? `<line class="axisLine" x1="${l}" y1="${y(0).toFixed(1)}" x2="${w-r}" y2="${y(0).toFixed(1)}"></line>` : '';
+    const labelEvery = Math.max(1, Math.ceil(rows.length / 6));
+    const xlabels = rows.map((d, i) => {
+      if (i !== 0 && i !== rows.length - 1 && i % labelEvery !== 0) return '';
+      return `<text class="tickText" x="${x(i).toFixed(1)}" y="${h-17}" text-anchor="middle">${escapeHtml(d.label)}</text>`;
+    }).join('');
+    const lines = defs.map(def => {
+      const pts = rows.map((d, i) => {
+        const v = Number(d[def.key]);
+        return isFinite(v) ? `${x(i).toFixed(1)},${y(v).toFixed(1)}` : '';
+      }).filter(Boolean).join(' ');
+      const circles = rows.map((d, i) => {
+        const v = Number(d[def.key]);
+        if (!isFinite(v)) return '';
+        return `<circle class="${def.pointClass}" cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3.7"><title>${escapeHtml(def.label + ' · ' + d.label + ': ' + fmtValue(v, kind))}</title></circle>`;
+      }).join('');
+      return `<polyline class="${def.lineClass}" points="${pts}"></polyline>${circles}`;
+    }).join('');
+    const legend = `<div class="chartLegend">${defs.map(d => `<span class="legendItem"><span class="legendSwatch ${d.legendClass}"></span>${escapeHtml(d.label)}</span>`).join('')}</div>`;
+    const svg = `<svg class="svgChart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(title)}">${ticks.join('')}${zeroY}<line class="axisLine" x1="${l}" y1="${t+plotH}" x2="${w-r}" y2="${t+plotH}"></line>${lines}${xlabels}</svg>`;
+    return chartCard(title, subtitle, legend + svg);
   }
 
-  function cumulativeRealisedPnlSeries(closed) {
-    const sorted = closed.slice().sort((a,b) => dateKey(a.exitDate).localeCompare(dateKey(b.exitDate)));
-    let running = 0;
-    const out = [{ label: 'Start', value: 0 }];
-    sorted.forEach(p => { running += num(p.realizedUsd) || 0; out.push({ label: shortDate(p.exitDate), value: running, rawDate: p.exitDate }); });
-    return out;
+  function barChart(title, subtitle, data, opts) {
+    const options = opts || {};
+    const rows = (data || []).filter(d => isFinite(Number(d.value)));
+    if (!rows.length) return chartCard(title, subtitle, '<div class="empty">No chart data yet.</div>');
+    const w = 720, l = 150, r = 95, t = 22, rowH = 34, b = 26;
+    const h = Math.max(210, t + b + rows.length * rowH);
+    const plotW = w - l - r;
+    const values = rows.map(d => Number(d.value));
+    const diverging = !!options.diverging;
+    const ext = niceExtent(values, !diverging);
+    const x = v => l + ((v - ext.min) / (ext.max - ext.min)) * plotW;
+    const zeroX = diverging ? x(0) : l;
+    const axis = diverging ? `<line class="axisLine" x1="${zeroX.toFixed(1)}" y1="${t-8}" x2="${zeroX.toFixed(1)}" y2="${h-b+4}"></line>` : '';
+    const bars = rows.map((d, i) => {
+      const v = Number(d.value);
+      const y = t + i * rowH;
+      const x1 = diverging ? Math.min(zeroX, x(v)) : l;
+      const bw = Math.max(2, Math.abs((diverging ? x(v) - zeroX : x(v) - l)));
+      const clsName = d.kind || (v < 0 ? 'barBad' : v > 0 ? 'barGood' : 'barNeutral');
+      const valueX = diverging ? (v >= 0 ? x1 + bw + 6 : x1 - 6) : x1 + bw + 6;
+      const anchor = diverging && v < 0 ? 'end' : 'start';
+      return `<text class="axisText" x="${l-10}" y="${y+18}" text-anchor="end">${escapeHtml(d.label)}</text><rect class="${clsName}" x="${x1.toFixed(1)}" y="${y+5}" width="${bw.toFixed(1)}" height="18" rx="6"><title>${escapeHtml(d.label + ': ' + fmtValue(v, options.kind || 'money'))}</title></rect><text class="valueText" x="${valueX.toFixed(1)}" y="${y+19}" text-anchor="${anchor}">${escapeHtml(fmtValue(v, options.kind || 'money'))}</text>`;
+    }).join('');
+    const svg = `<svg class="svgChart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${escapeHtml(title)}"><line class="axisLine" x1="${l}" y1="${h-b}" x2="${w-r}" y2="${h-b}"></line>${axis}${bars}</svg>`;
+    return chartCard(title, subtitle, svg, options.footer || '');
   }
-
-  function pnlByEntryProxySeries() {
-    const rows = [];
-    getClosedPositions().forEach(p => rows.push({ date: dateKey(p.entryDate), realised: num(p.realizedUsd) || 0, unrealised: 0 }));
-    enrichOpen().forEach(p => rows.push({ date: dateKey(p.entryDate), realised: 0, unrealised: p.pnl || 0 }));
-    rows.sort((a,b) => a.date.localeCompare(b.date));
-    let r = 0, u = 0;
-    const out = [{ label: 'Start', realised: 0, unrealised: 0, total: 0 }];
-    rows.forEach(x => { r += x.realised; u += x.unrealised; out.push({ label: shortDate(x.date), realised: r, unrealised: u, total: r + u }); });
-    return out;
-  }
-
-  function monthlyRealisedSeries(closed) {
-    const map = new Map();
-    closed.forEach(p => { const k = monthKey(p.exitDate); map.set(k, (map.get(k) || 0) + (num(p.realizedUsd) || 0)); });
-    return Array.from(map.entries()).sort((a,b) => a[0].localeCompare(b[0])).map(([k,v]) => ({ label: shortMonth(k), value: v }));
-  }
-
-  function closedDistribution(closed) {
-    const buckets = [
-      { label: '< -$1k', lo: -Infinity, hi: -1000, value: 0 },
-      { label: '-$1k to -$250', lo: -1000, hi: -250, value: 0 },
-      { label: '-$250 to $0', lo: -250, hi: 0, value: 0 },
-      { label: '$0 to $250', lo: 0, hi: 250, value: 0 },
-      { label: '$250 to $1k', lo: 250, hi: 1000, value: 0 },
-      { label: '> $1k', lo: 1000, hi: Infinity, value: 0 }
-    ];
+  function portfolioEquityTrend(st) {
+    const closed = st.closed.slice().filter(p => p.exitDate).sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol).localeCompare(String(b.symbol)));
+    let equity = BASELINE_BALANCE;
+    const rows = [{ label: 'Start', value: equity }];
     closed.forEach(p => {
+      equity += num(p.realizedUsd) || 0;
+      rows.push({ label: shortDateLabel(p.exitDate), value: equity });
+    });
+    return rows;
+  }
+  // Your realised-equity curve, plus a "what if I'd put the same starting balance
+  // into ONEQ on my first trade date and held it" line, sampled on the same dates.
+  function equityVsBenchmark(st) {
+    const closed = st.closed.slice().filter(p => p.exitDate)
+      .sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol).localeCompare(String(b.symbol)));
+
+    // ONEQ daily closes from the feed -> sorted series + "close on/before a date" lookup.
+    const series = (state.data?.benchmark || [])
+      .map(r => ({ date: String(r.date || '').slice(0, 10), close: num(r.close) }))
+      .filter(r => r.date && isFinite(r.close))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const closeOnOrBefore = (dateStr) => {
+      if (!series.length || !dateStr) return null;
+      let chosen = null;
+      for (const r of series) { if (r.date <= dateStr) chosen = r.close; else break; }
+      return chosen;
+    };
+
+    // Start date = the earliest date you actually deployed capital (any trade's entry).
+    const allEntries = st.closed.map(p => String(p.entryDate || '').slice(0, 10))
+      .concat(st.open.map(p => String(p.entryDate || '').slice(0, 10)))
+      .filter(Boolean).sort();
+    const startDate = allEntries[0] || (closed[0] ? String(closed[0].exitDate).slice(0, 10) : null);
+    const startClose = closeOnOrBefore(startDate);
+    const oneqAt = (dateStr) => {
+      if (startClose == null) return null;
+      const c = closeOnOrBefore(dateStr);
+      return c == null ? null : BASELINE_BALANCE * (c / startClose);
+    };
+
+    let equity = BASELINE_BALANCE;
+    const rows = [{ label: 'Start', you: equity, oneq: startClose == null ? null : BASELINE_BALANCE }];
+    closed.forEach(p => {
+      equity += num(p.realizedUsd) || 0;
+      rows.push({ label: shortDateLabel(p.exitDate), you: equity, oneq: oneqAt(String(p.exitDate).slice(0, 10)) });
+    });
+    return rows;
+  }
+  function benchmarkLineDefs() {
+    return [
+      { key: 'you', label: 'Your equity (realised)', lineClass: 'multiLineYou', pointClass: 'multiPointYou', legendClass: 'legendYou' },
+      { key: 'oneq', label: 'ONEQ buy & hold', lineClass: 'multiLineBench', pointClass: 'multiPointBench', legendClass: 'legendBench' }
+    ];
+  }
+  function portfolioPnlBridge(st) {
+    return [
+      { label: 'Realised P&L', value: st.realised || 0, kind: (st.realised || 0) >= 0 ? 'barGood' : 'barBad' },
+      { label: 'Unrealised P&L', value: st.unrealised || 0, kind: (st.unrealised || 0) >= 0 ? 'barGood' : 'barBad' },
+      { label: 'Total stop risk', value: -(st.totalStopRisk || 0), kind: 'barWarn' }
+    ];
+  }
+  function cumulativeRealisedTrend(st) {
+    const closed = st.closed.slice().filter(p => p.exitDate).sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol).localeCompare(String(b.symbol)));
+    let total = 0;
+    const rows = [{ label: 'Start', value: 0 }];
+    closed.forEach(p => {
+      total += num(p.realizedUsd) || 0;
+      rows.push({ label: shortDateLabel(p.exitDate), value: total });
+    });
+    return rows;
+  }
+  function realisedDrawdownTrend(st) {
+    const eq = portfolioEquityTrend(st);
+    let peak = -Infinity;
+    return eq.map(d => {
+      const value = Number(d.value);
+      if (isFinite(value)) peak = Math.max(peak, value);
+      return { label: d.label, value: isFinite(value) && isFinite(peak) ? value - peak : 0 };
+    });
+  }
+  function monthKey(dateStr) {
+    const d = new Date(String(dateStr || '') + 'T00:00:00');
+    if (isNaN(d.getTime())) return 'Unknown';
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+  function monthLabel(key) {
+    if (key === 'Unknown') return key;
+    const d = new Date(key + '-01T00:00:00');
+    return d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
+  }
+  function monthlyPnlBars(st) {
+    const map = {};
+    st.closed.forEach(p => {
+      const k = monthKey(p.exitDate);
+      map[k] = (map[k] || 0) + (num(p.realizedUsd) || 0);
+    });
+    return Object.keys(map).sort().map(k => ({ label: monthLabel(k), value: map[k], kind: map[k] >= 0 ? 'barGood' : 'barBad' }));
+  }
+  function closedTradeDistribution(st) {
+    const buckets = [
+      { label: 'Big loss < -$1k', min: -Infinity, max: -1000, count: 0, kind: 'barBad' },
+      { label: 'Small loss', min: -1000, max: -0.0001, count: 0, kind: 'barBad' },
+      { label: 'Flat', min: -0.0001, max: 0.0001, count: 0, kind: 'barNeutral' },
+      { label: 'Small win', min: 0.0001, max: 1000, count: 0, kind: 'barGood' },
+      { label: 'Big win > $1k', min: 1000, max: Infinity, count: 0, kind: 'barGood' }
+    ];
+    st.closed.forEach(p => {
       const v = num(p.realizedUsd) || 0;
-      const b = buckets.find(x => v >= x.lo && v < x.hi);
-      if (b) b.value++;
+      const b = buckets.find(x => v >= x.min && v < x.max);
+      if (b) b.count++;
     });
-    return buckets;
+    return buckets.map(b => ({ label: b.label, value: b.count, kind: b.kind }));
   }
-
-  function riskByStopType(open) {
-    const map = new Map();
-    open.forEach(p => {
-      const type = p.stop?.stopType || 'Unknown';
+  function topBottomContributors(st) {
+    const ranked = st.closed.slice().sort((a, b) => (num(b.realizedUsd)||0) - (num(a.realizedUsd)||0));
+    const top = ranked.slice(0, 5);
+    const bottom = ranked.slice(-5).reverse();
+    return top.concat(bottom).map(p => {
+      const v = num(p.realizedUsd) || 0;
+      return { label: String(p.symbol || '') + ' ' + shortDateLabel(p.exitDate), value: v, kind: v >= 0 ? 'barGood' : 'barBad' };
+    });
+  }
+  function riskByPosition(st) {
+    return st.open.map(p => {
       const risk = stopRiskForOpen(p) || 0;
-      map.set(type, (map.get(type) || 0) + risk);
+      return { label: p.symbol, value: risk, kind: risk ? 'barWarn' : 'barNeutral' };
+    }).sort((a, b) => b.value - a.value);
+  }
+  function pnlByOpeningDate(st) {
+    const byDate = {};
+    function bucket(date) {
+      const key = String(date || '').slice(0, 10) || 'Unknown';
+      if (!byDate[key]) byDate[key] = { realised: 0, unrealised: 0 };
+      return byDate[key];
+    }
+    (st.closed || []).forEach(p => {
+      bucket(p.entryDate).realised += num(p.realizedUsd) || 0;
     });
-    return Array.from(map.entries()).map(([label, value]) => ({ label, value })).sort((a,b) => b.value - a.value);
+    (st.open || []).forEach(p => {
+      bucket(p.entryDate).unrealised += p.pnl || 0;
+    });
+    const dates = Object.keys(byDate).filter(d => d !== 'Unknown').sort();
+    let realised = 0, unrealised = 0;
+    const rows = [{ label: 'Start', realised: 0, unrealised: 0, total: 0 }];
+    dates.forEach(d => {
+      realised += byDate[d].realised || 0;
+      unrealised += byDate[d].unrealised || 0;
+      rows.push({ label: shortDateLabel(d), realised, unrealised, total: realised + unrealised });
+    });
+    return rows;
+  }
+  function pnlLineDefs() {
+    return [
+      { key: 'realised', label: 'Realised P&L', lineClass: 'multiLineRealised', pointClass: 'multiPointRealised', legendClass: 'legendRealised' },
+      { key: 'unrealised', label: 'Unrealised P&L', lineClass: 'multiLineUnrealised', pointClass: 'multiPointUnrealised', legendClass: 'legendUnrealised' },
+      { key: 'total', label: 'Total P&L', lineClass: 'multiLineTotal', pointClass: 'multiPointTotal', legendClass: 'legendTotal' }
+    ];
   }
 
-  function topBottomContributors(closed) {
-    const sorted = closed.slice().sort((a,b) => (num(b.realizedUsd)||0) - (num(a.realizedUsd)||0));
-    const top = sorted.slice(0, 5).map(p => ({ label: p.symbol + ' win', value: num(p.realizedUsd)||0 }));
-    const bottom = sorted.slice(-5).map(p => ({ label: p.symbol + ' loss', value: num(p.realizedUsd)||0 }));
-    return top.concat(bottom).filter(x => isFinite(x.value));
+  function currentPositionPnlBars(open) {
+    return open.slice().sort((a, b) => (b.pnl || 0) - (a.pnl || 0)).map(p => ({ label: p.symbol, value: p.pnl || 0, kind: (p.pnl || 0) >= 0 ? 'barGood' : 'barBad' }));
   }
-
-  function chartScale(values, height, topPad, bottomPad) {
-    let min = Math.min(...values, 0), max = Math.max(...values, 0);
-    if (!isFinite(min) || !isFinite(max) || min === max) { min = -1; max = 1; }
-    const pad = (max - min) * 0.1;
-    min -= pad; max += pad;
-    const y = v => topPad + (max - v) / (max - min) * (height - topPad - bottomPad);
-    return { min, max, y };
-  }
-  function linePath(points, xFn, yFn) {
-    return points.map((p,i) => (i ? 'L' : 'M') + xFn(p,i).toFixed(2) + ' ' + yFn(p,i).toFixed(2)).join(' ');
-  }
-  function lineChart(title, sub, series, options = {}) {
-    const width = 760, height = 270, left = 58, right = 18, top = 22, bottom = 42;
-    const labels = series[0]?.data?.map(d => d.label) || [];
-    const allVals = series.flatMap(s => s.data.map(d => d.value));
-    const scale = chartScale(allVals, height, top, bottom);
-    const x = (p,i) => left + (labels.length <= 1 ? 0 : i * (width-left-right)/(labels.length-1));
-    const y = (p) => scale.y(p.value);
-    const grid = [0, .25, .5, .75, 1].map(t => {
-      const gy = top + t*(height-top-bottom);
-      const val = scale.max - t*(scale.max-scale.min);
-      return `<line class="gridLine" x1="${left}" x2="${width-right}" y1="${gy}" y2="${gy}"/><text class="axisText" x="6" y="${gy+4}">${Math.round(val/1000)}k</text>`;
-    }).join('');
-    const tickEvery = Math.max(1, Math.ceil(labels.length / 6));
-    const ticks = labels.map((lab,i) => i % tickEvery === 0 || i === labels.length-1 ? `<text class="axisText" x="${x(null,i)-14}" y="${height-12}">${escapeHtml(lab)}</text>` : '').join('');
-    const classes = ['lineA','lineB','lineC'];
-    const sw = ['','b','c'];
-    const paths = series.map((s,i) => `<path class="${classes[i] || 'lineA'}" d="${linePath(s.data, x, y)}"/>${s.data.map((p,j)=>`<circle class="point" cx="${x(p,j)}" cy="${y(p)}" r="2.3"/>`).join('')}`).join('');
-    const legend = `<div class="legend">${series.map((s,i)=>`<span class="legendItem"><span class="legendSwatch ${sw[i] || ''}"></span>${escapeHtml(s.name)}</span>`).join('')}</div>`;
-    return `<div class="chartCard" data-chart="1"><div class="chartTitle">${escapeHtml(title)}</div><div class="chartSub">${escapeHtml(sub)}</div><svg class="svgChart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${grid}${paths}${ticks}</svg>${legend}</div>`;
-  }
-  function barChart(title, sub, data) {
-    const width = 760, height = 270, left = 58, right = 18, top = 22, bottom = 52;
-    const values = data.map(d => d.value);
-    const scale = chartScale(values, height, top, bottom);
-    const zero = scale.y(0);
-    const bw = Math.max(12, (width-left-right) / Math.max(data.length, 1) * 0.58);
-    const step = (width-left-right) / Math.max(data.length, 1);
-    const grid = [0,.25,.5,.75,1].map(t => {
-      const gy = top + t*(height-top-bottom);
-      const val = scale.max - t*(scale.max-scale.min);
-      return `<line class="gridLine" x1="${left}" x2="${width-right}" y1="${gy}" y2="${gy}"/><text class="axisText" x="6" y="${gy+4}">${Math.round(val/1000)}k</text>`;
-    }).join('');
-    const bars = data.map((d,i) => {
-      const cx = left + i*step + step/2;
-      const y = scale.y(d.value);
-      const h = Math.abs(zero-y);
-      const klass = d.kind || (d.value < 0 ? 'barBad' : 'barGood');
-      return `<rect class="${klass}" x="${cx-bw/2}" y="${Math.min(y, zero)}" width="${bw}" height="${Math.max(1,h)}" rx="3"/><text class="axisText" x="${cx-18}" y="${height-18}">${escapeHtml(String(d.label).slice(0,10))}</text>`;
-    }).join('');
-    return `<div class="chartCard" data-chart="1"><div class="chartTitle">${escapeHtml(title)}</div><div class="chartSub">${escapeHtml(sub)}</div><svg class="svgChart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${grid}${bars}</svg></div>`;
-  }
-  function horizontalBarChart(title, sub, data) {
-    const width = 760, height = Math.max(260, 36 * data.length + 44), left = 130, right = 80, top = 18, bottom = 18;
-    const maxAbs = Math.max(1, ...data.map(d => Math.abs(d.value || 0)));
-    const rowH = (height-top-bottom) / Math.max(data.length, 1);
-    const mid = left + (width-left-right) / 2;
-    const bars = data.map((d,i) => {
-      const y = top + i*rowH + 7;
-      const val = d.value || 0;
-      const len = Math.abs(val) / maxAbs * ((width-left-right)/2);
-      const x = val >= 0 ? mid : mid - len;
-      const klass = d.kind || (val < 0 ? 'barBad' : 'barGood');
-      return `<text class="axisText" x="6" y="${y+13}">${escapeHtml(String(d.label).slice(0,18))}</text><rect class="${klass}" x="${x}" y="${y}" width="${len}" height="16" rx="3"/><text class="axisText" x="${val>=0?x+len+5:x-70}" y="${y+13}">${escapeHtml(signedMoney(val).replace('.00',''))}</text>`;
-    }).join('');
-    return `<div class="chartCard" data-chart="1"><div class="chartTitle">${escapeHtml(title)}</div><div class="chartSub">${escapeHtml(sub)}</div><svg class="svgChart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><line class="gridLine" x1="${mid}" x2="${mid}" y1="${top}" y2="${height-bottom}"/>${bars}</svg></div>`;
-  }
-
-  function openPnlByPosition(open) {
-    return open.filter(p => p.pnl != null).sort((a,b) => (b.pnl||0)-(a.pnl||0)).map(p => ({ label: p.symbol, value: p.pnl || 0 }));
-  }
-  function riskByPosition(open) {
-    return open.map(p => ({ label: p.symbol, value: stopRiskForOpen(p) || 0, kind: 'barWarn' })).filter(x => x.value).sort((a,b) => b.value-a.value);
+  function stopRiskByType(st) {
+    const map = {};
+    st.open.forEach(p => {
+      const type = String(p.stop?.stopType || 'Awaiting');
+      const stop = num(p.stop?.stopPrice), lastClose = num(p.stop?.lastClose);
+      const risk = (stop != null && lastClose != null && p.shares) ? Math.max(0, (lastClose - stop) * p.shares) : 0;
+      map[type] = (map[type] || 0) + risk;
+    });
+    return Object.entries(map).map(([label, value]) => ({ label, value, kind: label === 'Awaiting' ? 'barWarn' : 'barNeutral' })).sort((a, b) => b.value - a.value);
   }
 
   function renderPortfolio() {
-    const open = filteredOpenPositions();
-    const closed = filteredClosedPositions();
-    const allOpen = enrichOpen();
-    const allClosed = getClosedPositions();
-    const realised = allClosed.reduce((a,p)=>a+(num(p.realizedUsd)||0),0);
-    const unrealised = allOpen.reduce((a,p)=>a+(p.pnl||0),0);
-    const openValue = allOpen.reduce((a,p)=>a+(p.value||0),0);
-    const openCost = allOpen.reduce((a,p)=>a+(p.cost||0),0);
-    const stopRisk = allOpen.reduce((a,p)=>a+(stopRiskForOpen(p)||0),0);
-    const currentEquity = BASELINE_BALANCE + realised + unrealised;
-    const estimatedCash = BASELINE_BALANCE + realised - openCost;
-    const realisedSeries = cumulativeRealisedSeries(allClosed);
-    const pnlProxy = pnlByEntryProxySeries();
-    el('tablePanel').innerHTML = `
-      <div class="section">
-        <h2>Portfolio performance</h2>
-        <div class="grid">
-          ${metricCard('Opening balance', money(BASELINE_BALANCE), 'Hard-coded baseline')}
-          ${metricCard('Current equity estimate', money(currentEquity), 'Opening balance + realised + unrealised', cls(currentEquity-BASELINE_BALANCE))}
-          ${metricCard('Total return', pct(((currentEquity-BASELINE_BALANCE)/BASELINE_BALANCE)*100), 'Since opening balance', cls(currentEquity-BASELINE_BALANCE))}
-          ${metricCard('Equity if stops hit', money(currentEquity-stopRisk), 'Current equity less priced stop risk', 'warn')}
-          ${metricCard('Estimated cash', money(estimatedCash), 'Baseline + realised - open cost')}
-          ${metricCard('Open exposure', pct(currentEquity ? openValue/currentEquity*100 : 0), 'Open market value / equity')}
-        </div>
-        <div class="noteBox">${escapeHtml(currentFilterDescription())}</div>
-        <div class="chartGrid">
-          ${lineChart('Realised equity trend', 'Starting balance plus closed trade outcomes only. Open trades are not added as one final spike.', [{ name: 'Realised equity', data: realisedSeries }])}
-          ${lineChart('P&L lines by opening date', 'Realised, unrealised and total P&L using the opening date of each trade as a proxy.', [
-            { name: 'Realised P&L', data: pnlProxy.map(x=>({label:x.label,value:x.realised})) },
-            { name: 'Unrealised P&L', data: pnlProxy.map(x=>({label:x.label,value:x.unrealised})) },
-            { name: 'Total P&L', data: pnlProxy.map(x=>({label:x.label,value:x.total})) }
-          ])}
-          ${barChart('P&L and risk bridge', 'Realised P&L, unrealised P&L and stop risk shown separately.', [
-            { label: 'Realised', value: realised, kind: realised >= 0 ? 'barGood' : 'barBad' },
-            { label: 'Unrealised', value: unrealised, kind: unrealised >= 0 ? 'barGood' : 'barBad' },
-            { label: 'Stop risk', value: -stopRisk, kind: 'barWarn' }
-          ])}
-          ${barChart('Current account split', 'Estimated cash, open market value and cash risk to priced stops.', [
-            { label: 'Cash', value: estimatedCash, kind: 'barNeutral' },
-            { label: 'Open market value', value: openValue, kind: 'barGood' },
-            { label: 'Stop risk', value: -stopRisk, kind: 'barWarn' }
-          ])}
-          ${horizontalBarChart('Open P&L by position', 'Current unrealised contribution from each open position.', openPnlByPosition(open))}
-          ${barChart('Monthly realised P&L', 'Closed trade P&L grouped by exit month.', monthlyRealisedSeries(closed).map(x=>({label:x.label,value:x.value,kind:x.value>=0?'barGood':'barBad'})))}
-          ${horizontalBarChart('Risk concentration by position', 'Which open trades account for the most downside to their current stop.', riskByPosition(open))}
-        </div>
-      </div>`;
+    const st = strategyStats();
+    const openValue = st.open.reduce((a, p) => a + (p.value || 0), 0);
+    const openCost = st.open.reduce((a, p) => a + (p.cost || 0), 0);
+    const currentEquity = BASELINE_BALANCE + st.total;
+    const returnPct = BASELINE_BALANCE ? (st.total / BASELINE_BALANCE) * 100 : 0;
+    const realisedPct = BASELINE_BALANCE ? (st.realised / BASELINE_BALANCE) * 100 : 0;
+    const unrealisedPct = BASELINE_BALANCE ? (st.unrealised / BASELINE_BALANCE) * 100 : 0;
+    const cashEstimate = currentEquity - openValue;
+    const exposurePct = currentEquity ? (openValue / currentEquity) * 100 : 0;
+    const stopRiskPct = currentEquity ? (st.totalStopRisk / currentEquity) * 100 : 0;
+    const equityAfterStops = currentEquity - st.totalStopRisk;
+    const afterStopsReturn = BASELINE_BALANCE ? ((equityAfterStops - BASELINE_BALANCE) / BASELINE_BALANCE) * 100 : 0;
+    const progress = Math.max(0, Math.min(100, exposurePct));
+    const portfolioCharts = `<div class="section">
+      <h2>Portfolio charts</h2>
+      <div class="chartGrid">
+        ${multiLineChart('Equity vs ONEQ buy & hold', 'Am I beating the market? Your realised (closed-trade) equity versus the same starting balance put into ONEQ on your first trade date and held. The ONEQ line updates when you run Refresh stops & prices.', equityVsBenchmark(st), benchmarkLineDefs(), 'money', { forceZero: false })}
+        ${multiLineChart('P&L lines by opening date', 'Realised and current unrealised P&L plotted against each trade opening date as a proxy.', pnlByOpeningDate(st), pnlLineDefs(), 'money')}
+        ${barChart('Monthly realised P&L', 'Realised profit or loss grouped by exit month.', monthlyPnlBars(st), { kind: 'money', diverging: true })}
+        ${barChart('P&L and risk bridge', 'Realised P&L, current unrealised P&L and the cash risk if priced stops were hit.', portfolioPnlBridge(st), { kind: 'money', diverging: true })}
+        ${barChart('Current account split', 'Estimated cash, open market value and cash risk to priced stops.', [
+          { label: 'Estimated cash', value: cashEstimate, kind: 'barNeutral' },
+          { label: 'Open market value', value: openValue, kind: 'barGood' },
+          { label: 'Stop risk', value: st.totalStopRisk, kind: 'barWarn' }
+        ], { kind: 'money' })}
+        ${barChart('Open P&L by position', 'Unrealised profit or loss on each currently open position.', currentPositionPnlBars(st.open), { kind: 'money', diverging: true })}
+        ${barChart('Risk concentration by position', 'Which open trades account for the most current cash risk to stop.', riskByPosition(st), { kind: 'money' })}
+      </div>
+    </div>`;
+
+    el('tablePanel').innerHTML = `<div class="section">
+      <h2>Portfolio performance</h2>
+      <p>This is measured against the hard-coded starting balance before your first trade: <strong>${money(BASELINE_BALANCE)}</strong>. It uses realised P&amp;L from closed trades plus unrealised P&amp;L from the latest refreshed closes. The realised equity chart stays closed-trade only; the separate P&amp;L line chart uses each trade's opening date as a proxy for where the realised or unrealised profit belongs on the timeline.</p>
+      <div class="miniGrid">
+        ${metricCard('Starting balance', money(BASELINE_BALANCE), 'Hard-coded baseline')}
+        ${metricCard('Current equity estimate', money(currentEquity), 'Baseline + realised + unrealised', cls(currentEquity - BASELINE_BALANCE))}
+        ${metricCard('Total portfolio P&L', signedMoney(st.total), signedPct(returnPct), cls(st.total))}
+        ${metricCard('Return %', signedPct(returnPct), 'Total return versus baseline', cls(returnPct))}
+        ${metricCard('Realised P&L', signedMoney(st.realised), signedPct(realisedPct), cls(st.realised))}
+        ${metricCard('Unrealised P&L', signedMoney(st.unrealised), signedPct(unrealisedPct), cls(st.unrealised))}
+        ${metricCard('Open market value', money(openValue), 'Latest close × shares')}
+        ${metricCard('Estimated cash', money(cashEstimate), 'Equity estimate less open value', cashEstimate < 0 ? 'warn' : '')}
+        ${metricCard('Open exposure', pct(exposurePct), money(openValue) + ' currently invested', exposurePct > 80 ? 'warn' : '')}
+        ${metricCard('Total stop risk', money(st.totalStopRisk), pct(stopRiskPct) + ' of current equity', st.totalStopRisk ? 'warn' : 'pos')}
+        ${metricCard('Equity if stopped', money(equityAfterStops), signedPct(afterStopsReturn) + ' versus baseline', cls(equityAfterStops - BASELINE_BALANCE))}
+        ${metricCard('Open cost basis', money(openCost), 'Original cost of current open trades')}
+      </div>
+    </div>
+    ${portfolioCharts}
+    <div class="section">
+      <h2>Exposure view</h2>
+      <div class="noteBox">Open exposure shows how much of the estimated account equity is currently invested in open positions. The remaining amount is the estimated cash balance, so this is a strategy-level view rather than a broker-grade cash reconciliation.</div>
+      <div class="barWrap"><div class="barFill" style="width:${progress}%"></div></div>
+      <p><strong>${pct(exposurePct)}</strong> invested · <strong>${pct(Math.max(0, 100 - exposurePct))}</strong> estimated cash/uninvested.</p>
+    </div>
+    <div class="section">
+      <h2>Portfolio calculation</h2>
+      ${simpleRows([
+        ['Starting balance', money(BASELINE_BALANCE)],
+        ['Plus realised P&L', `<span class="${cls(st.realised)}">${signedMoney(st.realised)}</span>`],
+        ['Plus unrealised P&L', `<span class="${cls(st.unrealised)}">${signedMoney(st.unrealised)}</span>`],
+        ['Current equity estimate', `<strong>${money(currentEquity)}</strong>`],
+        ['Less stop risk', `<span class="warn">-${money(st.totalStopRisk).replace('$','')}</span>`],
+        ['Equity estimate if all priced stops hit', `<strong class="${cls(equityAfterStops - BASELINE_BALANCE)}">${money(equityAfterStops)}</strong>`]
+      ])}
+    </div>`;
   }
 
   function renderStrategy() {
-    const allClosed = getClosedPositions();
-    const closed = filteredClosedPositions();
-    const open = filteredOpenPositions();
-    const realised = allClosed.reduce((a,p)=>a+(num(p.realizedUsd)||0),0);
-    const winners = allClosed.filter(p => (num(p.realizedUsd)||0) > 0);
-    const losers = allClosed.filter(p => (num(p.realizedUsd)||0) < 0);
-    const grossWin = winners.reduce((a,p)=>a+(num(p.realizedUsd)||0),0);
-    const grossLoss = Math.abs(losers.reduce((a,p)=>a+(num(p.realizedUsd)||0),0));
-    const avgWin = winners.length ? grossWin / winners.length : 0;
-    const avgLoss = losers.length ? -grossLoss / losers.length : 0;
-    const winRate = allClosed.length ? winners.length / allClosed.length * 100 : 0;
-    const profitFactor = grossLoss ? grossWin / grossLoss : null;
-    const expectancy = allClosed.length ? realised / allClosed.length : 0;
-    const cum = cumulativeRealisedPnlSeries(allClosed);
-    const pnlProxy = pnlByEntryProxySeries();
-    el('tablePanel').innerHTML = `
-      <div class="section">
-        <h2>Strategy analytics</h2>
-        <div class="grid">
-          ${metricCard('Closed trades', String(allClosed.length), 'Round-trips reconstructed from ledger')}
-          ${metricCard('Win rate', pct(winRate), winners.length + ' winners · ' + losers.length + ' losers', winRate >= 40 ? 'pos' : 'warn')}
-          ${metricCard('Realised P&L', money(realised), 'All closed trades', cls(realised))}
-          ${metricCard('Profit factor', profitFactor == null ? '-' : profitFactor.toFixed(2), 'Gross wins / gross losses', profitFactor && profitFactor >= 1 ? 'pos' : 'neg')}
-          ${metricCard('Expectancy', money(expectancy), 'Average P&L per closed trade', cls(expectancy))}
-          ${metricCard('Average win', money(avgWin), 'Closed winners only', 'pos')}
-          ${metricCard('Average loss', money(avgLoss), 'Closed losers only', 'neg')}
-          ${metricCard('Stop coverage', `${enrichOpen().filter(p=>stopRiskForOpen(p)!=null).length}/${enrichOpen().length}`, 'Open trades with priced stop risk')}
-        </div>
-        <div class="noteBox">R-multiple is not calculated yet because the dashboard does not currently have a stable original initial-stop field for every trade. Once the sheet captures the initial stop at entry, this page can add average R, best/worst R, expectancy in R and R-distribution without guessing.</div>
-        <div class="chartGrid">
-          ${lineChart('Cumulative realised P&L', 'Closed trades accumulated by exit date.', [{ name: 'Realised P&L', data: cum }])}
-          ${lineChart('Strategy P&L by opening date', 'Realised, unrealised and total P&L using trade opening dates as a proxy.', [
-            { name: 'Realised P&L', data: pnlProxy.map(x=>({label:x.label,value:x.realised})) },
-            { name: 'Unrealised P&L', data: pnlProxy.map(x=>({label:x.label,value:x.unrealised})) },
-            { name: 'Total P&L', data: pnlProxy.map(x=>({label:x.label,value:x.total})) }
-          ])}
-          ${barChart('Recent closed trade P&L', 'Latest closed round-trips by realised result.', closed.slice(0, 14).reverse().map(p=>({label:p.symbol,value:num(p.realizedUsd)||0,kind:(num(p.realizedUsd)||0)>=0?'barGood':'barBad'})))}
-          ${barChart('Closed trade distribution', 'Number of closed trades by profit/loss bucket.', closedDistribution(allClosed).map(x=>({label:x.label,value:x.value,kind:'barNeutral'})))}
-          ${horizontalBarChart('Top and bottom contributors', 'Best and worst closed trades by realised P&L.', topBottomContributors(allClosed))}
-          ${barChart('Stop risk by stop type', 'Current downside risk grouped by stop method.', riskByStopType(open).map(x=>({label:x.label,value:x.value,kind:'barWarn'})))}
-        </div>
-      </div>`;
+    const st = strategyStats();
+    const winRate = st.closed.length ? (st.wins.length / st.closed.length) * 100 : 0;
+    const lossRate = st.closed.length ? (st.losses.length / st.closed.length) * 100 : 0;
+    const avgWin = avg(st.wins) || 0;
+    const avgLoss = avg(st.losses) || 0;
+    const profitFactor = st.grossLoss ? st.grossWin / st.grossLoss : null;
+    const expectancy = st.closed.length ? st.realised / st.closed.length : 0;
+    const combinedPnl = st.total;
+    const openWinRate = st.open.length ? (st.openWinners / st.open.length) * 100 : 0;
+    const awaitingStops = st.open.filter(p => String(p.stop?.stopType || '').toLowerCase() === 'awaiting').length;
+
+    const stopTypeMap = {};
+    st.open.forEach(p => {
+      const type = String(p.stop?.stopType || 'Awaiting');
+      const risk = stopRiskForOpen(p) || 0;
+      if (!stopTypeMap[type]) stopTypeMap[type] = { count: 0, risk: 0 };
+      stopTypeMap[type].count++;
+      stopTypeMap[type].risk += risk;
+    });
+    const stopTypeRows = Object.entries(stopTypeMap).map(([type, item]) => {
+      return `<tr><td>${chip(type, type === 'Awaiting' ? 'warn' : 'good')}</td><td>${item.count}</td><td>${money(item.risk)}</td></tr>`;
+    }).join('');
+
+    const topClosed = st.closed.slice().sort((a,b)=>(num(b.realizedUsd)||0)-(num(a.realizedUsd)||0)).slice(0,5).map(p => {
+      const r = num(p.realizedUsd)||0;
+      return `<tr><td><strong>${escapeHtml(p.symbol)}</strong></td><td>${escapeHtml(p.entryDate)}</td><td>${escapeHtml(p.exitDate)}</td><td class="${cls(r)}">${money(r)}</td></tr>`;
+    }).join('');
+    const bottomClosed = st.closed.slice().sort((a,b)=>(num(a.realizedUsd)||0)-(num(b.realizedUsd)||0)).slice(0,5).map(p => {
+      const r = num(p.realizedUsd)||0;
+      return `<tr><td><strong>${escapeHtml(p.symbol)}</strong></td><td>${escapeHtml(p.entryDate)}</td><td>${escapeHtml(p.exitDate)}</td><td class="${cls(r)}">${money(r)}</td></tr>`;
+    }).join('');
+
+    const recentTradeBars = st.closed.slice()
+      .filter(p => p.exitDate)
+      .sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol).localeCompare(String(b.symbol)))
+      .slice(-30)
+      .map(p => ({ label: String(p.symbol || '') + ' ' + shortDateLabel(p.exitDate), value: num(p.realizedUsd) || 0, kind: (num(p.realizedUsd) || 0) >= 0 ? 'barGood' : 'barBad' }));
+    const strategyCharts = `<div class="section">
+      <h2>Strategy charts</h2>
+      <div class="chartGrid">
+        ${lineChart('Cumulative realised P&L trend', 'Running realised profit or loss from closed trades only.', cumulativeRealisedTrend(st), 'money')}
+        ${multiLineChart('Strategy P&L by opening date', 'Realised and current unrealised P&L shown as separate cumulative lines, using each trade opening date as a proxy.', pnlByOpeningDate(st), pnlLineDefs(), 'money')}
+        ${barChart('Monthly realised P&L', 'Realised profit or loss grouped by exit month.', monthlyPnlBars(st), { kind: 'money', diverging: true })}
+        ${barChart('Closed trade distribution', 'Number of trades in loss/win size buckets. This helps show whether the strategy relies on a few big winners.', closedTradeDistribution(st), { kind: 'number' })}
+        ${barChart('Top and bottom contributors', 'Best five and worst five closed trades by realised P&L.', topBottomContributors(st), { kind: 'money', diverging: true })}
+        ${barChart('Recent closed trade P&L', 'Last 30 closed trades by exit date. Green bars are winners, red bars are losers.', recentTradeBars, { kind: 'money', diverging: true })}
+        ${barChart('Stop risk by stop type', 'Current cash risk grouped by the stop style selected on open trades.', stopRiskByType(st), { kind: 'money' })}
+        ${barChart('Risk concentration by position', 'Which open trades account for the most current cash risk to stop.', riskByPosition(st), { kind: 'money' })}
+      </div>
+    </div>`;
+
+    el('tablePanel').innerHTML = `<div class="section">
+      <h2>Trade strategy analytics</h2>
+      <p>This page is focused on the trading strategy itself: closed-trade batting average, realised profit, open-trade position, expectancy and current stop risk.</p>
+      <div class="miniGrid">
+        ${metricCard('Closed trades', String(st.closed.length), `${st.wins.length} winners · ${st.losses.length} losers · ${st.flats.length} flat`)}
+        ${metricCard('Win rate', pct(winRate), pct(lossRate) + ' loss rate', winRate >= 40 ? 'pos' : winRate >= 30 ? 'warn' : 'neg')}
+        ${metricCard('Realised P&L', signedMoney(st.realised), 'Closed trades only', cls(st.realised))}
+        ${metricCard('Unrealised P&L', signedMoney(st.unrealised), `${st.openWinners} open winners · ${st.openLosers} open losers`, cls(st.unrealised))}
+        ${metricCard('Total strategy P&L', signedMoney(combinedPnl), 'Realised plus unrealised', cls(combinedPnl))}
+        ${metricCard('Average win', money(avgWin), `${st.wins.length} winning trades`, 'pos')}
+        ${metricCard('Average loss', money(avgLoss), `${st.losses.length} losing trades`, 'neg')}
+        ${metricCard('Profit factor', profitFactor == null ? 'n/a' : profitFactor.toFixed(2), 'Gross wins ÷ gross losses', profitFactor != null && profitFactor >= 1 ? 'pos' : 'neg')}
+        ${metricCard('Expectancy', signedMoney(expectancy), 'Average realised P&L per closed trade', cls(expectancy))}
+        ${metricCard('Average hold', st.avgHold == null ? '-' : st.avgHold.toFixed(1) + ' days', 'Entry date to exit date')}
+        ${metricCard('Open batting average', pct(openWinRate), `${st.openWinners} of ${st.open.length} open trades currently positive`, openWinRate >= 50 ? 'pos' : 'warn')}
+        ${metricCard('Stop coverage', String(st.open.length - awaitingStops) + ' / ' + st.open.length, awaitingStops + ' still Awaiting', awaitingStops ? 'warn' : 'pos')}
+      </div>
+    </div>
+    ${strategyCharts}
+    <div class="section">
+      <h2>R-multiple readiness</h2>
+      <div class="noteBox">R-multiple is not calculated yet because the dashboard does not currently have a stable original initial-stop field for every trade. Once the sheet captures the initial stop at entry, this page can add average R, best/worst R, expectancy in R and R-distribution without guessing.</div>
+    </div>
+    <div class="section twoCol">
+      <div>
+        <h2>Stop style mix</h2>
+        <div class="tablewrap" style="max-height:none"><table><thead><tr><th>Stop type</th><th>Trades</th><th>Risk to stop</th></tr></thead><tbody>${stopTypeRows || '<tr><td colspan="3">No stop data.</td></tr>'}</tbody></table></div>
+      </div>
+      <div>
+        <h2>Best and worst</h2>
+        ${simpleRows([
+          ['Best closed trade', st.best ? `<strong>${escapeHtml(st.best.symbol)}</strong> · <span class="pos">${money(num(st.best.realizedUsd)||0)}</span>` : '-'],
+          ['Worst closed trade', st.worst ? `<strong>${escapeHtml(st.worst.symbol)}</strong> · <span class="neg">${money(num(st.worst.realizedUsd)||0)}</span>` : '-'],
+          ['Trades with partial exits', String(st.partialTrades)],
+          ['Current total stop risk', `<span class="warn">${money(st.totalStopRisk)}</span>`]
+        ])}
+      </div>
+    </div>
+    <div class="section twoCol">
+      <div>
+        <h2>Top 5 closed winners</h2>
+        <div class="tablewrap" style="max-height:none"><table><thead><tr><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L</th></tr></thead><tbody>${topClosed || '<tr><td colspan="4">No closed winners yet.</td></tr>'}</tbody></table></div>
+      </div>
+      <div>
+        <h2>Top 5 closed losers</h2>
+        <div class="tablewrap" style="max-height:none"><table><thead><tr><th>Symbol</th><th>Entry</th><th>Exit</th><th>P&L</th></tr></thead><tbody>${bottomClosed || '<tr><td colspan="4">No closed losers yet.</td></tr>'}</tbody></table></div>
+      </div>
+    </div>`;
   }
 
-  function renderChartsIfNeeded() {
-    if (state.tab === 'portfolio') renderPortfolio();
-    if (state.tab === 'strategy') renderStrategy();
+  function renderFills() {
+    const rows = (state.data.clean || []).filter(filterFillRow).slice().reverse().map(f => {
+      const side = String(f.side || '').toUpperCase();
+      return `<tr>
+        <td>${escapeHtml(f.date)}</td>
+        <td><strong>${escapeHtml(f.symbol)}</strong></td>
+        <td>${chip(side, side === 'BUY' ? 'good' : 'bad')}</td>
+        <td>${Number(f.shares || 0).toLocaleString('en-GB')}</td>
+        <td>${money(f.price)}</td>
+        <td>${money(f.cash)}</td>
+        <td>${money(f.fee)}</td>
+      </tr>`;
+    });
+    table(['Date','Symbol','Side','Shares','Price','Cash','Fee'], rows);
   }
 
-  function renderTable() {
-    if (!state.data) return;
-    if (state.tab === 'live') return renderLive();
-    if (state.tab === 'stops') return renderStops();
-    if (state.tab === 'portfolio') return renderPortfolio();
-    if (state.tab === 'strategy') return renderStrategy();
-    if (state.tab === 'closed') return renderClosed();
-    return renderFills();
-  }
+
 
   function openChartModal(card) {
-    const clone = card.cloneNode(true);
-    clone.removeAttribute('data-chart');
+    const modal = el('chartModal');
     const body = el('chartModalBody');
-    body.innerHTML = '';
-    body.appendChild(clone);
-    el('chartModal').classList.remove('hidden');
-    el('chartModal').setAttribute('aria-hidden', 'false');
+    if (!modal || !body || !card) return;
+    body.innerHTML = card.outerHTML;
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
   }
   function closeChartModal() {
-    el('chartModal').classList.add('hidden');
-    el('chartModal').setAttribute('aria-hidden', 'true');
-    el('chartModalBody').innerHTML = '';
+    const modal = el('chartModal');
+    const body = el('chartModalBody');
+    if (!modal || !body) return;
+    body.innerHTML = '';
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
   }
 
   saveConnectBtn.addEventListener('click', () => {
     const webUrl = normaliseUrl(el('webUrl').value);
-    const webSecret = el('webSecret').value.trim();
+    const webSecret = String(el('webSecret').value || '').trim();
     hideErr(setupError);
-    if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(webUrl)) {
+    if (!webUrl || !webUrl.startsWith('https://script.google.com/macros/s/') || !webUrl.endsWith('/exec')) {
       showErr(setupError, 'The Web app URL should start with https://script.google.com/macros/s/ and end with /exec');
       return;
     }
@@ -1409,23 +1746,49 @@
     saveSettings({ webUrl, webSecret });
     loadData();
   });
-  clearBtn.addEventListener('click', () => { localStorage.removeItem(STORAGE_KEY); showSetup(); });
-  settingsBtn.addEventListener('click', () => showSetup());
-  refreshBtn.addEventListener('click', () => loadData());
-  search.addEventListener('input', () => { state.search = search.value; renderTable(); });
-  [dateFrom, dateTo, statusFilter, stopTypeFilter, resultFilter, minPnlFilter, minRiskFilter].forEach(node => node.addEventListener('input', updateFiltersFromInputs));
+
+  clearBtn.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    state.data = null;
+    showSetup();
+  });
+  settingsBtn.addEventListener('click', showSetup);
+  refreshBtn.addEventListener('click', loadData);
+  search.addEventListener('input', () => {
+    state.search = search.value.trim();
+    renderTable();
+  });
+  [dateFrom, dateTo, statusFilter, stopTypeFilter, resultFilter, minPnlFilter, minRiskFilter].forEach(node => {
+    node.addEventListener('input', updateFiltersFromInputs);
+    node.addEventListener('change', updateFiltersFromInputs);
+  });
   resetFiltersBtn.addEventListener('click', resetFilters);
-  document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => { state.tab = btn.dataset.tab; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab)); renderTable(); }));
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      state.tab = t.dataset.tab;
+      render();
+    });
+  });
+
+
+
   dashboard.addEventListener('click', e => {
-    const coachBtn = e.target.closest('#generateCoachBtn');
-    if (coachBtn) { loadData('coach'); return; }
-    const chartCard = e.target.closest('[data-chart="1"]');
-    if (chartCard && !chartCard.closest('.chartModalBody')) openChartModal(chartCard);
+    if (e.target && e.target.id === 'generateCoachBtn') {
+      loadData('coach');
+    }
+  });
+
+  el('tablePanel').addEventListener('click', e => {
+    const card = e.target.closest('.chartCard');
+    if (card && el('tablePanel').contains(card)) openChartModal(card);
   });
   el('chartModalClose').addEventListener('click', closeChartModal);
-  el('chartModal').addEventListener('click', e => { if (e.target.id === 'chartModal') closeChartModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChartModal(); });
-
+  el('chartModal').addEventListener('click', e => {
+    if (e.target === el('chartModal')) closeChartModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeChartModal();
+  });
   if (getSettings().webUrl && getSettings().webSecret) loadData();
   else showSetup();
 })();
