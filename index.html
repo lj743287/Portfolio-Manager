@@ -1362,50 +1362,7 @@
     });
     return rows;
   }
-  // Your realised-equity curve, plus a "what if I'd put the same starting balance
-  // into ONEQ on my first trade date and held it" line, sampled on the same dates.
-  function equityVsBenchmark(st) {
-    const closed = st.closed.slice().filter(p => p.exitDate)
-      .sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol).localeCompare(String(b.symbol)));
 
-    // ONEQ daily closes from the feed -> sorted series + "close on/before a date" lookup.
-    const series = (state.data?.benchmark || [])
-      .map(r => ({ date: String(r.date || '').slice(0, 10), close: num(r.close) }))
-      .filter(r => r.date && isFinite(r.close))
-      .sort((a, b) => a.date.localeCompare(b.date));
-    const closeOnOrBefore = (dateStr) => {
-      if (!series.length || !dateStr) return null;
-      let chosen = null;
-      for (const r of series) { if (r.date <= dateStr) chosen = r.close; else break; }
-      return chosen;
-    };
-
-    // Start date = the earliest date you actually deployed capital (any trade's entry).
-    const allEntries = st.closed.map(p => String(p.entryDate || '').slice(0, 10))
-      .concat(st.open.map(p => String(p.entryDate || '').slice(0, 10)))
-      .filter(Boolean).sort();
-    const startDate = allEntries[0] || (closed[0] ? String(closed[0].exitDate).slice(0, 10) : null);
-    const startClose = closeOnOrBefore(startDate);
-    const oneqAt = (dateStr) => {
-      if (startClose == null) return null;
-      const c = closeOnOrBefore(dateStr);
-      return c == null ? null : BASELINE_BALANCE * (c / startClose);
-    };
-
-    let equity = BASELINE_BALANCE;
-    const rows = [{ label: 'Start', you: equity, oneq: startClose == null ? null : BASELINE_BALANCE }];
-    closed.forEach(p => {
-      equity += num(p.realizedUsd) || 0;
-      rows.push({ label: shortDateLabel(p.exitDate), you: equity, oneq: oneqAt(String(p.exitDate).slice(0, 10)) });
-    });
-    return rows;
-  }
-  function benchmarkLineDefs() {
-    return [
-      { key: 'you', label: 'Your equity (realised)', lineClass: 'multiLineYou', pointClass: 'multiPointYou', legendClass: 'legendYou' },
-      { key: 'oneq', label: 'ONEQ buy & hold', lineClass: 'multiLineBench', pointClass: 'multiPointBench', legendClass: 'legendBench' }
-    ];
-  }
   function portfolioPnlBridge(st) {
     return [
       { label: 'Realised P&L', value: st.realised || 0, kind: (st.realised || 0) >= 0 ? 'barGood' : 'barBad' },
@@ -1481,25 +1438,56 @@
     }).sort((a, b) => b.value - a.value);
   }
   function pnlByOpeningDate(st) {
+    // ONEQ daily closes from the feed -> sorted series + "close on/before a date" lookup.
+    const series = (state.data?.benchmark || [])
+      .map(r => ({ date: String(r.date || '').slice(0, 10), close: num(r.close) }))
+      .filter(r => r.date && isFinite(r.close))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const hasBench = series.length > 0;
+    const closeOnOrBefore = (dateStr) => {
+      if (!series.length || !dateStr) return null;
+      let chosen = null;
+      for (const r of series) { if (r.date <= dateStr) chosen = r.close; else break; }
+      return chosen;
+    };
+    const latestClose = series.length ? series[series.length - 1].close : null;
+
+    // What the SAME money invested on the trade's entry date would have made in ONEQ
+    // over the SAME holding window (entry -> exit for closed, entry -> now for open).
+    function oneqPnlForTrade(p, isOpen) {
+      if (!hasBench) return 0;
+      const invested = num(p.costBasisUsd) || (num(p.shares) * num(p.avgEntry));
+      if (!invested) return 0;
+      const entryClose = closeOnOrBefore(String(p.entryDate || '').slice(0, 10));
+      const endClose = isOpen ? latestClose : closeOnOrBefore(String(p.exitDate || '').slice(0, 10));
+      if (entryClose == null || endClose == null || entryClose === 0) return 0;
+      return invested * (endClose / entryClose - 1);
+    }
+
     const byDate = {};
     function bucket(date) {
       const key = String(date || '').slice(0, 10) || 'Unknown';
-      if (!byDate[key]) byDate[key] = { realised: 0, unrealised: 0 };
+      if (!byDate[key]) byDate[key] = { realised: 0, unrealised: 0, oneq: 0 };
       return byDate[key];
     }
     (st.closed || []).forEach(p => {
-      bucket(p.entryDate).realised += num(p.realizedUsd) || 0;
+      const b = bucket(p.entryDate);
+      b.realised += num(p.realizedUsd) || 0;
+      b.oneq += oneqPnlForTrade(p, false);
     });
     (st.open || []).forEach(p => {
-      bucket(p.entryDate).unrealised += p.pnl || 0;
+      const b = bucket(p.entryDate);
+      b.unrealised += p.pnl || 0;
+      b.oneq += oneqPnlForTrade(p, true);
     });
     const dates = Object.keys(byDate).filter(d => d !== 'Unknown').sort();
-    let realised = 0, unrealised = 0;
-    const rows = [{ label: 'Start', realised: 0, unrealised: 0, total: 0 }];
+    let realised = 0, unrealised = 0, oneq = 0;
+    const rows = [{ label: 'Start', realised: 0, unrealised: 0, total: 0, oneq: hasBench ? 0 : null }];
     dates.forEach(d => {
       realised += byDate[d].realised || 0;
       unrealised += byDate[d].unrealised || 0;
-      rows.push({ label: shortDateLabel(d), realised, unrealised, total: realised + unrealised });
+      oneq += byDate[d].oneq || 0;
+      rows.push({ label: shortDateLabel(d), realised, unrealised, total: realised + unrealised, oneq: hasBench ? oneq : null });
     });
     return rows;
   }
@@ -1507,7 +1495,8 @@
     return [
       { key: 'realised', label: 'Realised P&L', lineClass: 'multiLineRealised', pointClass: 'multiPointRealised', legendClass: 'legendRealised' },
       { key: 'unrealised', label: 'Unrealised P&L', lineClass: 'multiLineUnrealised', pointClass: 'multiPointUnrealised', legendClass: 'legendUnrealised' },
-      { key: 'total', label: 'Total P&L', lineClass: 'multiLineTotal', pointClass: 'multiPointTotal', legendClass: 'legendTotal' }
+      { key: 'total', label: 'Total P&L', lineClass: 'multiLineTotal', pointClass: 'multiPointTotal', legendClass: 'legendTotal' },
+      { key: 'oneq', label: 'ONEQ equivalent', lineClass: 'multiLineBench', pointClass: 'multiPointBench', legendClass: 'legendBench' }
     ];
   }
 
@@ -1542,8 +1531,8 @@
     const portfolioCharts = `<div class="section">
       <h2>Portfolio charts</h2>
       <div class="chartGrid">
-        ${multiLineChart('Equity vs ONEQ buy & hold', 'Am I beating the market? Your realised (closed-trade) equity versus the same starting balance put into ONEQ on your first trade date and held. The ONEQ line updates when you run Refresh stops & prices.', equityVsBenchmark(st), benchmarkLineDefs(), 'money', { forceZero: false })}
-        ${multiLineChart('P&L lines by opening date', 'Realised and current unrealised P&L plotted against each trade opening date as a proxy.', pnlByOpeningDate(st), pnlLineDefs(), 'money')}
+        ${lineChart('Realised equity trend', 'Closed-trade equity only. Open P&L is shown separately so it is not dumped into one final spike.', portfolioEquityTrend(st), 'money')}
+        ${multiLineChart('P&L lines by opening date', "Cumulative P&L booked at each trade's opening date. The dashed ONEQ line is what the same money, invested in ONEQ on each entry date and held over that trade's window, would have made — your real test against the market.", pnlByOpeningDate(st), pnlLineDefs(), 'money')}
         ${barChart('Monthly realised P&L', 'Realised profit or loss grouped by exit month.', monthlyPnlBars(st), { kind: 'money', diverging: true })}
         ${barChart('P&L and risk bridge', 'Realised P&L, current unrealised P&L and the cash risk if priced stops were hit.', portfolioPnlBridge(st), { kind: 'money', diverging: true })}
         ${barChart('Current account split', 'Estimated cash, open market value and cash risk to priced stops.', [
