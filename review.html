@@ -174,7 +174,7 @@
     .stat .v { font-size: 16px; font-weight: 850; margin-top: 4px; }
     #chartBox {
       width: 100%;
-      height: 480px;
+      height: 580px;
       border: 1px solid var(--line);
       border-radius: 12px;
       background: #0b1120;
@@ -275,6 +275,9 @@
           <span class="legendItem"><span class="sw swMa50"></span>50-day MA</span>
           <span class="legendItem"><span class="sw swEntry"></span>Entry price line</span>
           <span class="legendItem"><span class="sw swExit"></span>Exit price line</span>
+          <span class="legendItem"><span class="sw" style="background:#22aa44"></span>Burst up (+4% on volume)</span>
+          <span class="legendItem"><span class="sw" style="background:#cc3333"></span>Burst down (-4% on volume)</span>
+          <span class="legendItem">BUY? = first burst from quiet base, TI65 &#8805; 1.05</span>
         </div>
       </div>
     </div>
@@ -296,7 +299,7 @@
     sortBy: 'exitDesc'
   };
   const candleCache = {}; // symbol|start|end -> candle data (per session)
-  let chart = null, candleSeries = null, volSeries = null, ma10Series = null, ma20Series = null, ma50Series = null;
+  let chart = null, candleSeries = null, volSeries = null, ma10Series = null, ma20Series = null, ma50Series = null, burstSeries = null, burstMarkers = null;
 
   const el = id => document.getElementById(id);
 
@@ -527,6 +530,51 @@
     return out;
   }
 
+  // ---------- Stockbee Momentum Burst (ported from Pine v5, daily bars) ----------
+  // Bull: >= +4% vs prior close, volume > prior day, close in top 30% of range.
+  // Bear: mirror. BUY?: first bull burst with no bull flags in prior 5 days,
+  // no bear flags in prior 20 days, and TI65 (SMA7/SMA65) >= 1.05.
+  function computeBursts(candles) {
+    const closes = candles.map(c => c.close);
+    function smaAt(period, i) {
+      if (i < period - 1) return null;
+      let s = 0;
+      for (let j = i - period + 1; j <= i; j++) s += closes[j];
+      return s / period;
+    }
+    const bull = [], bear = [];
+    for (let i = 0; i < candles.length; i++) {
+      const c = candles[i], prev = candles[i - 1];
+      let b = false, s = false;
+      if (prev && prev.close) {
+        const pctChg = 100 * (c.close - prev.close) / prev.close;
+        const rng = c.high - c.low;
+        const nearHigh = rng > 0 ? (c.high - c.close) / rng <= 0.30 : true;
+        const nearLow = rng > 0 ? (c.close - c.low) / rng <= 0.30 : true;
+        const volOk = c.volume > prev.volume;
+        b = pctChg >= 4 && volOk && nearHigh;
+        s = pctChg <= -4 && volOk && nearLow;
+      }
+      bull.push(b);
+      bear.push(s);
+    }
+    const out = [];
+    for (let i = 0; i < candles.length; i++) {
+      let buy = false;
+      if (bull[i]) {
+        let greens = 0;
+        for (let j = Math.max(0, i - 5); j < i; j++) if (bull[j]) greens++;
+        let reds = 0;
+        for (let j = Math.max(0, i - 20); j < i; j++) if (bear[j]) reds++;
+        const s7 = smaAt(7, i), s65 = smaAt(65, i);
+        const ti65 = (s7 != null && s65 != null && s65 !== 0) ? s7 / s65 : null;
+        buy = greens === 0 && reds === 0 && ti65 != null && ti65 >= 1.05;
+      }
+      out.push({ time: candles[i].time, bull: bull[i], bear: bear[i], buy });
+    }
+    return out;
+  }
+
   // ---------- Chart ----------
   function ensureChart() {
     if (chart) return;
@@ -558,6 +606,17 @@
     ma10Series = chart.addSeries(LightweightCharts.LineSeries, { color: '#f59e0b', ...maOpts });
     ma20Series = chart.addSeries(LightweightCharts.LineSeries, { color: '#60a5fa', ...maOpts });
     ma50Series = chart.addSeries(LightweightCharts.LineSeries, { color: '#c084fc', ...maOpts });
+    // Stockbee burst flags in their own pane below the price chart
+    burstSeries = chart.addSeries(LightweightCharts.HistogramSeries, {
+      priceFormat: { type: 'price', precision: 0, minMove: 1 },
+      priceLineVisible: false,
+      lastValueVisible: false,
+      base: 0
+    }, 1);
+    try {
+      const panes = chart.panes();
+      if (panes && panes[1]) panes[1].setHeight(100);
+    } catch (e) {}
     new ResizeObserver(() => {
       if (chart) chart.applyOptions({ width: box.clientWidth, height: box.clientHeight });
     }).observe(box);
@@ -628,6 +687,19 @@
     ma10Series.setData(ma10.filter(p => p.time >= displayStart));
     ma20Series.setData(ma20.filter(p => p.time >= displayStart));
     ma50Series.setData(ma50.filter(p => p.time >= displayStart));
+
+    // Stockbee burst flags: green/red spikes in the bottom pane, BUY? markers on top
+    const bursts = computeBursts(candles).filter(p => p.time >= displayStart);
+    burstSeries.setData(bursts.map(p => ({
+      time: p.time,
+      value: (p.bull || p.bear) ? 2 : 0,
+      color: p.bull ? '#22aa44' : p.bear ? '#cc3333' : 'rgba(0,0,0,0)'
+    })));
+    const buyMarkers = bursts.filter(p => p.buy).map(p => ({
+      time: p.time, position: 'aboveBar', color: '#22aa44', shape: 'arrowDown', text: 'BUY?'
+    }));
+    if (!burstMarkers) burstMarkers = LightweightCharts.createSeriesMarkers(burstSeries, buyMarkers);
+    else burstMarkers.setMarkers(buyMarkers);
 
     // Entry / exit markers
     const markers = [];
