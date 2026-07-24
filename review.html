@@ -543,7 +543,9 @@
     candleSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
       upColor: '#22c55e', downColor: '#ef4444',
       wickUpColor: '#22c55e', wickDownColor: '#ef4444',
-      borderVisible: false
+      borderVisible: false,
+      priceLineVisible: false,
+      lastValueVisible: false
     });
     volSeries = chart.addSeries(LightweightCharts.HistogramSeries, {
       priceFormat: { type: 'volume' },
@@ -630,10 +632,10 @@
     // Entry / exit markers
     const markers = [];
     const entryTime = nearestTimeOnOrAfter(shown, t.entryDate);
-    if (entryTime) markers.push({ time: entryTime, position: 'belowBar', color: '#22c55e', shape: 'arrowUp', text: 'Entry ' + (t.avgEntry != null ? money(t.avgEntry) : '') });
+    if (entryTime) markers.push({ time: entryTime, position: 'belowBar', color: '#bbf7d0', shape: 'arrowUp', size: 2, text: 'Entry ' + (t.avgEntry != null ? money(t.avgEntry) : '') });
     if (t.exitDate) {
       const exitTime = nearestTimeOnOrAfter(shown, t.exitDate);
-      if (exitTime) markers.push({ time: exitTime, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'Exit ' + (t.avgExit != null ? money(t.avgExit) : '') });
+      if (exitTime) markers.push({ time: exitTime, position: 'aboveBar', color: '#fecaca', shape: 'arrowDown', size: 2, text: 'Exit ' + (t.avgExit != null ? money(t.avgExit) : '') });
     }
     markers.sort((a, b) => String(a.time).localeCompare(String(b.time)));
     if (!seriesMarkers) seriesMarkers = LightweightCharts.createSeriesMarkers(candleSeries, markers);
