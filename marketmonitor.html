@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Market Monitor</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#111827; --panel2:#1f2937; --text:#e5e7eb; --muted:#9ca3af;
+    --line:#374151; --good:#22c55e; --bad:#ef4444; --warn:#f59e0b; --blue:#60a5fa;
+    --chip:#334155; --white:#fff;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; font-family:Arial, Helvetica, sans-serif;
+    background:radial-gradient(circle at top left, #1e293b, var(--bg) 50%);
+    color:var(--text);
+  }
+  header {
+    padding:22px 22px 12px; border-bottom:1px solid var(--line);
+    background:rgba(15,23,42,.86); position:sticky; top:0; z-index:5; backdrop-filter:blur(10px);
+  }
+  .topbar { display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  h1 { margin:0; font-size:24px; }
+  .subtitle { margin-top:4px; color:var(--muted); font-size:13px; }
+  .btns { display:flex; gap:10px; flex-wrap:wrap; }
+  button, .linkbtn {
+    border:1px solid var(--line); background:#2563eb; color:var(--white);
+    padding:9px 12px; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;
+    text-decoration:none; display:inline-block;
+  }
+  button.secondary, .linkbtn.secondary { background:var(--panel2); }
+  button.range { background:var(--panel2); }
+  button.range.active { background:#2563eb; border-color:#60a5fa; }
+  main { padding:18px 22px 40px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin:16px 0; }
+  .card {
+    background:rgba(17,24,39,.94); border:1px solid var(--line);
+    border-radius:16px; padding:14px; min-height:92px;
+  }
+  .card .label { color:var(--muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .card .value { font-size:24px; margin-top:7px; font-weight:800; }
+  .card .sub { color:var(--muted); font-size:12px; margin-top:4px; line-height:1.35; }
+  .card.bullBorder { border-color:rgba(34,197,94,.45); }
+  .card.bearBorder { border-color:rgba(239,68,68,.45); }
+  .pos { color:var(--good); } .neg { color:var(--bad); } .warn { color:var(--warn); }
+  .panel {
+    background:rgba(17,24,39,.92); border:1px solid var(--line);
+    border-radius:16px; overflow:hidden; margin-top:14px;
+  }
+  .section { padding:16px; border-bottom:1px solid var(--line); }
+  .section:last-child { border-bottom:none; }
+  .section h2 { margin:0 0 6px; font-size:18px; }
+  .section p { color:var(--muted); line-height:1.45; margin:6px 0 0; font-size:13px; }
+  .chartCard {
+    background:rgba(31,41,55,.72); border:1px solid var(--line);
+    border-radius:14px; padding:12px; margin-top:12px;
+  }
+  .chartTitle { font-size:15px; font-weight:850; margin:0; }
+  .chartSub { color:var(--muted); font-size:12px; line-height:1.35; margin:3px 0 8px; }
+  .svgChart { width:100%; height:auto; display:block; overflow:visible; }
+  .tickText { fill:var(--muted); font-size:11px; font-weight:700; }
+  .gridLine { stroke:rgba(156,163,175,.20); stroke-width:1; }
+  .axisLine { stroke:rgba(156,163,175,.50); stroke-width:1.2; }
+  .bandLine { stroke:rgba(156,163,175,.45); stroke-width:1; stroke-dasharray:5 5; }
+  .bandText { fill:var(--muted); font-size:10px; font-weight:700; }
+  .chartLegend { display:flex; gap:14px; flex-wrap:wrap; margin:6px 0 4px; color:var(--muted); font-size:11px; font-weight:800; }
+  .legendItem { display:inline-flex; align-items:center; gap:6px; }
+  .legendSwatch { width:22px; height:3px; border-radius:999px; display:inline-block; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
+  th { background:#020617; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; position:sticky; top:0; z-index:2; }
+  tr:hover td { background:rgba(96,165,250,.06); }
+  .tablewrap { overflow-x:auto; max-height:60vh; }
+  .chip { display:inline-flex; align-items:center; border-radius:999px; background:var(--chip); padding:4px 8px; font-size:12px; font-weight:700; }
+  .chip.good { background:rgba(34,197,94,.15); color:#86efac; border:1px solid rgba(34,197,94,.25); }
+  .chip.bad { background:rgba(239,68,68,.15); color:#fecaca; border:1px solid rgba(239,68,68,.25); }
+  .chip.warn { background:rgba(245,158,11,.15); color:#fde68a; border:1px solid rgba(245,158,11,.25); }
+  .error {
+    background:rgba(127,29,29,.75); border:1px solid rgba(248,113,113,.35);
+    color:#fee2e2; padding:12px; border-radius:12px; margin:12px 0; white-space:pre-wrap;
+  }
+  .noteBox {
+    background:rgba(2,6,23,.55); border:1px solid var(--line); border-radius:14px;
+    padding:12px; color:var(--muted); line-height:1.45; font-size:13px; margin-top:10px;
+  }
+  .hidden { display:none !important; }
+  .statusline { color:var(--muted); font-size:13px; }
+  .empty { padding:24px; color:var(--muted); text-align:center; }
+  @media (max-width:560px) {
+    main, header { padding-left:14px; padding-right:14px; }
+    .grid { grid-template-columns:1fr; }
+    h1 { font-size:21px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <div>
+      <h1>Market Monitor</h1>
+      <div class="subtitle" id="subtitle">Stockbee-style breadth across the full US common-stock universe</div>
+    </div>
+    <div class="btns">
+      <a href="index.html" class="linkbtn secondary">Back to dashboard</a>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="mainError" class="error hidden"></div>
+
+  <div class="btns" id="rangeBtns" style="margin-bottom:6px">
+    <button class="range" data-days="60">60 days</button>
+    <button class="range active" data-days="120">120 days</button>
+    <button class="range" data-days="250">250 days</button>
+  </div>
+  <div class="statusline" id="statusline">Loading breadth data...</div>
+
+  <div class="grid" id="cards"></div>
+  <div id="charts"></div>
+
+  <div class="panel">
+    <div class="section">
+      <h2>Recent readings</h2>
+      <p>The last 20 trading days, straight from the nightly scan.</p>
+    </div>
+    <div class="tablewrap" id="tableWrap"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="section">
+      <h2>How to read this</h2>
+      <div class="noteBox">
+        <strong>Primary trend</strong> is the count of stocks up 25% in a quarter versus down 25% in a quarter.
+        More up than down is a bullish phase. That relationship flipping is the signal that matters most.<br><br>
+        <strong>4% daily</strong> counts stocks moving more than 4% in a single day on rising volume.
+        Under 300 is normal, 300&ndash;500 is high, 500&ndash;1000 is very high, and above 1000 is extreme &mdash;
+        which usually means a climax rather than a beginning.<br><br>
+        <strong>10-day ratio</strong> is ten days of 4% up divided by ten days of 4% down.
+        Above 2 is a bullish thrust, below 0.5 is a bearish thrust.<br><br>
+        <strong>Breadth divergence</strong> is the thing to watch. When the market keeps making highs
+        but the breadth line rolls over, participation is narrowing and the move is running on fewer stocks.
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'tradeDashboard.feedSettings.v1';
+  let rows = [];
+  let rangeDays = 120;
+
+  const el = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const n = v => { const x = Number(v); return isFinite(x) ? x : 0; };
+
+  function getSettings() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function showErr(msg) {
+    const node = el('mainError');
+    node.textContent = msg;
+    node.classList.remove('hidden');
+  }
+  function hideErr() { el('mainError').classList.add('hidden'); }
+
+  /* ---------------------------------------------------------- data load -- */
+  function load() {
+    const s = getSettings();
+    hideErr();
+    if (!s.webUrl || !s.webSecret) {
+      showErr('No feed details saved in this browser. Open the main dashboard first, connect it to your Google Sheet, then come back here.');
+      el('statusline').textContent = 'Not connected';
+      return;
+    }
+    el('statusline').textContent = 'Loading breadth data...';
+    el('refreshBtn').disabled = true;
+
+    const cb = 'mmCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    const script = document.createElement('script');
+    const url = String(s.webUrl).trim().replace(/\?.*$/, '');
+    script.src = url + '?key=' + encodeURIComponent(s.webSecret) +
+                 '&action=marketmonitor&days=400&callback=' + encodeURIComponent(cb) +
+                 '&_=' + Date.now();
+
+    const timer = setTimeout(() => {
+      cleanup();
+      showErr('The breadth feed did not respond. Check that you redeployed the Apps Script as a New version after adding the marketmonitor route.');
+      el('statusline').textContent = 'Load failed';
+      el('refreshBtn').disabled = false;
+    }, 25000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cb] = function (data) {
+      cleanup();
+      el('refreshBtn').disabled = false;
+      if (!data || !data.ok) {
+        showErr(data && data.error ? data.error : 'The feed returned an unknown error.');
+        el('statusline').textContent = 'Feed error';
+        return;
+      }
+      rows = (data.marketMonitor && data.marketMonitor.rows) || [];
+      if (!rows.length) {
+        showErr('The feed connected but MM_History is empty. Run mmRunBackfill in Apps Script.');
+        el('statusline').textContent = 'No data';
+        return;
+      }
+      el('statusline').textContent = rows.length + ' days of breadth history \u00B7 feed generated ' + (data.generatedAt || '-');
+      render();
+    };
+    script.onerror = function () {
+      cleanup();
+      el('refreshBtn').disabled = false;
+      showErr('Could not reach the Apps Script URL.');
+      el('statusline').textContent = 'Load failed';
+    };
+    document.body.appendChild(script);
+  }
+
+  /* ------------------------------------------------------------- charts -- */
+  const W = 900, H = 250, L = 58, R = 18, T = 16, B = 34;
+  const PW = W - L - R, PH = H - T - B;
+
+  function extent(vals, forceZero) {
+    const v = vals.filter(isFinite);
+    if (!v.length) return { min: 0, max: 1 };
+    let min = Math.min(...v), max = Math.max(...v);
+    if (forceZero) { min = Math.min(0, min); max = Math.max(0, max); }
+    if (min === max) { min -= 1; max += 1; }
+    const pad = (max - min) * 0.08;
+    return { min: min - pad, max: max + pad };
+  }
+  function xAt(i, len) { return len <= 1 ? L + PW / 2 : L + (i / (len - 1)) * PW; }
+  function yFn(ext) { return v => T + ((ext.max - v) / (ext.max - ext.min)) * PH; }
+
+  function gridAndAxes(ext, data) {
+    const y = yFn(ext);
+    let out = '';
+    for (let i = 0; i <= 4; i++) {
+      const val = ext.min + (ext.max - ext.min) * (i / 4);
+      const yy = y(val);
+      out += `<line class="gridLine" x1="${L}" y1="${yy.toFixed(1)}" x2="${W - R}" y2="${yy.toFixed(1)}"></line>` +
+             `<text class="tickText" x="${L - 8}" y="${(yy + 4).toFixed(1)}" text-anchor="end">${Math.round(val)}</text>`;
+    }
+    const every = Math.max(1, Math.ceil(data.length / 8));
+    data.forEach((d, i) => {
+      if (i !== 0 && i !== data.length - 1 && i % every !== 0) return;
+      out += `<text class="tickText" x="${xAt(i, data.length).toFixed(1)}" y="${H - 12}" text-anchor="middle">${esc(shortDate(d.date))}</text>`;
+    });
+    return out;
+  }
+  function shortDate(s) {
+    const d = new Date(String(s) + 'T00:00:00');
+    if (isNaN(d.getTime())) return String(s);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
+  function bands(ext, levels) {
+    const y = yFn(ext);
+    return levels.filter(v => v > ext.min && v < ext.max).map(v =>
+      `<line class="bandLine" x1="${L}" y1="${y(v).toFixed(1)}" x2="${W - R}" y2="${y(v).toFixed(1)}"></line>` +
+      `<text class="bandText" x="${W - R - 2}" y="${(y(v) - 4).toFixed(1)}" text-anchor="end">${v}</text>`
+    ).join('');
+  }
+
+  function histChart(title, sub, data, key) {
+    if (!data.length) return card(title, sub, '<div class="empty">No data.</div>');
+    const vals = data.map(d => n(d[key]));
+    const ext = extent(vals, true);
+    const y = yFn(ext);
+    const zero = y(0);
+    const bw = Math.max(1.2, PW / data.length * 0.86);
+    const bars = data.map((d, i) => {
+      const v = n(d[key]);
+      const yy = y(v);
+      const top = Math.min(yy, zero), hgt = Math.max(1, Math.abs(yy - zero));
+      const col = v >= 0 ? '#22c55e' : '#ef4444';
+      return `<rect x="${(xAt(i, data.length) - bw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${hgt.toFixed(1)}" fill="${col}"><title>${esc(d.date + ': ' + (v >= 0 ? '+' : '') + v)}</title></rect>`;
+    }).join('');
+    const svg = `<svg class="svgChart" viewBox="0 0 ${W} ${H}">${gridAndAxes(ext, data)}${bars}` +
+                `<line class="axisLine" x1="${L}" y1="${zero.toFixed(1)}" x2="${W - R}" y2="${zero.toFixed(1)}"></line></svg>`;
+    return card(title, sub, svg);
+  }
+
+  function lineChart(title, sub, data, series, bandLevels) {
+    if (!data.length) return card(title, sub, '<div class="empty">No data.</div>');
+    const all = [];
+    data.forEach(d => series.forEach(s => { const v = Number(d[s.key]); if (isFinite(v)) all.push(v); }));
+    const ext = extent(all, false);
+    const y = yFn(ext);
+    const lines = series.map(s => {
+      const pts = data.map((d, i) => {
+        const v = Number(d[s.key]);
+        return isFinite(v) ? `${xAt(i, data.length).toFixed(1)},${y(v).toFixed(1)}` : '';
+      }).filter(Boolean).join(' ');
+      return `<polyline points="${pts}" fill="none" stroke="${s.colour}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></polyline>`;
+    }).join('');
+    const legend = `<div class="chartLegend">${series.map(s =>
+      `<span class="legendItem"><span class="legendSwatch" style="background:${s.colour}"></span>${esc(s.label)}</span>`).join('')}</div>`;
+    const svg = `<svg class="svgChart" viewBox="0 0 ${W} ${H}">${gridAndAxes(ext, data)}${bandLevels ? bands(ext, bandLevels) : ''}` +
+                `<line class="axisLine" x1="${L}" y1="${T + PH}" x2="${W - R}" y2="${T + PH}"></line>${lines}</svg>`;
+    return card(title, sub, legend + svg);
+  }
+
+  function card(title, sub, body) {
+    return `<div class="chartCard"><h3 class="chartTitle">${esc(title)}</h3>` +
+           `<div class="chartSub">${esc(sub)}</div>${body}</div>`;
+  }
+
+  /* -------------------------------------------------------- band labels -- */
+  function band4(v) {
+    if (v >= 1000) return ['extreme', 'bad'];
+    if (v >= 500)  return ['very high', 'warn'];
+    if (v >= 300)  return ['high', 'warn'];
+    return ['normal', ''];
+  }
+
+  /* ------------------------------------------------------------- render -- */
+  function render() {
+    const view = rows.slice(-rangeDays);
+    const last = rows[rows.length - 1] || {};
+    const prev = rows[rows.length - 2] || {};
+
+    const bull = n(last.q25up) > n(last.q25dn);
+    const flipped = (n(last.q25up) > n(last.q25dn)) !== (n(prev.q25up) > n(prev.q25dn));
+    const ratio = last.ratio10 == null ? null : Number(last.ratio10);
+    const [up4Band, up4Cls] = band4(n(last.up4));
+    const [dn4Band, dn4Cls] = band4(n(last.dn4));
+
+    el('cards').innerHTML = `
+      <div class="card ${bull ? 'bullBorder' : 'bearBorder'}">
+        <div class="label">Primary trend</div>
+        <div class="value ${bull ? 'pos' : 'neg'}">${bull ? 'BULLISH' : 'BEARISH'}</div>
+        <div class="sub">${n(last.q25up)} up 25% vs ${n(last.q25dn)} down 25% in a quarter${flipped ? ' \u00B7 <strong>flipped today</strong>' : ''}</div>
+      </div>
+      <div class="card">
+        <div class="label">Breadth spread</div>
+        <div class="value ${n(last.diffQ) >= 0 ? 'pos' : 'neg'}">${n(last.diffQ) >= 0 ? '+' : ''}${n(last.diffQ)}</div>
+        <div class="sub">Quarter up minus quarter down</div>
+      </div>
+      <div class="card">
+        <div class="label">4% up today</div>
+        <div class="value pos">${n(last.up4)}</div>
+        <div class="sub ${up4Cls}">${up4Band}</div>
+      </div>
+      <div class="card">
+        <div class="label">4% down today</div>
+        <div class="value neg">${n(last.dn4)}</div>
+        <div class="sub ${dn4Cls}">${dn4Band}</div>
+      </div>
+      <div class="card">
+        <div class="label">10-day ratio</div>
+        <div class="value ${ratio == null ? '' : ratio >= 2 ? 'pos' : ratio <= 0.5 ? 'neg' : 'warn'}">${ratio == null ? '-' : ratio.toFixed(2)}</div>
+        <div class="sub">${ratio == null ? 'no data' : ratio >= 2 ? 'bullish thrust' : ratio <= 0.5 ? 'bearish thrust' : 'neutral'}</div>
+      </div>
+      <div class="card">
+        <div class="label">34/13 spread</div>
+        <div class="value ${n(last.diff3413) >= 0 ? 'pos' : 'neg'}">${n(last.diff3413) >= 0 ? '+' : ''}${n(last.diff3413)}</div>
+        <div class="sub">${n(last.b3413)} bull vs ${n(last.s3413)} bear</div>
+      </div>
+      <div class="card">
+        <div class="label">Stocks scanned</div>
+        <div class="value">${n(last.total).toLocaleString('en-GB')}</div>
+        <div class="sub">${esc(last.date || '-')}</div>
+      </div>
+      <div class="card">
+        <div class="label">Monthly movers</div>
+        <div class="value">${n(last.m25up)} / ${n(last.m25dn)}</div>
+        <div class="sub">Up / down 25% in a month \u00B7 ${n(last.m50up)} up 50%</div>
+      </div>`;
+
+    el('charts').innerHTML =
+      histChart('Breadth divergence',
+        'Stocks up 25% in a quarter minus stocks down 25% in a quarter. Green means more stocks rising than falling. Watch for this rolling over while the index keeps climbing.',
+        view, 'diffQ') +
+      lineChart('25% in a quarter',
+        'The primary indicator. Where these two lines cross is where the market phase changes.',
+        view,
+        [{ key: 'q25up', label: 'Up 25%', colour: '#22c55e' },
+         { key: 'q25dn', label: 'Down 25%', colour: '#ef4444' }],
+        [200, 500, 1000]) +
+      lineChart('4% daily movers',
+        'Stocks gaining or losing more than 4% in one day on rising volume. Spikes above 1000 tend to mark climaxes, not starts.',
+        view,
+        [{ key: 'up4', label: '4% up', colour: '#22c55e' },
+         { key: 'dn4', label: '4% down', colour: '#ef4444' }],
+        [300, 500, 1000]) +
+      lineChart('10-day breadth ratio',
+        'Ten days of 4% up divided by ten days of 4% down. Above 2 is a thrust worth acting on; below 0.5 is the opposite.',
+        view,
+        [{ key: 'ratio10', label: '10-day ratio', colour: '#60a5fa' }],
+        [0.5, 1, 2]) +
+      lineChart('34/13 secondary',
+        'Stocks up 13% from their 34-day low versus down 13% from their 34-day high. Faster moving, noisier, useful as confirmation only.',
+        view,
+        [{ key: 'b3413', label: 'Bullish', colour: '#22c55e' },
+         { key: 's3413', label: 'Bearish', colour: '#ef4444' }],
+        null);
+
+    const recent = rows.slice(-20).reverse();
+    el('tableWrap').innerHTML =
+      '<table><thead><tr>' +
+      ['Date', 'Phase', '4% up', '4% down', '10d ratio', '25% Q up', '25% Q down', 'Spread', '25% M up', '25% M down', 'Scanned']
+        .map(h => `<th>${h}</th>`).join('') +
+      '</tr></thead><tbody>' +
+      recent.map(r => {
+        const b = n(r.q25up) > n(r.q25dn);
+        const rt = r.ratio10 == null ? null : Number(r.ratio10);
+        return `<tr>
+          <td>${esc(r.date)}</td>
+          <td><span class="chip ${b ? 'good' : 'bad'}">${b ? 'Bull' : 'Bear'}</span></td>
+          <td>${n(r.up4)}</td>
+          <td>${n(r.dn4)}</td>
+          <td class="${rt == null ? '' : rt >= 2 ? 'pos' : rt <= 0.5 ? 'neg' : ''}">${rt == null ? '-' : rt.toFixed(2)}</td>
+          <td>${n(r.q25up)}</td>
+          <td>${n(r.q25dn)}</td>
+          <td class="${n(r.diffQ) >= 0 ? 'pos' : 'neg'}">${n(r.diffQ) >= 0 ? '+' : ''}${n(r.diffQ)}</td>
+          <td>${n(r.m25up)}</td>
+          <td>${n(r.m25dn)}</td>
+          <td>${n(r.total).toLocaleString('en-GB')}</td>
+        </tr>`;
+      }).join('') +
+      '</tbody></table>';
+  }
+
+  /* -------------------------------------------------------------- wiring -- */
+  el('rangeBtns').addEventListener('click', e => {
+    const btn = e.target.closest('button.range');
+    if (!btn) return;
+    rangeDays = Number(btn.dataset.days) || 120;
+    document.querySelectorAll('button.range').forEach(b => b.classList.toggle('active', b === btn));
+    if (rows.length) render();
+  });
+  el('refreshBtn').addEventListener('click', load);
+
+  load();
+})();
+</script>
+</body>
+</html>
