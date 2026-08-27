@@ -27,10 +27,6 @@
       background: radial-gradient(circle at top left, #1e293b, var(--bg) 50%);
       color: var(--text);
     }
-    body.market-negative header {
-      background: rgba(42, 15, 18, 0.94);
-      border-bottom-color: rgba(248, 113, 113, .55);
-    }
     header {
       padding: 22px 22px 12px;
       border-bottom: 1px solid var(--line);
@@ -447,21 +443,6 @@
     .chartModalBody .chartTitle { font-size: 22px; }
     .chartModalBody .chartSub { font-size: 14px; }
     .chartModalBody .svgChart { min-height: 520px; }
-    .marketBanner .marketStats {
-      display: inline-flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-    .marketBanner .marketStat {
-      border: 1px solid rgba(254, 202, 202, .35);
-      background: rgba(2, 6, 23, .22);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
     @media (max-width: 900px) {
       .grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
       th { top: 0; }
@@ -743,8 +724,6 @@
     return String(url || '').trim().replace(/\?.*$/, '');
   }
   function showSetup() {
-    document.body.classList.remove('market-negative');
-    if (marketBanner) { marketBanner.classList.add('hidden'); marketBanner.innerHTML = ''; }
     const settings = getSettings();
     el('webUrl').value = settings.webUrl || '';
     el('webSecret').value = settings.webSecret || '';
@@ -776,7 +755,7 @@
       return;
     }
     showDashboard();
-    el('statusline').textContent = isCoachAction ? 'Generating Trade Coach...' : 'Loading from Google Sheet...';
+    el('statusline').textContent = 'Loading from Google Sheet...';
     refreshBtn.disabled = true;
 
     const callbackName = 'tradeDashCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
