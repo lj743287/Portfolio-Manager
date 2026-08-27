@@ -1,0 +1,58 @@
+name: Remove trade coach functionality
+on:
+  push:
+    paths:
+      - '.github/workflows/remove-coach.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          original = s
+
+          # Remove Trade Coach CSS block, while keeping the Action Panel CSS that follows it.
+          s = re.sub(r'\n\s*\.coachPanel\s*\{.*?\n\s*\.actionPanel\s*\{', '\n    .actionPanel {', s, flags=re.S)
+
+          # Remove Trade Coach placeholder panel from the page.
+          s = re.sub(r'\n\s*<div id="coachPanel" class="coachPanel"></div>\s*\n', '\n', s)
+
+          # Remove render call from the main render function.
+          s = s.replace('    renderCoachPanel();\n', '')
+
+          # Remove Trade Coach helper/render functions, ending immediately before renderActionPanel.
+          s = re.sub(r'\n\s*function\s+coachRatingClass\s*\(.*?\n\s*function\s+renderActionPanel\s*\(', '\n  function renderActionPanel(', s, flags=re.S)
+          s = re.sub(r'\n\s*function\s+renderCoachPanel\s*\(.*?\n\s*function\s+renderActionPanel\s*\(', '\n  function renderActionPanel(', s, flags=re.S)
+
+          # Remove click handler that generated the Trade Coach.
+          s = re.sub(r"\n\s*dashboard\.addEventListener\('click',\s*e\s*=>\s*\{\s*if\s*\(e\.target\s*&&\s*e\.target\.id\s*===\s*'generateCoachBtn'\)\s*\{\s*loadData\('coach'\);\s*\}\s*\}\);\s*", '\n', s, flags=re.S)
+
+          # Remove special coach action handling from loadData.
+          s = s.replace("    const isCoachAction = action === 'coach';\n", '')
+          s = s.replace("      el('statusline').textContent = isCoachAction ? 'Generating Trade Coach...' : 'Loading from Google Sheet...';", "      el('statusline').textContent = 'Loading from Google Sheet...';")
+          s = s.replace("      showErr(mainError, isCoachAction ? 'The Trade Coach took too long to respond. It may still have completed in the Google Sheet. Refresh the dashboard in a moment, or check the Apps Script execution log.' : 'The dashboard could not load the Google Sheet feed. Check the Web app URL, the Web app secret, and that the Apps Script deployment is still set to Anyone.');", "      showErr(mainError, 'The dashboard could not load the Google Sheet feed. Check the Web app URL, the Web app secret, and that the Apps Script deployment is still set to Anyone.');")
+          s = s.replace('    }, isCoachAction ? 70000 : 20000);', '    }, 20000);')
+
+          p.write_text(s, encoding='utf-8')
+          print('index changed:', s != original)
+          remaining = [term for term in ['coachPanel', 'generateCoachBtn', 'Trade Coach', 'renderCoachPanel', 'coachRatingClass'] if term in s]
+          print('remaining coach terms:', remaining)
+          PY
+      - name: Remove temporary workflow
+        run: rm -f .github/workflows/remove-coach.yml
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/remove-coach.yml
+          git commit -m "Remove trade coach functionality" || echo "No changes to commit"
+          git push
