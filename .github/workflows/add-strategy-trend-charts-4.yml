@@ -1,0 +1,82 @@
+name: Add strategy trend charts
+on:
+  push:
+    paths:
+      - '.github/workflows/add-strategy-trend-charts-4.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import textwrap
+          p = Path('index.html')
+          s = p.read_text()
+          helper = textwrap.dedent('''\
+            function closedPerformanceTrend(st) {
+              const closed = (st.closed || [])
+                .slice()
+                .filter(p => p.exitDate)
+                .sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol || '').localeCompare(String(b.symbol || '')));
+              const rows = [];
+              let trades = 0, wins = 0, winTotal = 0, winCount = 0, lossTotal = 0, lossCount = 0, realisedTotal = 0;
+              closed.forEach(p => {
+                const pnl = num(p.realizedUsd) || 0;
+                trades++;
+                realisedTotal += pnl;
+                if (pnl > 0) { wins++; winTotal += pnl; winCount++; }
+                if (pnl < 0) { lossTotal += pnl; lossCount++; }
+                rows.push({
+                  label: String(p.symbol || '') + ' ' + shortDateLabel(p.exitDate),
+                  winRate: trades ? (wins / trades) * 100 : 0,
+                  avgWin: winCount ? winTotal / winCount : null,
+                  avgLoss: lossCount ? lossTotal / lossCount : null,
+                  expectancy: trades ? realisedTotal / trades : 0
+                });
+              });
+              return rows;
+            }
+          ''')
+          if 'function closedPerformanceTrend(st)' not in s:
+            marker = '  function renderPortfolio() {'
+            if marker not in s:
+              raise SystemExit('Could not find renderPortfolio marker')
+            s = s.replace(marker, helper + '\n' + marker)
+          old = "\n".join([
+            "${lineChart('Cumulative realised P&L trend', 'Running realised profit or loss from closed trades only.', cumulativeRealisedTrend(st), 'money')}",
+            "        ${multiLineChart('Strategy P&L by opening date', 'Realised and current unrealised P&L shown as separate cumulative lines, using each trade opening date as a proxy.', pnlByOpeningDate(st), pnlLineDefs(), 'money')}"
+          ])
+          new = "\n".join([
+            "${lineChart('Cumulative realised P&L trend', 'Running realised profit or loss from closed trades only.', cumulativeRealisedTrend(st), 'money')}",
+            "        ${lineChart('Win rate over time', 'Cumulative win rate after each closed trade, sorted by exit date.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.winRate })), 'pct')}",
+            "        ${lineChart('Average win over time', 'Cumulative average realised profit of winning closed trades.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.avgWin })).filter(d => d.value != null), 'money')}",
+            "        ${lineChart('Average loss over time', 'Cumulative average realised loss of losing closed trades.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.avgLoss })).filter(d => d.value != null), 'money')}",
+            "        ${lineChart('Expectancy over time', 'Cumulative average realised P&L per closed trade.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.expectancy })), 'money')}",
+            "        ${multiLineChart('Strategy P&L by opening date', 'Realised and current unrealised P&L shown as separate cumulative lines, using each trade opening date as a proxy.', pnlByOpeningDate(st), pnlLineDefs(), 'money')}"
+          ])
+          if 'Win rate over time' not in s:
+            if old not in s:
+              raise SystemExit('Could not find strategy chart insertion point')
+            s = s.replace(old, new)
+          forbidden = ['isCoachAction', 'marketMonitorBtn', 'tradeAnalyserBtn']
+          for term in forbidden:
+            if term in s:
+              raise SystemExit(f'Forbidden leftover reference found: {term}')
+          if 'function closedPerformanceTrend(st)' not in s or 'Win rate over time' not in s:
+            raise SystemExit('Trend chart patch did not apply')
+          p.write_text(s)
+          PY
+      - name: Remove temporary workflow
+        run: rm -f .github/workflows/add-strategy-trend-charts-4.yml
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/add-strategy-trend-charts-4.yml
+          git commit -m "Add strategy trend charts"
+          git push
