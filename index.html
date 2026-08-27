@@ -1,1 +1,1579 @@
-placeholder
+
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portfolio Manager</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --line: #374151;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --warn: #f59e0b;
+      --blue: #60a5fa;
+      --chip: #334155;
+      --white: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top left, #1e293b, var(--bg) 50%);
+      color: var(--text);
+    }
+    body.market-negative {
+      --bg: #2a0f12;
+      --panel: #1f1113;
+      --panel2: #2a171a;
+      --line: #7f1d1d;
+      background: radial-gradient(circle at top left, #7f1d1d, #2a0f12 52%, #120608 100%);
+    }
+    body.market-negative header {
+      background: rgba(42, 15, 18, 0.94);
+      border-bottom-color: rgba(248, 113, 113, .55);
+    }
+    header {
+      padding: 22px 22px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.86);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      backdrop-filter: blur(10px);
+    }
+    .topbar {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0.2px;
+    }
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    button, .filebtn {
+      border: 1px solid var(--line);
+      background: #2563eb;
+      color: var(--white);
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    button.secondary { background: var(--panel2); }
+    button.danger { background: #7f1d1d; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    main { padding: 18px 22px 40px; }
+    .setup {
+      max-width: 850px;
+      margin: 18px auto;
+      background: rgba(17, 24, 39, 0.96);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .setup h2 { margin: 0 0 10px; }
+    .setup p { color: var(--muted); line-height: 1.45; }
+    label {
+      display: block;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    input {
+      width: 100%;
+      margin-top: 6px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      background: #020617;
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .card {
+      background: rgba(17,24,39,0.94);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 82px;
+    }
+    .card .label { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .card .value { font-size: 24px; margin-top: 7px; font-weight: 800; }
+    .card .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .pos { color: var(--good); }
+    .neg { color: var(--bad); }
+    .warn { color: var(--warn); }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 16px 0 12px;
+    }
+    .tab {
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab.active { background: #2563eb; border-color: #60a5fa; }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin: 8px 0 12px;
+    }
+    .search {
+      max-width: 320px;
+      min-width: 220px;
+    }
+    .panel {
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      background: #020617;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    tr:hover td { background: rgba(96, 165, 250, 0.06); }
+    .tablewrap { overflow-x: auto; max-height: 70vh; position: relative; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background: var(--chip);
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .chip.good { background: rgba(34,197,94,.15); color: #86efac; border: 1px solid rgba(34,197,94,.25); }
+    .chip.bad { background: rgba(239,68,68,.15); color: #fecaca; border: 1px solid rgba(239,68,68,.25); }
+    .chip.warn { background: rgba(245,158,11,.15); color: #fde68a; border: 1px solid rgba(245,158,11,.25); }
+    .hidden { display: none !important; }
+    .statusline {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .error {
+      background: rgba(127, 29, 29, .75);
+      border: 1px solid rgba(248, 113, 113, .35);
+      color: #fee2e2;
+      padding: 12px;
+      border-radius: 12px;
+      margin: 12px 0;
+      white-space: pre-wrap;
+    }
+    .empty {
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .section {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .section:last-child { border-bottom: none; }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .section p {
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 6px 0 0;
+    }
+    .noteBox {
+      background: rgba(96,165,250,.08);
+      border: 1px solid rgba(96,165,250,.22);
+      border-radius: 14px;
+      padding: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 14px 0;
+    }
+    .actionPanel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .actionCard {
+      background: rgba(17,24,39,.94);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .actionCard.priority { border-color: rgba(245,158,11,.45); }
+    .actionCard.badBorder { border-color: rgba(239,68,68,.45); }
+    .actionCard.goodBorder { border-color: rgba(34,197,94,.35); }
+    .aTitle { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 800; }
+    .aMain { font-size: 22px; font-weight: 850; margin-top: 6px; }
+    .aSub { color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.35; }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      align-items: end;
+      margin: 16px 0;
+      background: rgba(17,24,39,.78);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .filters select {
+      width: 100%;
+      margin-top: 6px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      background: #020617;
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .filterNote { color: var(--muted); font-size: 12px; line-height: 1.35; }
+
+    .chartGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 14px;
+      margin: 16px;
+    }
+    .chartCard {
+      position: relative;
+      background: rgba(15,23,42,.6);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 310px;
+      cursor: zoom-in;
+      transition: transform .12s ease, border-color .12s ease;
+    }
+    .chartCard:hover { transform: translateY(-1px); border-color: rgba(96,165,250,.6); }
+    .chartCard::after {
+      content: 'Click to enlarge';
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .chartTitle { font-weight: 800; font-size: 16px; margin-bottom: 6px; padding-right: 120px; }
+    .chartSub { color: var(--muted); font-size: 12px; line-height: 1.35; margin-bottom: 10px; min-height: 34px; }
+    .svgChart { width: 100%; min-height: 220px; }
+    .axisText { fill: var(--muted); font-size: 10px; }
+    .gridLine { stroke: rgba(148,163,184,.16); stroke-width: 1; }
+    .lineA { fill: none; stroke: #60a5fa; stroke-width: 2.4; }
+    .lineB { fill: none; stroke: #22c55e; stroke-width: 2.1; }
+    .lineC { fill: none; stroke: #f59e0b; stroke-width: 2.1; }
+    .point { fill: #60a5fa; stroke: #0f172a; stroke-width: 1; }
+    .barGood { fill: rgba(34,197,94,.72); }
+    .barBad { fill: rgba(239,68,68,.72); }
+    .barWarn { fill: rgba(245,158,11,.76); }
+    .barNeutral { fill: rgba(96,165,250,.74); }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .legendItem { display: flex; align-items: center; gap: 6px; }
+    .legendSwatch { width: 10px; height: 10px; border-radius: 999px; background: #60a5fa; display: inline-block; }
+    .legendSwatch.b { background: #22c55e; }
+    .legendSwatch.c { background: #f59e0b; }
+
+    .coachPanel {
+      margin: 16px 0;
+      border: 1px solid rgba(96,165,250,.25);
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(17,24,39,.9));
+      border-radius: 18px;
+      overflow: hidden;
+    }
+    .coachHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 16px;
+      border-bottom: 1px solid rgba(96,165,250,.18);
+    }
+    .coachTitle { margin: 0; font-size: 20px; display: flex; gap: 10px; align-items: center; }
+    .coachSummary { color: var(--text); font-size: 14px; line-height: 1.45; margin-top: 8px; max-width: 1100px; }
+    .coachMeta { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .coachControls { white-space: nowrap; }
+    .coachBadge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(15,23,42,.6);
+    }
+    .coachBadge.act, .coachBadge.high { color: #fecaca; background: rgba(127,29,29,.5); border-color: rgba(248,113,113,.4); }
+    .coachBadge.watch, .coachBadge.medium { color: #fde68a; background: rgba(120,53,15,.5); border-color: rgba(245,158,11,.4); }
+    .coachBadge.hold, .coachBadge.low { color: #bbf7d0; background: rgba(20,83,45,.45); border-color: rgba(34,197,94,.35); }
+    .coachPriorityList { display: grid; gap: 10px; padding: 16px; }
+    .coachPriority {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      align-items: start;
+      background: rgba(2,6,23,.45);
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .coachGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      padding: 16px;
+      border-top: 1px solid rgba(96,165,250,.16);
+    }
+    .coachCard {
+      background: rgba(2,6,23,.45);
+      border: 1px solid rgba(148,163,184,.16);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .coachCard.act { border-color: rgba(248,113,113,.35); }
+    .coachCard.watch { border-color: rgba(245,158,11,.35); }
+    .coachCard.hold { border-color: rgba(34,197,94,.25); }
+    .coachCardTop { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 8px; }
+    .coachSymbol { font-weight: 900; font-size: 16px; }
+    .coachText { font-size: 13px; line-height: 1.4; margin-top: 6px; }
+    .coachMuted { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 6px; }
+    .coachEmpty { padding: 16px; color: var(--muted); }
+
+    .chartModal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(2,6,23,.82);
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chartModalBox {
+      width: min(1180px, 96vw);
+      max-height: 94vh;
+      overflow: auto;
+      background: rgba(15, 23, 42, .98);
+      border: 1px solid rgba(96, 165, 250, .55);
+      border-radius: 18px;
+      box-shadow: 0 24px 90px rgba(0,0,0,.55);
+      padding: 16px;
+    }
+    .chartModalTop {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
+    .chartModalClose { background: var(--panel2); }
+    .chartModalBody .chartCard {
+      min-height: unset;
+      border: 0;
+      background: transparent;
+      cursor: default;
+      transform: none;
+      padding: 0;
+    }
+    .chartModalBody .chartCard::after { content: ''; display: none; }
+    .chartModalBody .chartTitle { font-size: 22px; }
+    .chartModalBody .chartSub { font-size: 14px; }
+    .chartModalBody .svgChart { min-height: 520px; }
+
+
+    .marketBanner {
+      margin: 0;
+      padding: 14px 22px;
+      border-bottom: 1px solid rgba(248, 113, 113, .55);
+      background: linear-gradient(90deg, rgba(127, 29, 29, .98), rgba(153, 27, 27, .92));
+      color: #fee2e2;
+      position: sticky;
+      top: 81px;
+      z-index: 4;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+    .marketBannerTitle {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .02em;
+      margin-bottom: 4px;
+    }
+    .marketBannerText {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #fecaca;
+    }
+    .marketBanner .marketStats {
+      display: inline-flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .marketBanner .marketStat {
+      border: 1px solid rgba(254, 202, 202, .35);
+      background: rgba(2, 6, 23, .22);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .marketBanner.marketPositive {
+      border-bottom-color: rgba(74, 222, 128, .5);
+      background: linear-gradient(90deg, rgba(20, 83, 45, .98), rgba(22, 101, 52, .92));
+      color: #dcfce7;
+    }
+    .marketBanner.marketPositive .marketBannerText { color: #bbf7d0; }
+    .marketBanner.marketNeutral {
+      border-bottom-color: rgba(245, 158, 11, .5);
+      background: linear-gradient(90deg, rgba(120, 53, 15, .98), rgba(146, 64, 14, .92));
+      color: #fffbeb;
+    }
+    .marketBanner.marketNeutral .marketBannerText { color: #fde68a; }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+      th { top: 0; }
+    }
+    @media (max-width: 560px) {
+      main, header { padding-left: 14px; padding-right: 14px; }
+      .marketBanner { padding-left: 14px; padding-right: 14px; top: 78px; }
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <div>
+      <h1>Trade Dashboard</h1>
+      <div class="subtitle" id="subtitle">Read-only dashboard powered by your Google Sheet</div>
+    </div>
+    <div class="btns">
+      <button id="refreshBtn" disabled>Refresh data</button>
+      <button id="marketMonitorBtn" class="secondary" disabled>Market monitor</button>
+      <button id="tradeAnalyserBtn" class="secondary" disabled>Trade analyser</button>
+      <button id="settingsBtn" class="secondary">Settings</button>
+    </div>
+  </div>
+</header>
+
+<div id="marketBanner" class="marketBanner hidden"></div>
+
+<main>
+  <section id="setup" class="setup hidden">
+    <h2>Connect to your Google Sheet feed</h2>
+    <p>Paste the Web app URL and Web app secret from your Google Sheet setup. This dashboard only reads data. It does not write anything back to the sheet.</p>
+    <label for="webUrl">Web app URL</label>
+    <input id="webUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" />
+    <div class="hint">This should end in <strong>/exec</strong>. Do not include <strong>?key=</strong> here.</div>
+    <label for="webSecret">Web app secret</label>
+    <input id="webSecret" placeholder="Paste the random secret from the config tab" autocomplete="off" />
+    <div class="hint">No quotation marks. Paste the secret exactly as it appears in the config tab.</div>
+    <div class="btns" style="margin-top:16px">
+      <button id="saveConnectBtn">Save and connect</button>
+      <button id="clearBtn" class="danger">Clear saved details</button>
+    </div>
+    <div id="setupError" class="error hidden"></div>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div class="grid">
+      <div class="card"><div class="label">Open positions</div><div class="value" id="openCount">-</div><div class="sub" id="openSub">Live holdings</div></div>
+      <div class="card"><div class="label">Open market value</div><div class="value" id="openValue">-</div><div class="sub">Based on latest refreshed close</div></div>
+      <div class="card"><div class="label">Unrealised P&amp;L</div><div class="value" id="unrealised">-</div><div class="sub" id="unrealisedSub">Open trades only</div></div>
+      <div class="card"><div class="label">Partial realised</div><div class="value" id="partialRealised">-</div><div class="sub">Banked from open trades</div></div>
+      <div class="card"><div class="label">Realised P&amp;L</div><div class="value" id="realised">-</div><div class="sub">Closed + partial exits</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div class="label">Total P&amp;L</div><div class="value" id="totalPnl">-</div><div class="sub">Closed + partial + unrealised</div></div>
+      <div class="card"><div class="label">Open cost basis</div><div class="value" id="costBasis">-</div><div class="sub">Remaining open shares only</div></div>
+      <div class="card"><div class="label">Total stop risk</div><div class="value" id="totalStopRisk">-</div><div class="sub" id="totalStopRiskSub">Current close to stops</div></div>
+      <div class="card"><div class="label">Stops awaiting info</div><div class="value" id="awaitingStops">-</div><div class="sub">Rows still set to Awaiting</div></div>
+      <div class="card"><div class="label">Last stop update</div><div class="value" id="lastStopUpdate" style="font-size:18px">-</div><div class="sub" id="generatedAt">-</div></div>
+    </div>
+
+    <div id="coachPanel" class="coachPanel"></div>
+
+    <div id="actionPanel" class="actionPanel"></div>
+
+    <div class="filters" id="filters" style="display:none">
+      <div>
+        <label for="dateFrom">From entry date</label>
+        <input id="dateFrom" type="date" />
+      </div>
+      <div>
+        <label for="dateTo">To entry date</label>
+        <input id="dateTo" type="date" />
+      </div>
+      <div>
+        <label for="statusFilter">Status</label>
+        <select id="statusFilter">
+          <option value="all">All</option>
+          <option value="open">Open only</option>
+          <option value="closed">Closed only</option>
+        </select>
+      </div>
+      <div>
+        <label for="stopTypeFilter">Stop type</label>
+        <select id="stopTypeFilter"><option value="all">All stop types</option></select>
+      </div>
+      <div>
+        <label for="resultFilter">Result</label>
+        <select id="resultFilter">
+          <option value="all">All</option>
+          <option value="winner">Winners</option>
+          <option value="loser">Losers</option>
+          <option value="flat">Flat / no P&amp;L</option>
+        </select>
+      </div>
+      <div>
+        <label for="minPnlFilter">Min P&amp;L $</label>
+        <input id="minPnlFilter" type="number" step="1" placeholder="e.g. -500" />
+      </div>
+      <div>
+        <label for="minRiskFilter">Min stop risk $</label>
+        <input id="minRiskFilter" type="number" step="1" placeholder="e.g. 250" />
+      </div>
+      <div>
+        <button id="resetFiltersBtn" class="secondary" type="button">Reset filters</button>
+      </div>
+      <div class="filterNote">Filters affect the tables and analytics/charts below. The summary cards at the top stay as the full account view.</div>
+    </div>
+
+
+    <div class="tabs">
+      <button class="tab active" data-tab="live">Live trades</button>
+      <button class="tab" data-tab="stops">Stops</button>
+      <button class="tab" data-tab="portfolio">Portfolio performance</button>
+      <button class="tab" data-tab="strategy">Strategy analytics</button>
+      <button class="tab" data-tab="closed">Closed trades</button>
+      <button class="tab" data-tab="fills">Clean fills</button>
+    </div>
+
+    <div class="toolbar">
+      <input id="search" class="search" placeholder="Search symbol..." />
+      <div class="statusline" id="statusline">Not loaded yet</div>
+    </div>
+
+    <div id="mainError" class="error hidden"></div>
+    <div id="tablePanel" class="panel"><div class="empty">Loading...</div></div>
+  </section>
+</main>
+
+<div id="chartModal" class="chartModal hidden" aria-hidden="true">
+  <div class="chartModalBox" role="dialog" aria-modal="true" aria-label="Expanded chart">
+    <div class="chartModalTop"><button id="chartModalClose" class="chartModalClose">Close</button></div>
+    <div id="chartModalBody" class="chartModalBody"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'tradeDashboard.feedSettings.v1';
+  const BASELINE_BALANCE = 183330.61;
+  let state = { data: null, tab: 'live', search: '', showMarketMonitor: false, filters: { dateFrom: '', dateTo: '', status: 'all', stopType: 'all', result: 'all', minPnl: '', minRisk: '' } };
+
+  const el = id => document.getElementById(id);
+  const setup = el('setup');
+  const dashboard = el('dashboard');
+  const refreshBtn = el('refreshBtn');
+  const marketMonitorBtn = el('marketMonitorBtn');
+  const tradeAnalyserBtn = el('tradeAnalyserBtn');
+  const settingsBtn = el('settingsBtn');
+  const saveConnectBtn = el('saveConnectBtn');
+  const clearBtn = el('clearBtn');
+  const setupError = el('setupError');
+  const mainError = el('mainError');
+  const marketBanner = el('marketBanner');
+  const search = el('search');
+  const dateFrom = el('dateFrom');
+  const dateTo = el('dateTo');
+  const statusFilter = el('statusFilter');
+  const stopTypeFilter = el('stopTypeFilter');
+  const resultFilter = el('resultFilter');
+  const minPnlFilter = el('minPnlFilter');
+  const minRiskFilter = el('minRiskFilter');
+  const resetFiltersBtn = el('resetFiltersBtn');
+
+  function money(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return '$' + v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function num(n) {
+    if (n === null || n === undefined || n === '') return null;
+    const v = Number(String(n).replace(/[$,\s]/g, ''));
+    return isFinite(v) ? v : null;
+  }
+  function pct(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return v.toFixed(2) + '%';
+  }
+  function cls(n) {
+    const v = Number(n);
+    return v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+  }
+  function signedMoney(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return (v > 0 ? '+' : '') + money(v);
+  }
+  function signedPct(n) {
+    const v = Number(n);
+    if (!isFinite(v)) return '-';
+    return (v > 0 ? '+' : '') + pct(v);
+  }
+  function escapeHtml(v) {
+    return String(v ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  }
+  function setText(id, value, className) {
+    const node = el(id);
+    node.textContent = value;
+    node.className = 'value' + (className ? ' ' + className : '');
+  }
+  function chip(text, type) {
+    return `<span class="chip ${type || ''}">${escapeHtml(text)}</span>`;
+  }
+  function metricCard(label, value, sub, className) {
+    return `<div class="card"><div class="label">${escapeHtml(label)}</div><div class="value ${className || ''}">${value}</div><div class="sub">${escapeHtml(sub || '')}</div></div>`;
+  }
+  function dateKey(v) { return String(v || '').slice(0, 10); }
+  function monthKey(v) { return String(v || '').slice(0, 7) || 'Unknown'; }
+  function shortDate(v) {
+    const s = String(v || '');
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s.slice(5);
+    return s || '-';
+  }
+  function shortMonth(v) {
+    const s = String(v || '');
+    if (/^\d{4}-\d{2}$/.test(s)) return s.slice(5) + '/' + s.slice(2,4);
+    return s || '-';
+  }
+
+  function getSettings() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function saveSettings(settings) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+  function normaliseUrl(url) {
+    return String(url || '').trim().replace(/\?.*$/, '');
+  }
+  function showSetup() {
+    document.body.classList.remove('market-negative');
+    if (marketBanner) { marketBanner.classList.add('hidden'); marketBanner.innerHTML = ''; }
+    const settings = getSettings();
+    el('webUrl').value = settings.webUrl || '';
+    el('webSecret').value = settings.webSecret || '';
+    setup.classList.remove('hidden');
+    dashboard.classList.add('hidden');
+    refreshBtn.disabled = true;
+    marketMonitorBtn.disabled = true;
+    tradeAnalyserBtn.disabled = true;
+  }
+  function showDashboard() {
+    setup.classList.add('hidden');
+    dashboard.classList.remove('hidden');
+    refreshBtn.disabled = false;
+    marketMonitorBtn.disabled = false;
+    tradeAnalyserBtn.disabled = false;
+  }
+  function showErr(node, msg) {
+    node.textContent = msg;
+    node.classList.remove('hidden');
+  }
+  function hideErr(node) {
+    node.textContent = '';
+    node.classList.add('hidden');
+  }
+
+  function loadData(action) {
+    const settings = getSettings();
+    hideErr(mainError);
+    hideErr(setupError);
+
+    if (!settings.webUrl || !settings.webSecret) {
+      showSetup();
+      return;
+    }
+    showDashboard();
+    const isCoachAction = action === 'coach';
+    el('statusline').textContent = isCoachAction ? 'Generating Trade Coach...' : 'Loading from Google Sheet...';
+    refreshBtn.disabled = true;
+
+    const callbackName = 'tradeDashCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    const script = document.createElement('script');
+    const sep = settings.webUrl.includes('?') ? '&' : '?';
+    const actionPart = action ? '&action=' + encodeURIComponent(action) : '';
+    script.src = normaliseUrl(settings.webUrl) + sep + 'key=' + encodeURIComponent(settings.webSecret) + actionPart + '&callback=' + encodeURIComponent(callbackName) + '&_=' + Date.now();
+
+    let timer = setTimeout(() => {
+      cleanup();
+      showErr(mainError, isCoachAction ? 'The Trade Coach took too long to respond. It may still have completed in the Google Sheet. Refresh the dashboard in a moment, or check the Apps Script execution log.' : 'The dashboard could not load the Google Sheet feed. Check the Web app URL, the Web app secret, and that the Apps Script deployment is still set to Anyone.');
+      el('statusline').textContent = 'Load failed';
+      refreshBtn.disabled = false;
+    }, isCoachAction ? 70000 : 20000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[callbackName] = function (data) {
+      cleanup();
+      refreshBtn.disabled = false;
+      if (!data || !data.ok) {
+        showErr(mainError, data && data.error ? data.error : 'The feed returned an unknown error.');
+        el('statusline').textContent = 'Feed error';
+        return;
+      }
+      state.data = data;
+      render();
+    };
+    script.onerror = function () {
+      cleanup();
+      refreshBtn.disabled = false;
+      showErr(mainError, 'The dashboard could not reach the Google Apps Script URL. Re-check the Web app URL.');
+      el('statusline').textContent = 'Load failed';
+    };
+    document.body.appendChild(script);
+  }
+
+  function getOpenPositions() {
+    const positions = state.data?.positions || [];
+    return positions.filter(p => String(p.status || '').toUpperCase() === 'OPEN');
+  }
+  function getClosedPositions() {
+    const positions = state.data?.positions || [];
+    return positions.filter(p => String(p.status || '').toUpperCase() === 'CLOSED');
+  }
+  function stopsById() {
+    const map = {};
+    (state.data?.stops || []).forEach(s => { if (s.id) map[s.id] = s; });
+    return map;
+  }
+  function enrichOpen() {
+    const smap = stopsById();
+    return getOpenPositions().map(p => {
+      const s = smap[p.id] || {};
+      const shares = num(p.shares) || 0;
+      const avgEntry = num(p.avgEntry) || 0;
+      const lastClose = num(s.lastClose);
+      const cost = num(p.costBasisUsd) ?? shares * avgEntry;
+      const value = lastClose != null ? shares * lastClose : null;
+      const pnl = value != null ? value - cost : null;
+      const partialRealized = num(p.realizedUsd) || 0; // realised P&L from partial sells on still-open trades
+      const totalTradePnl = partialRealized + (pnl || 0);
+      const pnlPct = cost ? (pnl / cost) * 100 : null;
+      return { ...p, stop: s, shares, avgEntry, lastClose, cost, value, pnl, pnlPct, partialRealized, totalTradePnl };
+    });
+  }
+  function stopRiskForOpen(p) {
+    const stop = num(p.stop?.stopPrice);
+    if (stop == null || p.lastClose == null || !p.shares) return null;
+    return Math.max(0, (p.lastClose - stop) * p.shares);
+  }
+
+
+  function renderMarketCondition() {
+    const mc = state.data?.marketCondition || null;
+    const status = String(mc?.status || '').toLowerCase();
+    const isNegative = status === 'negative';
+    const showMonitor = isNegative || state.showMarketMonitor;
+
+    document.body.classList.toggle('market-negative', isNegative);
+
+    if (!marketBanner) return;
+    if (!showMonitor) {
+      marketBanner.classList.add('hidden');
+      marketBanner.innerHTML = '';
+      return;
+    }
+
+    const fastDays = mc?.fastDays || 10;
+    const slowDays = mc?.slowDays || 20;
+    const proxy = mc?.proxy || 'ONEQ';
+    const fast = num(mc?.fastMa);
+    const slow = num(mc?.slowMa);
+    const close = num(mc?.close);
+    const updated = mc?.latestDate || state.data?.generatedAt || '-';
+    const isPositive = status === 'positive' || status === 'good';
+    const title = isNegative ? '⚠ Market conditions negative' : isPositive ? '✅ Market conditions positive' : 'ℹ Market monitor';
+    const defaultMessage = isNegative
+      ? `${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression and respect sell signals.`
+      : isPositive
+        ? `${proxy} ${fastDays}MA is above its ${slowDays}MA. Conditions are supportive by your market proxy.`
+        : `${proxy} market condition data is not available yet. Refresh prices or rebuild the backend if this remains blank.`;
+
+    marketBanner.classList.remove('hidden', 'marketPositive', 'marketNeutral');
+    if (isPositive) marketBanner.classList.add('marketPositive');
+    if (!isNegative && !isPositive) marketBanner.classList.add('marketNeutral');
+    marketBanner.innerHTML = `
+      <div class="marketBannerTitle">${escapeHtml(title)}</div>
+      <div class="marketBannerText">${escapeHtml(mc?.message || defaultMessage)}</div>
+      <div class="marketStats">
+        <span class="marketStat">Proxy: ${escapeHtml(proxy)}</span>
+        <span class="marketStat">${fastDays}MA: ${fast != null ? money(fast) : '-'}</span>
+        <span class="marketStat">${slowDays}MA: ${slow != null ? money(slow) : '-'}</span>
+        <span class="marketStat">Close: ${close != null ? money(close) : '-'}</span>
+        <span class="marketStat">Updated: ${escapeHtml(updated)}</span>
+      </div>`;
+  }
+
+  function openInfoModal(title, bodyHtml) {
+    const body = el('chartModalBody');
+    body.innerHTML = `<div class="chartCard" style="cursor:default;min-height:0"><div class="chartTitle">${escapeHtml(title)}</div>${bodyHtml}</div>`;
+    el('chartModal').classList.remove('hidden');
+    el('chartModal').setAttribute('aria-hidden', 'false');
+  }
+
+  function showMarketMonitorPanel() {
+    if (!state.data) {
+      loadData();
+      return;
+    }
+    const mc = state.data?.marketCondition || {};
+    const status = String(mc.status || '').toLowerCase();
+    const fastDays = mc.fastDays || 10;
+    const slowDays = mc.slowDays || 20;
+    const proxy = mc.proxy || 'ONEQ';
+    const fast = num(mc.fastMa);
+    const slow = num(mc.slowMa);
+    const close = num(mc.close);
+    const updated = mc.latestDate || state.data?.generatedAt || '-';
+    const isNegative = status === 'negative';
+    const isPositive = status === 'positive' || status === 'good';
+    const statusText = isNegative ? 'Negative' : isPositive ? 'Positive' : 'Unavailable';
+    const statusClass = isNegative ? 'neg' : isPositive ? 'pos' : 'warn';
+    const message = mc.message || (isNegative
+      ? `${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression, avoid marginal setups and respect sell signals.`
+      : isPositive
+        ? `${proxy} ${fastDays}MA is above its ${slowDays}MA. Conditions are supportive by your proxy.`
+        : `${proxy} market data is not available yet.`);
+
+    openInfoModal('Market monitor', `
+      <div class="section" style="padding:12px 0 0;border-bottom:0">
+        <div class="grid">
+          ${metricCard('Market status', statusText, 'ONEQ 10MA versus 20MA', statusClass)}
+          ${metricCard('Proxy', escapeHtml(proxy), 'Market regime indicator')}
+          ${metricCard(`${fastDays}MA`, fast != null ? money(fast) : '-', 'Fast moving average', isNegative ? 'neg' : 'pos')}
+          ${metricCard(`${slowDays}MA`, slow != null ? money(slow) : '-', 'Slow moving average')}
+          ${metricCard('Latest close', close != null ? money(close) : '-', 'ONEQ close')}
+          ${metricCard('Updated', escapeHtml(updated), 'Latest market data date')}
+        </div>
+        <div class="noteBox">${escapeHtml(message)}</div>
+      </div>`);
+  }
+
+  function openTradeAnalyser() {
+    if (!state.data) {
+      loadData();
+      return;
+    }
+    const open = enrichOpen();
+    const closed = getClosedPositions();
+    const closedRealised = closed.reduce((a,p)=>a+(num(p.realizedUsd)||0),0);
+    const partialRealised = open.reduce((a,p)=>a+(p.partialRealized||0),0);
+    const unrealised = open.reduce((a,p)=>a+(p.pnl||0),0);
+    const total = closedRealised + partialRealised + unrealised;
+    const winners = closed.filter(p => (num(p.realizedUsd)||0) > 0).length;
+    const losers = closed.filter(p => (num(p.realizedUsd)||0) < 0).length;
+    const winRate = closed.length ? (winners / closed.length) * 100 : 0;
+    const stopRisk = open.reduce((a,p)=>a+(stopRiskForOpen(p)||0),0);
+    const biggestRisk = open.map(p => ({ symbol: p.symbol, risk: stopRiskForOpen(p) || 0 })).sort((a,b)=>b.risk-a.risk)[0];
+    const bestOpen = open.slice().sort((a,b)=>(b.totalTradePnl||0)-(a.totalTradePnl||0))[0];
+    const worstOpen = open.slice().sort((a,b)=>(a.totalTradePnl||0)-(b.totalTradePnl||0))[0];
+
+    openInfoModal('Trade analyser', `
+      <div class="section" style="padding:12px 0 0;border-bottom:0">
+        <div class="grid">
+          ${metricCard('Total P&L', money(total), 'Closed + partial + unrealised', cls(total))}
+          ${metricCard('Closed realised', money(closedRealised), 'Fully closed trades', cls(closedRealised))}
+          ${metricCard('Partial realised', money(partialRealised), 'Banked from open trades', cls(partialRealised))}
+          ${metricCard('Unrealised', money(unrealised), 'Remaining open shares', cls(unrealised))}
+          ${metricCard('Win rate', pct(winRate), `${winners} winners · ${losers} losers`, winRate >= 40 ? 'pos' : 'warn')}
+          ${metricCard('Total stop risk', money(stopRisk), `${open.length} open positions`, stopRisk ? 'warn' : 'pos')}
+          ${metricCard('Largest risk', biggestRisk ? escapeHtml(biggestRisk.symbol) : '-', biggestRisk ? money(biggestRisk.risk) + ' to stop' : 'No priced stop risk', 'warn')}
+          ${metricCard('Best open trade', bestOpen ? escapeHtml(bestOpen.symbol) : '-', bestOpen ? signedMoney(bestOpen.totalTradePnl || 0) : '-', bestOpen ? cls(bestOpen.totalTradePnl || 0) : '')}
+          ${metricCard('Worst open trade', worstOpen ? escapeHtml(worstOpen.symbol) : '-', worstOpen ? signedMoney(worstOpen.totalTradePnl || 0) : '-', worstOpen ? cls(worstOpen.totalTradePnl || 0) : '')}
+        </div>
+        <div class="noteBox">This is a quick snapshot. Use the full Strategy analytics tab for the charts and detailed breakdown.</div>
+        <button id="openFullStrategyBtn" type="button">Open full Strategy analytics</button>
+      </div>`);
+
+    const btn = document.getElementById('openFullStrategyBtn');
+    if (btn) btn.addEventListener('click', () => {
+      closeChartModal();
+      state.tab = 'strategy';
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
+      renderTable();
+      setTimeout(() => el('tablePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    });
+  }
+
+  function render() {
+    if (!state.data) return;
+    const open = enrichOpen();
+    const closed = getClosedPositions();
+    const summary = state.data.summary || {};
+
+    const openValue = open.reduce((a, p) => a + (p.value || 0), 0);
+    const openCost = open.reduce((a, p) => a + (p.cost || 0), 0);
+    const unrealised = open.reduce((a, p) => a + (p.pnl || 0), 0);
+    const partialRealised = open.reduce((a, p) => a + (p.partialRealized || 0), 0);
+    const closedRealised = closed.reduce((a, p) => a + (num(p.realizedUsd) || 0), 0);
+    const realised = closedRealised + partialRealised;
+    const total = unrealised + realised;
+    const awaiting = (state.data.stops || []).filter(s => String(s.stopType || '').toLowerCase() === 'awaiting').length;
+    const smap = stopsById();
+    let totalStopRisk = 0;
+    let riskedStops = 0;
+    open.forEach(p => {
+      const s = smap[p.id] || {};
+      const stop = num(s.stopPrice);
+      const lastClose = num(s.lastClose);
+      if (stop != null && lastClose != null && p.shares) {
+        totalStopRisk += Math.max(0, (lastClose - stop) * p.shares);
+        riskedStops++;
+      }
+    });
+
+    setText('openCount', String(open.length));
+    setText('openValue', money(openValue));
+    setText('unrealised', money(unrealised), cls(unrealised));
+    el('unrealisedSub').textContent = openCost ? pct((unrealised / openCost) * 100) + ' on open cost' : 'Open trades only';
+    setText('partialRealised', money(partialRealised), cls(partialRealised));
+    setText('realised', money(realised), cls(realised));
+    setText('totalPnl', money(total), cls(total));
+    setText('costBasis', money(openCost));
+    setText('totalStopRisk', money(totalStopRisk), totalStopRisk ? 'warn' : 'pos');
+    el('totalStopRiskSub').textContent = riskedStops + ' priced stop' + (riskedStops === 1 ? '' : 's');
+    setText('awaitingStops', String(awaiting), awaiting ? 'warn' : 'pos');
+    setText('lastStopUpdate', summary.latestStopUpdate || '-');
+    el('generatedAt').textContent = 'Feed generated: ' + (state.data.generatedAt || '-');
+    el('statusline').textContent = `${open.length} open · ${closed.length} closed · ${state.data.clean?.length || 0} clean fills`;
+    el('subtitle').textContent = 'Read-only dashboard powered by your Google Sheet';
+    renderMarketCondition();
+    renderFilterOptions();
+    renderCoachPanel();
+    renderActionPanel(open);
+
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
+    renderTable();
+  }
+
+  function rowFilterSymbol(row) {
+    const q = state.search.trim().toUpperCase();
+    if (!q) return true;
+    return String(row.symbol || row.sym || '').toUpperCase().includes(q);
+  }
+  function datePass(date) {
+    const d = dateKey(date);
+    if (state.filters.dateFrom && d < state.filters.dateFrom) return false;
+    if (state.filters.dateTo && d > state.filters.dateTo) return false;
+    return true;
+  }
+  function resultPass(value) {
+    const v = num(value) || 0;
+    if (state.filters.result === 'winner') return v > 0;
+    if (state.filters.result === 'loser') return v < 0;
+    if (state.filters.result === 'flat') return v === 0;
+    return true;
+  }
+  function minPnlPass(value) {
+    if (state.filters.minPnl === '') return true;
+    return (num(value) || 0) >= (num(state.filters.minPnl) || 0);
+  }
+  function minRiskPass(value) {
+    if (state.filters.minRisk === '') return true;
+    return (num(value) || 0) >= (num(state.filters.minRisk) || 0);
+  }
+  function filterOpenRow(p) {
+    const risk = stopRiskForOpen(p);
+    return rowFilterSymbol(p) && datePass(p.entryDate) && (state.filters.status === 'all' || state.filters.status === 'open') &&
+      (state.filters.stopType === 'all' || String(p.stop?.stopType || 'Awaiting') === state.filters.stopType) &&
+      resultPass(p.totalTradePnl) && minPnlPass(p.totalTradePnl) && minRiskPass(risk);
+  }
+  function filterClosedRow(p) {
+    return rowFilterSymbol(p) && datePass(p.entryDate) && (state.filters.status === 'all' || state.filters.status === 'closed') &&
+      resultPass(p.realizedUsd) && minPnlPass(p.realizedUsd);
+  }
+  function filterFillRow(f) {
+    return rowFilterSymbol(f) && datePass(f.date);
+  }
+  function filteredOpenPositions() { return enrichOpen().filter(filterOpenRow); }
+  function filteredClosedPositions() { return getClosedPositions().filter(filterClosedRow); }
+  function currentFilterDescription() {
+    const parts = [];
+    if (state.search) parts.push('symbol contains "' + state.search + '"');
+    if (state.filters.dateFrom) parts.push('from ' + state.filters.dateFrom);
+    if (state.filters.dateTo) parts.push('to ' + state.filters.dateTo);
+    if (state.filters.status !== 'all') parts.push(state.filters.status + ' trades');
+    if (state.filters.stopType !== 'all') parts.push('stop type ' + state.filters.stopType);
+    if (state.filters.result !== 'all') parts.push(state.filters.result + 's');
+    if (state.filters.minPnl !== '') parts.push('P&L >= ' + money(state.filters.minPnl));
+    if (state.filters.minRisk !== '') parts.push('risk >= ' + money(state.filters.minRisk));
+    return parts.length ? 'Filtered: ' + parts.join(' · ') : 'No filters applied';
+  }
+  function updateFiltersFromInputs() {
+    state.filters.dateFrom = dateFrom.value || '';
+    state.filters.dateTo = dateTo.value || '';
+    state.filters.status = statusFilter.value || 'all';
+    state.filters.stopType = stopTypeFilter.value || 'all';
+    state.filters.result = resultFilter.value || 'all';
+    state.filters.minPnl = minPnlFilter.value || '';
+    state.filters.minRisk = minRiskFilter.value || '';
+    renderTable();
+  }
+  function resetFilters() {
+    search.value = ''; state.search = '';
+    dateFrom.value = ''; dateTo.value = ''; statusFilter.value = 'all'; stopTypeFilter.value = 'all'; resultFilter.value = 'all'; minPnlFilter.value = ''; minRiskFilter.value = '';
+    updateFiltersFromInputs();
+  }
+  function renderFilterOptions() {
+    const selected = stopTypeFilter.value || 'all';
+    const types = Array.from(new Set((state.data?.stops || []).map(s => String(s.stopType || 'Awaiting')))).sort();
+    stopTypeFilter.innerHTML = '<option value="all">All stop types</option>' + types.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    stopTypeFilter.value = types.includes(selected) ? selected : 'all';
+    state.filters.stopType = stopTypeFilter.value;
+  }
+
+  function coachRatingClass(rating) {
+    const r = String(rating || '').toLowerCase();
+    if (r === 'act' || r === 'high') return 'act';
+    if (r === 'watch' || r === 'medium') return 'watch';
+    if (r === 'hold' || r === 'calm' || r === 'low') return 'hold';
+    return '';
+  }
+  function renderCoachPanel() {
+    const panel = el('coachPanel');
+    if (!panel) return;
+    const rows = state.data?.coach || [];
+    const overall = rows.find(r => String(r.type || '').toLowerCase() === 'overall');
+    const priorities = rows.filter(r => String(r.type || '').toLowerCase() === 'priority').sort((a,b)=>(num(a.rank)||0)-(num(b.rank)||0));
+    const positions = rows.filter(r => String(r.type || '').toLowerCase() === 'position').sort((a,b)=>String(a.symbol||'').localeCompare(String(b.symbol||'')));
+
+    if (!rows.length || !overall) {
+      panel.innerHTML = `<div class="coachHeader">
+        <div>
+          <h2 class="coachTitle">Trade Coach</h2>
+          <div class="coachSummary">No coach report has been generated yet. This will use your Google Sheet positions, stop settings, Twelve Data market data and the OpenAI API key stored privately in the sheet config.</div>
+          <div class="coachMeta">It analyses existing open trades only. It does not suggest new buys.</div>
+        </div>
+        <div class="coachControls"><button id="generateCoachBtn" type="button">Generate Trade Coach</button></div>
+      </div>`;
+      return;
+    }
+
+    const overallRating = overall.rating || 'Watch';
+    const priorityHtml = priorities.length ? `<div class="coachPriorityList">${priorities.slice(0,5).map(p => `
+      <div class="coachPriority">
+        <div>${chip(p.symbol || 'Portfolio', coachRatingClass(p.priority || 'Medium'))}</div>
+        <div><div class="coachText"><strong>${escapeHtml(p.suggestedAction || p.action || '-')}</strong></div><div class="coachMuted">${escapeHtml(p.reason || '')}</div></div>
+      </div>`).join('')}</div>` : '<div class="coachEmpty">No priority actions flagged in the latest report.</div>';
+
+    const positionHtml = positions.length ? `<div class="coachGrid">${positions.map(p => {
+      const rc = coachRatingClass(p.rating);
+      return `<div class="coachCard ${rc}">
+        <div class="coachCardTop"><div class="coachSymbol">${escapeHtml(p.symbol || '-')}</div><span class="coachBadge ${rc}">${escapeHtml(p.rating || '-')}</span></div>
+        <div class="coachText"><strong>Action:</strong> ${escapeHtml(p.suggestedAction || '-')}</div>
+        <div class="coachText"><strong>Stop:</strong> ${escapeHtml(p.suggestedStop || '-')}</div>
+        <div class="coachMuted">${escapeHtml(p.reason || '')}</div>
+        <div class="coachMuted"><strong>Risk:</strong> ${escapeHtml(p.riskNote || '-')}</div>
+        ${p.dataWarning ? `<div class="coachMuted warn"><strong>Data:</strong> ${escapeHtml(p.dataWarning)}</div>` : ''}
+      </div>`;
+    }).join('')}</div>` : '<div class="coachEmpty">No position coach cards available.</div>';
+
+    panel.innerHTML = `<div class="coachHeader">
+      <div>
+        <h2 class="coachTitle">Trade Coach <span class="coachBadge ${coachRatingClass(overallRating)}">${escapeHtml(overallRating)}</span></h2>
+      </div>
+      <div class="coachControls"><button id="generateCoachBtn" type="button">Generate new coach report</button></div>
+    </div>
+    <div>
+      <h2>Today’s coach priorities</h2>
+      ${priorityHtml}
+    </div>
+    ${positionHtml}`;
+  }
+
+  function renderActionPanel(open) {
+    const rows = open || [];
+    const awaiting = rows.filter(p => String(p.stop?.stopType || '').toLowerCase() === 'awaiting');
+    const priced = rows.map(p => ({ p, dist: num(p.stop?.stopDistancePct), risk: stopRiskForOpen(p) })).filter(x => x.dist != null || x.risk != null);
+    const closest = priced.filter(x => x.dist != null).sort((a, b) => a.dist - b.dist)[0];
+    const biggestRisk = priced.filter(x => x.risk != null).sort((a, b) => b.risk - a.risk)[0];
+    const best = rows.slice().filter(p => p.pnl != null).sort((a, b) => (b.totalTradePnl || 0) - (a.totalTradePnl || 0))[0];
+    const worst = rows.slice().filter(p => p.pnl != null).sort((a, b) => (a.totalTradePnl || 0) - (b.totalTradePnl || 0))[0];
+    const missingClose = rows.filter(p => p.lastClose == null).length;
+    const noPricedStop = rows.filter(p => stopRiskForOpen(p) == null).length;
+    const warnings = [];
+    if (awaiting.length) warnings.push(awaiting.length + ' stop' + (awaiting.length === 1 ? '' : 's') + ' awaiting info');
+    if (missingClose) warnings.push(missingClose + ' missing latest close');
+    if (noPricedStop) warnings.push(noPricedStop + ' without priced stop risk');
+    if (!warnings.length) warnings.push('No obvious data warnings');
+
+    el('actionPanel').innerHTML = `
+      <div class="actionCard ${awaiting.length ? 'priority' : 'goodBorder'}"><div class="aTitle">Stops missing</div><div class="aMain ${awaiting.length ? 'warn' : 'pos'}">${awaiting.length}</div><div class="aSub">${awaiting.slice(0, 4).map(p => escapeHtml(p.symbol)).join(', ') || 'All open trades have a selected stop type.'}</div></div>
+      <div class="actionCard ${closest && closest.dist < 3 ? 'badBorder' : 'priority'}"><div class="aTitle">Closest to stop</div><div class="aMain ${closest && closest.dist < 3 ? 'neg' : 'warn'}">${closest ? escapeHtml(closest.p.symbol) : '-'}</div><div class="aSub">${closest ? pct(closest.dist) + ' above stop · ' + money(closest.risk || 0) + ' risk' : 'No priced stops yet.'}</div></div>
+      <div class="actionCard priority"><div class="aTitle">Largest cash risk</div><div class="aMain warn">${biggestRisk ? escapeHtml(biggestRisk.p.symbol) : '-'}</div><div class="aSub">${biggestRisk ? money(biggestRisk.risk || 0) + ' risk to selected stop' : 'No priced stop risk yet.'}</div></div>
+      <div class="actionCard goodBorder"><div class="aTitle">Best open winner</div><div class="aMain pos">${best ? escapeHtml(best.symbol) : '-'}</div><div class="aSub">${best ? signedMoney(best.totalTradePnl || 0) + ' total trade P&L' : 'No open P&L yet.'}</div></div>
+      <div class="actionCard badBorder"><div class="aTitle">Worst open trade</div><div class="aMain ${worst && (worst.totalTradePnl || 0) < 0 ? 'neg' : ''}">${worst ? escapeHtml(worst.symbol) : '-'}</div><div class="aSub">${worst ? signedMoney(worst.totalTradePnl || 0) + ' total trade P&L' : 'No open P&L yet.'}</div></div>
+      <div class="actionCard ${warnings.length && warnings[0] !== 'No obvious data warnings' ? 'priority' : 'goodBorder'}"><div class="aTitle">Data warnings</div><div class="aMain ${warnings[0] === 'No obvious data warnings' ? 'pos' : 'warn'}">${warnings[0] === 'No obvious data warnings' ? 'Clear' : warnings.length}</div><div class="aSub">${warnings.map(escapeHtml).join(' · ')}</div></div>`;
+  }
+
+  function renderLive() {
+    const rows = filteredOpenPositions();
+    el('tablePanel').innerHTML = table(['Symbol','Entry date','Shares','Avg entry','Last close','Unrealised P&L','Partial realised','Total trade P&L','Open P&L %','Stop type','Risk to stop'], rows.map(p => {
+      const risk = stopRiskForOpen(p);
+      return [
+        `<strong>${escapeHtml(p.symbol)}</strong>`,
+        escapeHtml(p.entryDate || ''),
+        escapeHtml(p.shares),
+        money(p.avgEntry),
+        p.lastClose == null ? '-' : money(p.lastClose),
+        `<span class="${cls(p.pnl)}">${signedMoney(p.pnl || 0)}</span>`,
+        `<span class="${cls(p.partialRealized)}">${signedMoney(p.partialRealized || 0)}</span>`,
+        `<span class="${cls(p.totalTradePnl)}"><strong>${signedMoney(p.totalTradePnl || 0)}</strong></span>`,
+        `<span class="${cls(p.pnlPct)}">${signedPct(p.pnlPct || 0)}</span>`,
+        chip(p.stop?.stopType || 'Awaiting', String(p.stop?.stopType || '').toLowerCase() === 'awaiting' ? 'warn' : 'good'),
+        risk == null ? '-' : money(risk)
+      ];
+    }));
+  }
+
+  function renderStops() {
+    const rows = filteredOpenPositions();
+    el('tablePanel').innerHTML = table(['Symbol','Entry date','Stop type','Stop price','Last close','Stop distance','Risk to stop','Updated'], rows.map(p => {
+      const s = p.stop || {};
+      const risk = stopRiskForOpen(p);
+      return [
+        `<strong>${escapeHtml(p.symbol)}</strong>`,
+        escapeHtml(p.entryDate || ''),
+        chip(s.stopType || 'Awaiting', String(s.stopType || '').toLowerCase() === 'awaiting' ? 'warn' : 'good'),
+        escapeHtml(s.stopPrice || '-'),
+        s.lastClose === '' || s.lastClose == null ? '-' : money(s.lastClose),
+        s.stopDistancePct === '' || s.stopDistancePct == null ? '-' : pct(s.stopDistancePct),
+        risk == null ? '-' : money(risk),
+        escapeHtml(s.updated || '-')
+      ];
+    }));
+  }
+
+  function renderClosed() {
+    const rows = filteredClosedPositions();
+    el('tablePanel').innerHTML = table(['Symbol','Entry date','Exit date','Shares','Avg entry','Avg exit','Realised $','Partials'], rows.map(p => [
+      `<strong>${escapeHtml(p.symbol)}</strong>`,
+      escapeHtml(p.entryDate || ''),
+      escapeHtml(p.exitDate || ''),
+      escapeHtml(p.shares || ''),
+      money(p.avgEntry),
+      money(p.avgExit),
+      `<span class="${cls(p.realizedUsd)}">${signedMoney(p.realizedUsd || 0)}</span>`,
+      escapeHtml(p.partials || 0)
+    ]));
+  }
+
+  function renderFills() {
+    const fills = (state.data?.clean || []).filter(filterFillRow).slice().reverse();
+    el('tablePanel').innerHTML = table(['Date','Symbol','Side','Shares','Price','Cash','Fee'], fills.map(f => [
+      escapeHtml(f.date || ''),
+      `<strong>${escapeHtml(f.symbol)}</strong>`,
+      chip(f.side || ''),
+      escapeHtml(f.shares || ''),
+      money(f.price),
+      money(f.cash),
+      money(f.fee)
+    ]));
+  }
+
+  function table(headers, rows) {
+    if (!rows.length) return '<div class="empty">No rows to show.</div>';
+    return `<div class="tablewrap"><table><thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  }
+
+  function cumulativeRealisedSeries(closed) {
+    const sorted = closed.slice().sort((a,b) => dateKey(a.exitDate).localeCompare(dateKey(b.exitDate)));
+    let running = BASELINE_BALANCE;
+    const out = [{ label: 'Start', value: running }];
+    sorted.forEach(p => { running += num(p.realizedUsd) || 0; out.push({ label: shortDate(p.exitDate), value: running, rawDate: p.exitDate }); });
+    return out;
+  }
+
+  function cumulativeRealisedPnlSeries(closed) {
+    const sorted = closed.slice().sort((a,b) => dateKey(a.exitDate).localeCompare(dateKey(b.exitDate)));
+    let running = 0;
+    const out = [{ label: 'Start', value: 0 }];
+    sorted.forEach(p => { running += num(p.realizedUsd) || 0; out.push({ label: shortDate(p.exitDate), value: running, rawDate: p.exitDate }); });
+    return out;
+  }
+
+  function pnlByEntryProxySeries() {
+    const rows = [];
+    getClosedPositions().forEach(p => rows.push({ date: dateKey(p.entryDate), realised: num(p.realizedUsd) || 0, unrealised: 0 }));
+    enrichOpen().forEach(p => rows.push({ date: dateKey(p.entryDate), realised: p.partialRealized || 0, unrealised: p.pnl || 0 }));
+    rows.sort((a,b) => a.date.localeCompare(b.date));
+    let r = 0, u = 0;
+    const out = [{ label: 'Start', realised: 0, unrealised: 0, total: 0 }];
+    rows.forEach(x => { r += x.realised; u += x.unrealised; out.push({ label: shortDate(x.date), realised: r, unrealised: u, total: r + u }); });
+    return out;
+  }
+
+  function monthlyRealisedSeries(closed) {
+    const map = new Map();
+    closed.forEach(p => { const k = monthKey(p.exitDate); map.set(k, (map.get(k) || 0) + (num(p.realizedUsd) || 0)); });
+    return Array.from(map.entries()).sort((a,b) => a[0].localeCompare(b[0])).map(([k,v]) => ({ label: shortMonth(k), value: v }));
+  }
+
+  function closedDistribution(closed) {
+    const buckets = [
+      { label: '< -$1k', lo: -Infinity, hi: -1000, value: 0 },
+      { label: '-$1k to -$250', lo: -1000, hi: -250, value: 0 },
+      { label: '-$250 to $0', lo: -250, hi: 0, value: 0 },
+      { label: '$0 to $250', lo: 0, hi: 250, value: 0 },
+      { label: '$250 to $1k', lo: 250, hi: 1000, value: 0 },
+      { label: '> $1k', lo: 1000, hi: Infinity, value: 0 }
+    ];
+    closed.forEach(p => {
+      const v = num(p.realizedUsd) || 0;
+      const b = buckets.find(x => v >= x.lo && v < x.hi);
+      if (b) b.value++;
+    });
+    return buckets;
+  }
+
+  function riskByStopType(open) {
+    const map = new Map();
+    open.forEach(p => {
+      const type = p.stop?.stopType || 'Unknown';
+      const risk = stopRiskForOpen(p) || 0;
+      map.set(type, (map.get(type) || 0) + risk);
+    });
+    return Array.from(map.entries()).map(([label, value]) => ({ label, value })).sort((a,b) => b.value - a.value);
+  }
+
+  function topBottomContributors(closed) {
+    const sorted = closed.slice().sort((a,b) => (num(b.realizedUsd)||0) - (num(a.realizedUsd)||0));
+    const top = sorted.slice(0, 5).map(p => ({ label: p.symbol + ' win', value: num(p.realizedUsd)||0 }));
+    const bottom = sorted.slice(-5).map(p => ({ label: p.symbol + ' loss', value: num(p.realizedUsd)||0 }));
+    return top.concat(bottom).filter(x => isFinite(x.value));
+  }
+
+  function chartScale(values, height, topPad, bottomPad) {
+    let min = Math.min(...values, 0), max = Math.max(...values, 0);
+    if (!isFinite(min) || !isFinite(max) || min === max) { min = -1; max = 1; }
+    const pad = (max - min) * 0.1;
+    min -= pad; max += pad;
+    const y = v => topPad + (max - v) / (max - min) * (height - topPad - bottomPad);
+    return { min, max, y };
+  }
+  function linePath(points, xFn, yFn) {
+    return points.map((p,i) => (i ? 'L' : 'M') + xFn(p,i).toFixed(2) + ' ' + yFn(p,i).toFixed(2)).join(' ');
+  }
+  function lineChart(title, sub, series, options = {}) {
+    const width = 760, height = 270, left = 58, right = 18, top = 22, bottom = 42;
+    const labels = series[0]?.data?.map(d => d.label) || [];
+    const allVals = series.flatMap(s => s.data.map(d => d.value));
+    const scale = chartScale(allVals, height, top, bottom);
+    const x = (p,i) => left + (labels.length <= 1 ? 0 : i * (width-left-right)/(labels.length-1));
+    const y = (p) => scale.y(p.value);
+    const grid = [0, .25, .5, .75, 1].map(t => {
+      const gy = top + t*(height-top-bottom);
+      const val = scale.max - t*(scale.max-scale.min);
+      return `<line class="gridLine" x1="${left}" x2="${width-right}" y1="${gy}" y2="${gy}"/><text class="axisText" x="6" y="${gy+4}">${Math.round(val/1000)}k</text>`;
+    }).join('');
+    const tickEvery = Math.max(1, Math.ceil(labels.length / 6));
+    const ticks = labels.map((lab,i) => i % tickEvery === 0 || i === labels.length-1 ? `<text class="axisText" x="${x(null,i)-14}" y="${height-12}">${escapeHtml(lab)}</text>` : '').join('');
+    const classes = ['lineA','lineB','lineC'];
+    const sw = ['','b','c'];
+    const paths = series.map((s,i) => `<path class="${classes[i] || 'lineA'}" d="${linePath(s.data, x, y)}"/>${s.data.map((p,j)=>`<circle class="point" cx="${x(p,j)}" cy="${y(p)}" r="2.3"/>`).join('')}`).join('');
+    const legend = `<div class="legend">${series.map((s,i)=>`<span class="legendItem"><span class="legendSwatch ${sw[i] || ''}"></span>${escapeHtml(s.name)}</span>`).join('')}</div>`;
+    return `<div class="chartCard" data-chart="1"><div class="chartTitle">${escapeHtml(title)}</div><div class="chartSub">${escapeHtml(sub)}</div><svg class="svgChart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${grid}${paths}${ticks}</svg>${legend}</div>`;
+  }
+  function barChart(title, sub, data) {
+    const width = 760, height = 270, left = 58, right = 18, top = 22, bottom = 52;
+    const values = data.map(d => d.value);
+    const scale = chartScale(values, height, top, bottom);
+    const zero = scale.y(0);
+    const bw = Math.max(12, (width-left-right) / Math.max(data.length, 1) * 0.58);
+    const step = (width-left-right) / Math.max(data.length, 1);
+    const grid = [0,.25,.5,.75,1].map(t => {
+      const gy = top + t*(height-top-bottom);
+      const val = scale.max - t*(scale.max-scale.min);
+      return `<line class="gridLine" x1="${left}" x2="${width-right}" y1="${gy}" y2="${gy}"/><text class="axisText" x="6" y="${gy+4}">${Math.round(val/1000)}k</text>`;
+    }).join('');
+    const bars = data.map((d,i) => {
+      const cx = left + i*step + step/2;
+      const y = scale.y(d.value);
+      const h = Math.abs(zero-y);
+      const klass = d.kind || (d.value < 0 ? 'barBad' : 'barGood');
+      return `<rect class="${klass}" x="${cx-bw/2}" y="${Math.min(y, zero)}" width="${bw}" height="${Math.max(1,h)}" rx="3"/><text class="axisText" x="${cx-18}" y="${height-18}">${escapeHtml(String(d.label).slice(0,10))}</text>`;
+    }).join('');
+    return `<div class="chartCard" data-chart="1"><div class="chartTitle">${escapeHtml(title)}</div><div class="chartSub">${escapeHtml(sub)}</div><svg class="svgChart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${grid}${bars}</svg></div>`;
+  }
+  function horizontalBarChart(title, sub, data) {
+    const width = 760, height = Math.max(260, 36 * data.length + 44), left = 130, right = 80, top = 18, bottom = 18;
+    const maxAbs = Math.max(1, ...data.map(d => Math.abs(d.value || 0)));
+    const rowH = (height-top-bottom) / Math.max(data.length, 1);
+    const mid = left + (width-left-right) / 2;
+    const bars = data.map((d,i) => {
+      const y = top + i*rowH + 7;
+      const val = d.value || 0;
+      const len = Math.abs(val) / maxAbs * ((width-left-right)/2);
+      const x = val >= 0 ? mid : mid - len;
+      const klass = d.kind || (val < 0 ? 'barBad' : 'barGood');
+      return `<text class="axisText" x="6" y="${y+13}">${escapeHtml(String(d.label).slice(0,18))}</text><rect class="${klass}" x="${x}" y="${y}" width="${len}" height="16" rx="3"/><text class="axisText" x="${val>=0?x+len+5:x-70}" y="${y+13}">${escapeHtml(signedMoney(val).replace('.00',''))}</text>`;
+    }).join('');
+    return `<div class="chartCard" data-chart="1"><div class="chartTitle">${escapeHtml(title)}</div><div class="chartSub">${escapeHtml(sub)}</div><svg class="svgChart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><line class="gridLine" x1="${mid}" x2="${mid}" y1="${top}" y2="${height-bottom}"/>${bars}</svg></div>`;
+  }
+
+  function openPnlByPosition(open) {
+    return open.filter(p => p.pnl != null).sort((a,b) => (b.totalTradePnl||0)-(a.totalTradePnl||0)).map(p => ({ label: p.symbol, value: p.totalTradePnl || 0 }));
+  }
+  function riskByPosition(open) {
+    return open.map(p => ({ label: p.symbol, value: stopRiskForOpen(p) || 0, kind: 'barWarn' })).filter(x => x.value).sort((a,b) => b.value-a.value);
+  }
+
+  function renderPortfolio() {
+    const open = filteredOpenPositions();
+    const closed = filteredClosedPositions();
+    const allOpen = enrichOpen();
+    const allClosed = getClosedPositions();
+    const closedRealised = allClosed.reduce((a,p)=>a+(num(p.realizedUsd)||0),0);
+    const partialRealised = allOpen.reduce((a,p)=>a+(p.partialRealized||0),0);
+    const realised = closedRealised + partialRealised;
+    const unrealised = allOpen.reduce((a,p)=>a+(p.pnl||0),0);
+    const openValue = allOpen.reduce((a,p)=>a+(p.value||0),0);
+    const openCost = allOpen.reduce((a,p)=>a+(p.cost||0),0);
+    const stopRisk = allOpen.reduce((a,p)=>a+(stopRiskForOpen(p)||0),0);
+    const currentEquity = BASELINE_BALANCE + realised + unrealised;
+    const estimatedCash = BASELINE_BALANCE + realised - openCost;
+    const realisedSeries = cumulativeRealisedSeries(allClosed);
+    if (partialRealised) realisedSeries.push({ label: 'Open partials', value: BASELINE_BALANCE + realised, rawDate: 'Open partials' });
+    const pnlProxy = pnlByEntryProxySeries();
+    el('tablePanel').innerHTML = `
+      <div class="section">
+        <h2>Portfolio performance</h2>
+        <div class="grid">
+          ${metricCard('Opening balance', money(BASELINE_BALANCE), 'Hard-coded baseline')}
+          ${metricCard('Current equity estimate', money(currentEquity), 'Opening balance + realised + unrealised', cls(currentEquity-BASELINE_BALANCE))}
+          ${metricCard('Total return', pct(((currentEquity-BASELINE_BALANCE)/BASELINE_BALANCE)*100), 'Since opening balance', cls(currentEquity-BASELINE_BALANCE))}
+          ${metricCard('Equity if stops hit', money(currentEquity-stopRisk), 'Current equity less priced stop risk', 'warn')}
+          ${metricCard('Estimated cash', money(estimatedCash), 'Baseline + realised - open cost')}
+          ${metricCard('Partial realised', money(partialRealised), 'Banked from still-open trades', cls(partialRealised))}
+          ${metricCard('Open exposure', pct(currentEquity ? openValue/currentEquity*100 : 0), 'Open market value / equity')}
+        </div>
+        <div class="noteBox">${escapeHtml(currentFilterDescription())}</div>
+        <div class="chartGrid">
+          ${lineChart('Realised equity trend', 'Starting balance plus closed trade outcomes and banked partial exits on open trades.', [{ name: 'Realised equity', data: realisedSeries }])}
+          ${lineChart('P&L lines by opening date', 'Realised, unrealised and total P&L using the opening date of each trade as a proxy.', [
+            { name: 'Realised P&L', data: pnlProxy.map(x=>({label:x.label,value:x.realised})) },
+            { name: 'Unrealised P&L', data: pnlProxy.map(x=>({label:x.label,value:x.unrealised})) },
+            { name: 'Total P&L', data: pnlProxy.map(x=>({label:x.label,value:x.total})) }
+          ])}
+          ${barChart('P&L and risk bridge', 'Realised P&L, unrealised P&L and stop risk shown separately.', [
+            { label: 'Realised', value: realised, kind: realised >= 0 ? 'barGood' : 'barBad' },
+            { label: 'Unrealised', value: unrealised, kind: unrealised >= 0 ? 'barGood' : 'barBad' },
+            { label: 'Stop risk', value: -stopRisk, kind: 'barWarn' }
+          ])}
+          ${barChart('Current account split', 'Estimated cash, open market value and cash risk to priced stops.', [
+            { label: 'Cash', value: estimatedCash, kind: 'barNeutral' },
+            { label: 'Open market value', value: openValue, kind: 'barGood' },
+            { label: 'Stop risk', value: -stopRisk, kind: 'barWarn' }
+          ])}
+          ${horizontalBarChart('Open total P&L by position', 'Partial realised plus current unrealised P&L for each open position.', openPnlByPosition(open))}
+          ${barChart('Monthly realised P&L', 'Closed trade P&L grouped by exit month.', monthlyRealisedSeries(closed).map(x=>({label:x.label,value:x.value,kind:x.value>=0?'barGood':'barBad'})))}
+          ${horizontalBarChart('Risk concentration by position', 'Which open trades account for the most downside to their current stop.', riskByPosition(open))}
+        </div>
+      </div>`;
+  }
+
+  function renderStrategy() {
+    const allClosed = getClosedPositions();
+    const closed = filteredClosedPositions();
+    const open = filteredOpenPositions();
+    const partialRealised = enrichOpen().reduce((a,p)=>a+(p.partialRealized||0),0);
+    const closedRealised = allClosed.reduce((a,p)=>a+(num(p.realizedUsd)||0),0);
+    const realised = closedRealised + partialRealised;
+    const winners = allClosed.filter(p => (num(p.realizedUsd)||0) > 0);
+    const losers = allClosed.filter(p => (num(p.realizedUsd)||0) < 0);
+    const grossWin = winners.reduce((a,p)=>a+(num(p.realizedUsd)||0),0) + Math.max(0, partialRealised);
+    const grossLoss = Math.abs(losers.reduce((a,p)=>a+(num(p.realizedUsd)||0),0)) + Math.abs(Math.min(0, partialRealised));
+    const avgWin = winners.length ? winners.reduce((a,p)=>a+(num(p.realizedUsd)||0),0) / winners.length : 0;
+    const avgLoss = losers.length ? -Math.abs(losers.reduce((a,p)=>a+(num(p.realizedUsd)||0),0)) / losers.length : 0;
+    const winRate = allClosed.length ? winners.length / allClosed.length * 100 : 0;
+    const profitFactor = grossLoss ? grossWin / grossLoss : null;
+    const expectancy = allClosed.length ? closedRealised / allClosed.length : 0;
+    const cum = cumulativeRealisedPnlSeries(allClosed);
+    if (partialRealised) cum.push({ label: 'Open partials', value: closedRealised + partialRealised });
+    const pnlProxy = pnlByEntryProxySeries();
+    el('tablePanel').innerHTML = `
+      <div class="section">
+        <h2>Strategy analytics</h2>
+        <div class="grid">
+          ${metricCard('Closed trades', String(allClosed.length), 'Round-trips reconstructed from ledger')}
+          ${metricCard('Win rate', pct(winRate), winners.length + ' winners · ' + losers.length + ' losers', winRate >= 40 ? 'pos' : 'warn')}
+          ${metricCard('Closed realised', money(closedRealised), 'Fully closed trades only', cls(closedRealised))}
+          ${metricCard('Partial realised', money(partialRealised), 'Banked from still-open trades', cls(partialRealised))}
+          ${metricCard('Total realised', money(realised), 'Closed + partial exits', cls(realised))}
+          ${metricCard('Profit factor', profitFactor == null ? '-' : profitFactor.toFixed(2), 'Gross wins / gross losses including partial exits', profitFactor && profitFactor >= 1 ? 'pos' : 'neg')}
+          ${metricCard('Expectancy', money(expectancy), 'Average P&L per fully closed trade', cls(expectancy))}
+          ${metricCard('Average win', money(avgWin), 'Closed winners only', 'pos')}
+          ${metricCard('Average loss', money(avgLoss), 'Closed losers only', 'neg')}
+          ${metricCard('Stop coverage', `${enrichOpen().filter(p=>stopRiskForOpen(p)!=null).length}/${enrichOpen().length}`, 'Open trades with priced stop risk')}
+        </div>
+        <div class="noteBox">R-multiple is not calculated yet because the dashboard does not currently have a stable original initial-stop field for every trade. Once the sheet captures the initial stop at entry, this page can add average R, best/worst R, expectancy in R and R-distribution without guessing.</div>
+        <div class="chartGrid">
+          ${lineChart('Cumulative realised P&L', 'Closed trades accumulated by exit date, with current banked partial exits shown at the end.', [{ name: 'Realised P&L', data: cum }])}
+          ${lineChart('Strategy P&L by opening date', 'Realised, unrealised and total P&L using trade opening dates as a proxy.', [
+            { name: 'Realised P&L', data: pnlProxy.map(x=>({label:x.label,value:x.realised})) },
+            { name: 'Unrealised P&L', data: pnlProxy.map(x=>({label:x.label,value:x.unrealised})) },
+            { name: 'Total P&L', data: pnlProxy.map(x=>({label:x.label,value:x.total})) }
+          ])}
+          ${barChart('Recent closed trade P&L', 'Latest closed round-trips by realised result.', closed.slice(0, 14).reverse().map(p=>({label:p.symbol,value:num(p.realizedUsd)||0,kind:(num(p.realizedUsd)||0)>=0?'barGood':'barBad'})))}
+          ${barChart('Closed trade distribution', 'Number of closed trades by profit/loss bucket.', closedDistribution(allClosed).map(x=>({label:x.label,value:x.value,kind:'barNeutral'})))}
+          ${horizontalBarChart('Top and bottom contributors', 'Best and worst closed trades by realised P&L.', topBottomContributors(allClosed))}
+          ${barChart('Stop risk by stop type', 'Current downside risk grouped by stop method.', riskByStopType(open).map(x=>({label:x.label,value:x.value,kind:'barWarn'})))}
+        </div>
+      </div>`;
+  }
+
+  function renderTable() {
+    if (!state.data) return;
+    if (state.tab === 'live') return renderLive();
+    if (state.tab === 'stops') return renderStops();
+    if (state.tab === 'portfolio') return renderPortfolio();
+    if (state.tab === 'strategy') return renderStrategy();
+    if (state.tab === 'closed') return renderClosed();
+    return renderFills();
+  }
+
+  function openChartModal(card) {
+    const clone = card.cloneNode(true);
+    clone.removeAttribute('data-chart');
+    const body = el('chartModalBody');
+    body.innerHTML = '';
+    body.appendChild(clone);
+    el('chartModal').classList.remove('hidden');
+    el('chartModal').setAttribute('aria-hidden', 'false');
+  }
+  function closeChartModal() {
+    el('chartModal').classList.add('hidden');
+    el('chartModal').setAttribute('aria-hidden', 'true');
+    el('chartModalBody').innerHTML = '';
+  }
+
+  saveConnectBtn.addEventListener('click', () => {
+    const webUrl = normaliseUrl(el('webUrl').value);
+    const webSecret = el('webSecret').value.trim();
+    hideErr(setupError);
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(webUrl)) {
+      showErr(setupError, 'The Web app URL should start with https://script.google.com/macros/s/ and end with /exec');
+      return;
+    }
+    if (!webSecret) {
+      showErr(setupError, 'Paste the Web app secret from the config tab.');
+      return;
+    }
+    saveSettings({ webUrl, webSecret });
+    loadData();
+  });
+  clearBtn.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    showSetup();
+  });
+  settingsBtn.addEventListener('click', showSetup);
+  refreshBtn.addEventListener('click', loadData);
+  marketMonitorBtn.addEventListener('click', showMarketMonitorPanel);
+  tradeAnalyserBtn.addEventListener('click', openTradeAnalyser);
+  search.addEventListener('input', () => { state.search = search.value; renderTable(); });
+  [dateFrom, dateTo, statusFilter, stopTypeFilter, resultFilter, minPnlFilter, minRiskFilter].forEach(node => node.addEventListener('input', updateFiltersFromInputs));
+  resetFiltersBtn.addEventListener('click', resetFilters);
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      state.tab = t.dataset.tab;
+      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === state.tab));
+      renderTable();
+    });
+  });
+  dashboard.addEventListener('click', e => {
+    const coachBtn = e.target.closest('#generateCoachBtn');
+    if (coachBtn) {
+      loadData('coach');
+      return;
+    }
+  });
+  el('tablePanel').addEventListener('click', e => {
+    const chartCard = e.target.closest('[data-chart="1"]');
+    if (chartCard && !chartCard.closest('.chartModalBody')) openChartModal(chartCard);
+  });
+  el('chartModalClose').addEventListener('click', closeChartModal);
+  el('chartModal').addEventListener('click', e => {
+    if (e.target.id === 'chartModal') closeChartModal();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChartModal(); });
+
+  if (getSettings().webUrl && getSettings().webSecret) loadData();
+  else showSetup();
+})();
+</script>
+</body>
+</html>
