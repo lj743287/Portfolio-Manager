@@ -15,114 +15,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Restore previous dashboard and patch top buttons
+      - name: Restore previous dashboard
         run: |
           git checkout 2a91538fe165758fde883494f72afc60a10deda7 -- index.html
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          market_func = r'''  function showMarketMonitorPanel() {
-    if (!state.data) {
-      loadData();
-      return;
-    }
-    closeChartModal();
-    state.tab = 'market';
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', false));
-    renderTable();
-    setTimeout(() => el('tablePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-  }
-
-'''
-          s = re.sub(r"  function showMarketMonitorPanel\(\) \{.*?\n  \}\n\n", market_func, s, count=1, flags=re.S)
-
-          analyser_func = r'''  function openTradeAnalyser() {
-    if (!state.data) {
-      loadData();
-      return;
-    }
-    closeChartModal();
-    state.tab = 'strategy';
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
-    renderTable();
-    setTimeout(() => el('tablePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-  }
-
-'''
-          s = re.sub(r"  function openTradeAnalyser\(\) \{.*?\n  \}\n\n  function render\(\)", analyser_func + "  function render()", s, count=1, flags=re.S)
-
-          market_analytics = r'''  function renderMarketAnalytics() {
-    const mc = state.data?.marketCondition || {};
-    const status = String(mc.status || 'unknown').toLowerCase();
-    const isNeg = status === 'negative';
-    const isPos = status === 'positive' || status === 'good';
-    const proxy = mc.proxy || 'ONEQ';
-    const fastDays = mc.fastDays || 10;
-    const slowDays = mc.slowDays || 20;
-    const fast = num(mc.fastMa);
-    const slow = num(mc.slowMa);
-    const close = num(mc.close);
-    const spread = fast != null && slow != null ? fast - slow : null;
-    const spreadPct = fast != null && slow != null && slow !== 0 ? ((fast - slow) / slow) * 100 : null;
-    const statusLabel = isNeg ? 'Negative' : isPos ? 'Positive' : 'Unknown';
-    const statusClass = isNeg ? 'neg' : isPos ? 'pos' : 'warn';
-    const message = mc.message || (isNeg
-      ? `${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression, avoid marginal setups and respect sell signals.`
-      : isPos
-        ? `${proxy} ${fastDays}MA is above its ${slowDays}MA. Market conditions are supportive.`
-        : `${proxy} market condition data is not available yet. Refresh stops/prices in the Google Sheet and refresh this dashboard.`);
-
-    const comparisonBars = [
-      { label: 'Close', value: close || 0, kind: 'barNeutral' },
-      { label: `${fastDays}MA`, value: fast || 0, kind: isNeg ? 'barBad' : 'barGood' },
-      { label: `${slowDays}MA`, value: slow || 0, kind: 'barWarn' }
-    ].filter(x => x.value !== 0);
-
-    const spreadBars = [
-      { label: `${fastDays}MA minus ${slowDays}MA`, value: spread || 0, kind: spread != null && spread >= 0 ? 'barGood' : 'barBad' }
-    ];
-
-    const charts = comparisonBars.length
-      ? `<div class="chartGrid">
-          ${barChart(`${proxy} market proxy`, `Latest close versus ${fastDays}MA and ${slowDays}MA. Your regime rule is positive when ${fastDays}MA is above ${slowDays}MA.`, comparisonBars)}
-          ${barChart('Market regime spread', `Positive spread means ${fastDays}MA is above ${slowDays}MA. Negative spread means defensive market conditions.`, spreadBars)}
-        </div>`
-      : `<div class="empty">No market chart data available yet. Refresh stops/prices in the Google Sheet and refresh this dashboard.</div>`;
-
-    el('statusline').textContent = `Market monitor · ${proxy} · ${statusLabel}`;
-    el('tablePanel').innerHTML = `
-      <div class="section">
-        <h2>Market monitor</h2>
-        <div class="noteBox"><strong class="${statusClass}">${escapeHtml(statusLabel)} market conditions</strong><br>${escapeHtml(message)}</div>
-        <div class="grid">
-          ${metricCard('Market status', statusLabel, `${proxy} ${fastDays}MA versus ${slowDays}MA`, statusClass)}
-          ${metricCard('Proxy', escapeHtml(proxy), 'Market regime indicator')}
-          ${metricCard('Latest close', close != null ? money(close) : '-', escapeHtml(mc.latestDate || state.data.generatedAt || '-'))}
-          ${metricCard(`${fastDays}MA`, fast != null ? money(fast) : '-', 'Fast moving average', isNeg ? 'neg' : isPos ? 'pos' : 'warn')}
-          ${metricCard(`${slowDays}MA`, slow != null ? money(slow) : '-', 'Slow moving average')}
-          ${metricCard('MA spread', spread != null ? signedMoney(spread) : '-', spreadPct != null ? signedPct(spreadPct) : 'Fast MA minus slow MA', spread != null && spread >= 0 ? 'pos' : 'neg')}
-        </div>
-        ${charts}
-        <div class="noteBox">Rule: conditions are positive when ${escapeHtml(proxy)} ${fastDays}MA is above its ${slowDays}MA. Conditions are negative when ${fastDays}MA is below ${slowDays}MA.</div>
-      </div>`;
-  }
-
-'''
-          if 'function renderMarketAnalytics()' not in s:
-              s = s.replace('  function renderPortfolio() {', market_analytics + '  function renderPortfolio() {')
-
-          if "state.tab === 'market'" not in s:
-              s = s.replace("    if (state.tab === 'strategy') return renderStrategy();\n", "    if (state.tab === 'strategy') return renderStrategy();\n    if (state.tab === 'market') return renderMarketAnalytics();\n")
-
-          # Remove the old modal forwarding code if it remains unused but harmless. Leave modal itself for chart expansion.
-          wf = Path('.github/workflows/restore-full-tabs.yml')
-          p.write_text(s, encoding='utf-8')
-          if wf.exists():
-              wf.unlink()
-          PY
+      - name: Decode patch script
+        run: |
+          cat > /tmp/restore_patch.b64 <<'B64'
+ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmltcG9ydCByZQoKIyBQdXQgdGhlIGxhc3Qga25vd24gZ29vZCBkYXNoYm9hcmQgYmFjaywgdGhlbiBzd2l0Y2ggdGhlIHRvcCBidXR0b25zIGJhY2sgdG8gdGhlIGZ1bGwtcGFnZSBwYW5lbHMuCiMgVGhlIGNvbW1pdCBiZWxvdyBpcyB0aGUgbGFzdCBkYXNoYm9hcmQgYmVmb3JlIHRoZSBhY2NpZGVudGFsIHBsYWNlaG9sZGVyIG92ZXJ3cml0ZS4KIyBJdCBjb250YWlucyBwYXJ0aWFsIHJlYWxpc2VkIFAmTCwgbWFya2V0IHdhcm5pbmcgYmFja2dyb3VuZCBhbmQgdGhlIHRvcCBidXR0b25zLgojIFRoaXMgd29ya2Zsb3cgcnVucyBpbnNpZGUgR2l0SHViIEFjdGlvbnMgYWZ0ZXIgY2hlY2tvdXQuCgojIGluZGV4Lmh0bWwgaXMgcmVzdG9yZWQgYnkgdGhlIHdvcmtmbG93IGJlZm9yZSB0aGlzIHNjcmlwdCBydW5zLgpwID0gUGF0aCgnaW5kZXguaHRtbCcpCnMgPSBwLnJlYWRfdGV4dChlbmNvZGluZz0ndXRmLTgnKQoKbWFya2V0X2Z1bmMgPSByJycnICBmdW5jdGlvbiBzaG93TWFya2V0TW9uaXRvclBhbmVsKCkgewogICAgaWYgKCFzdGF0ZS5kYXRhKSB7CiAgICAgIGxvYWREYXRhKCk7CiAgICAgIHJldHVybjsKICAgIH0KICAgIGNsb3NlQ2hhcnRNb2RhbCgpOwogICAgc3RhdGUudGFiID0gJ21hcmtldCc7CiAgICBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCcudGFiJykuZm9yRWFjaCh0ID0+IHQuY2xhc3NMaXN0LnRvZ2dsZSgnYWN0aXZlJywgZmFsc2UpKTsKICAgIHJlbmRlclRhYmxlKCk7CiAgICBzZXRUaW1lb3V0KCgpID0+IGVsKCd0YWJsZVBhbmVsJyk/LnNjcm9sbEludG9WaWV3KHsgYmVoYXZpb3VyOiAnc21vb3RoJywgYmxvY2s6ICdzdGFydCcgfSksIDUwKTsKICB9CgonJycKcywgbl9tYXJrZXQgPSByZS5zdWJuKHInICBmdW5jdGlvbiBzaG93TWFya2V0TW9uaXRvclBhbmVsXCtcKFxcKSBcXHsuKj9cXG4gIFxcfVxcblxcbicsIG1hcmtldF9mdW5jLCBzLCBjb3VudD0xLCBmbGFncz1yZS5TKQoKYW5hbHlzZXJfZnVuYyA9IHInJycgIGZ1bmN0aW9uIG9wZW5UcmFkZUFuYWx5c2VyKCkgewogICAgaWYgKCFzdGF0ZS5kYXRhKSB7CiAgICAgIGxvYWREYXRhKCk7CiAgICAgIHJldHVybjsKICAgIH0KICAgIGNsb3NlQ2hhcnRNb2RhbCgpOwogICAgc3RhdGUudGFiID0gJ3N0cmF0ZWd5JzsKICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy50YWInKS5mb3JFYWNoKHQgPT4gdC5jbGFzc0xpc3QudG9nZ2xlKCdhY3RpdmUnLCB0LmRhdGFzZXQudGFiID09PSBzdGF0ZS50YWIpKTsKICAgIHJlbmRlclRhYmxlKCk7CiAgICBzZXRUaW1lb3V0KCgpID0+IGVsKCd0YWJsZVBhbmVsJyk/LnNjcm9sbEludG9WaWV3KHsgYmVoYXZpb3VyOiAnc21vb3RoJywgYmxvY2s6ICdzdGFydCcgfSksIDUwKTsKICB9CgonJycKcywgbl9hbmFseXNlciA9IHJlLnN1Ym4ocicgIGZ1bmN0aW9uIG9wZW5UcmFkZUFuYWx5c2VyXCtcKFxcKSBcXHsuKj9cXG4gIFxcfVxcbgpcXG4gIGZ1bmN0aW9uIHJlbmRlclxcKFxcKScsIGFuYWx5c2VyX2Z1bmMgKyAiICBmdW5jdGlvbiByZW5kZXIoKSIsIHMsIGNvdW50PTEsIGZsYWdzPXJlLlMpCgptYXJrZXRfYW5hbHl0aWNzID0gcicnJyAgZnVuY3Rpb24gcmVuZGVyTWFya2V0QW5hbHl0aWNzKCkgewogICAgY29uc3QgbWMgPSBzdGF0ZS5kYXRhPy5tYXJrZXRDb25kaXRpb24gfHwge307CiAgICBjb25zdCBzdGF0dXMgPSBTdHJpbmcobWMuc3RhdHVzIHx8ICd1bmtub3duJykudG9Mb3dlckNhc2UoKTsKICAgIGNvbnN0IGlzTmVnID0gc3RhdHVzID09PSAnbmVnYXRpdmUnOwogICAgY29uc3QgaXNQb3MgPSBzdGF0dXMgPT09ICdwb3NpdGl2ZScgfHwgc3RhdHVzID09PSAnZ29vZCc7CiAgICBjb25zdCBwcm94eSA9IG1jLnByb3h5IHx8ICdPTkVRJzsKICAgIGNvbnN0IGZhc3REYXlzID0gbWMuZmFzdERheXMgfHwgMTA7CiAgICBjb25zdCBzbG93RGF5cyA9IG1jLnNsb3dEYXlzIHx8IDIwOwogICAgY29uc3QgZmFzdCA9IG51bShtYy5mYXN0TWEpOwogICAgY29uc3Qgc2xvdyA9IG51bShtYy5zbG93TWEpOwogICAgY29uc3QgY2xvc2UgPSBudW0obWMuY2xvc2UpOwogICAgY29uc3Qgc3ByZWFkID0gZmFzdCAhPSBudWxsICYmIHNsb3cgIT0gbnVsbCA/IGZhc3QgLSBzbG93IDogbnVsbDsKICAgIGNvbnN0IHNwcmVhZFBjdCA9IGZhc3QgIT0gbnVsbCAmJiBzbG93ICE9IG51bGwgJiYgc2xvdyAhPT0gMCA/ICgoZmFzdCAtIHNsb3cpIC8gc2xvdykgKiAxMDAgOiBudWxsOwogICAgY29uc3Qgc3RhdHVzTGFiZWwgPSBpc05lZyA/ICdOZWdhdGl2ZScgOiBpc1BvcyA/ICdQb3NpdGl2ZScgOiAnVW5rbm93bic7CiAgICBjb25zdCBzdGF0dXNDbGFzcyA9IGlzTmVnID8gJ25lZycgOiBpc1BvcyA/ICdwb3MnIDogJ3dhcm4nOwogICAgY29uc3QgbWVzc2FnZSA9IG1jLm1lc3NhZ2UgfHwgKGlzTmVnCiAgICAgID8gYCR7cHJveHl9ICR7ZmFzdERheXN9TUEgaXMgYmVsb3cgaXRzICR7c2xvd0RheXN9TUEuIFJlZHVjZSBhZ2dyZXNzaW9uLCBhdm9pZCBtYXJnaW5hbCBzZXR1cHMgYW5kIHJlc3BlY3Qgc2VsbCBzaWduYWxzLmAKICAgICAgOiBpc1BvcwogICAgICAgID8gYCR7cHJveHl9ICR7ZmFzdERheXN9TUEgaXMgYWJvdmUgaXRzICR7c2xvd0RheXN9TUEuIE1hcmtldCBjb25kaXRpb25zIGFyZSBzdXBwb3J0aXZlLmAKICAgICAgICA6IGAke3Byb3h5fSBtYXJrZXQgY29uZGl0aW9uIGRhdGEgaXMgbm90IGF2YWlsYWJsZSB5ZXQuIFJlZnJlc2ggc3RvcHMvcHJpY2VzIGluIHRoZSBHb29nbGUgU2hlZXQgYW5kIHJlZnJlc2ggdGhpcyBkYXNoYm9hcmQuYCk7CgogICAgY29uc3QgY29tcGFyaXNvbkJhcnMgPSBbCiAgICAgIHsgbGFiZWw6ICdDbG9zZScsIHZhbHVlOiBjbG9zZSB8fCAwLCBraW5kOiAnYmFyTmV1dHJhbCcgfSwKICAgICAgeyBsYWJlbDogYCR7ZmFzdERheXN9TUFgLCB2YWx1ZTogZmFzdCB8fCAwLCBraW5kOiBpc05lZyA/ICdiYXJCYWQnIDogJ2Jhckdvb2QnIH0sCiAgICAgIHsgbGFiZWw6IGAke3Nsb3dEYXlzfU1BYCwgdmFsdWU6IHNsb3cgfHwgMCwga2luZDogJ2Jhcldhcm4nIH0KICAgIF0uZmlsdGVyKHggPT4geC52YWx1ZSAhPT0gMCk7CgogICAgY29uc3Qgc3ByZWFkQmFycyA9IFsKICAgICAgeyBsYWJlbDogYCR7ZmFzdERheXN9TUEgbWludXMgJHtzbG93RGF5c31NQWAsIHZhbHVlOiBzcHJlYWQgfHwgMCwga2luZDogc3ByZWFkICE9IG51bGwgJiYgc3ByZWFkID49IDAgPyAnYmFyR29vZCcgOiAnYmFyQmFkJyB9CiAgICBdOwoKICAgIGNvbnN0IGNoYXJ0cyA9IGNvbXBhcmlzb25CYXJzLmxlbmd0aAogICAgICA/IGA8ZGl2IGNsYXNzPVwiY2hhcnRHcmlkXCI+CiAgICAgICAgICAke2JhckNoYXJ0KGAke3Byb3h5fSBtYXJrZXQgcHJveHlgLCBgTGF0ZXN0IGNsb3NlIHZlcnN1cyAke2Zhc3REYXlzfU1BIGFuZCAke3Nsb3dEYXlzfU1BLiBZb3VyIHJlZ2ltZSBydWxlIGlzIHBvc2l0aXZlIHdoZW4gJHtmYXN0RGF5c31NQSBpcyBhYm92ZSAke3Nsb3dEYXlzfU1BLmAsIGNvbXBhcmlzb25CYXJzKX0KICAgICAgICAgICR7YmFyQ2hhcnQoJ01hcmtldCByZWdpbWUgc3ByZWFkJywgYFBvc2l0aXZlIHNwcmVhZCBtZWFucyAke2Zhc3REYXlzfU1BIGlzIGFib3ZlICR7c2xvd0RheXN9TUEuIE5lZ2F0aXZlIHNwcmVhZCBtZWFucyBkZWZlbnNpdmUgbWFya2V0IGNvbmRpdGlvbnMuYCwgc3ByZWFkQmFycyl9CiAgICAgICAgPC9kaXY+YAogICAgICA6IGA8ZGl2IGNsYXNzPVwiZW1wdHlcIj5ObyBtYXJrZXQgY2hhcnQgZGF0YSBhdmFpbGFibGUgeWV0LiBSZWZyZXNoIHN0b3BzL3ByaWNlcyBpbiB0aGUgR29vZ2xlIFNoZWV0IGFuZCByZWZyZXNoIHRoaXMgZGFzaGJvYXJkLjwvZGl2PmA7CgogICAgZWwoJ3N0YXR1c2xpbmUnKS50ZXh0Q29udGVudCA9IGBNYXJrZXQgbW9uaXRvciDCtyAke3Byb3h5fSDCtyAke3N0YXR1c0xhYmVsfWA7CiAgICBlbCgndGFibGVQYW5lbCcKS5pbm5lckhUTUwgPSBgCiAgICAgIDxkaXYgY2xhc3M9XCJzZWN0aW9uXCI+CiAgICAgICAgPGgyPk1hcmtldCBtb25pdG9yPC9oMj4KICAgICAgICA8ZGl2IGNsYXNzPVwibm90ZUJveFwiPjxzdHJvbmcgY2xhc3M9XCIke3N0YXR1c0NsYXNzfVwiPiR7ZXNjYXBlSHRtbChzdGF0dXNMYWJlbCl9IG1hcmtldCBjb25kaXRpb25zPC9zdHJvbmc+PGJyPiR7ZXNjYXBlSHRtbChtZXNzYWdlKX08L2Rpdj4KICAgICAgICA8ZGl2IGNsYXNzPVwiZ3JpZFwiPgogICAgICAgICAgJHttZXRyaWNDYXJkKCdNYXJrZXQgc3RhdHVzJywgc3RhdHVzTGFiZWwsIGAke3Byb3h5fSAke2Zhc3REYXlzfU1BIHZlcnN1cyAke3Nsb3dEYXlzfU1BYCwgc3RhdHVzQ2xhc3MpfQogICAgICAgICAgJHttZXRyaWNDYXJkKCdQcm94eScsIGVzY2FwZUh0bWwocHJveHkpLCAnTWFya2V0IHJlZ2ltZSBpbmRpY2F0b3InKX0KICAgICAgICAgICR7bWV0cmljQ2FyZCgnTGF0ZXN0IGNsb3NlJywgY2xvc2UgIT0gbnVsbCA/IG1vbmV5KGNsb3NlKSA6ICctJywgZXNjYXBlSHRtbChtYy5sYXRlc3REYXRlIHx8IHN0YXRlLmRhdGEuZ2VuZXJhdGVkQXQgfHwgJy0nKSl9CiAgICAgICAgICAke21ldHJpY0NhcmQoYCR7ZmFzdERheXN9TUFgLCBmYXN0ICE9IG51bGwgPyBtb25leShmYXN0KSA6ICctJywgJ0Zhc3QgbW92aW5nIGF2ZXJhZ2UnLCBpc05lZyA/ICduZWcnIDogaXNQb3MgPyAncG9zJyA6ICd3YXJuJyl9CiAgICAgICAgICAke21ldHJpY0NhcmQoYCR7c2xvd0RheXN9TUFgLCBzbG93ICE9IG51bGwgPyBtb25leShzbG93KSA6ICctJywgJ1Nsb3cgbW92aW5nIGF2ZXJhZ2UnKX0KICAgICAgICAgICR7bWV0cmljQ2FyZCgnTUEgc3ByZWFkJywgc3ByZWFkICE9IG51bGwgPyBzaWduZWRNb25leShzcHJlYWQpIDogJy0nLCBzcHJlYWRQY3QgIT0gbnVsbCA/IHNpZ25lZFBjdChzcHJlYWRQY3QpIDogJ0Zhc3QgTUEgbWludXMgc2xvdyBNQScsIHNwcmVhZCAhPSBudWxsICYmIHNwcmVhZCA+PSAwID8gJ3BvcycgOiAnbmVnJyl9CiAgICAgICAgPC9kaXY+CiAgICAgICAgJHtjaGFydHN9CiAgICAgICAgPGRpdiBjbGFzcz1cIm5vdGVCb3hcIj5SdWxlOiBjb25kaXRpb25zIGFyZSBwb3NpdGl2ZSB3aGVuICR7ZXNjYXBlSHRtbChwcm94eSl9ICR7ZmFzdERheXN9TUEgaXMgYWJvdmUgaXRzICR7c2xvd0RheXN9TUEuIENvbmRpdGlvbnMgYXJlIG5lZ2F0aXZlIHdoZW4gJHtmYXN0RGF5c31NQSBpcyBiZWxvdyAke3Nsb3dEYXlzfU1BLjwvZGl2PgogICAgICA8L2Rpdj5gOwogIH0KCicnJwppZiAnZnVuY3Rpb24gcmVuZGVyTWFya2V0QW5hbHl0aWNzKCknIG5vdCBpbiBzOgogICAgcyA9IHMucmVwbGFjZSgnICBmdW5jdGlvbiByZW5kZXJQb3J0Zm9saW8oKSB7JywgbWFya2V0X2FuYWx5dGljcyArICcgIGZ1bmN0aW9uIHJlbmRlclBvcnRmb2xpbygpIHsnKQoKaWYgInN0YXRlLnRhYiA9PT0gJ21hcmtldCciIG5vdCBpbiBzOgogICAgcyA9IHMucmVwbGFjZSgiICAgIGlmIChzdGF0ZS50YWIgPT09ICdzdHJhdGVneScpIHJldHVybiByZW5kZXJTdHJhdGVneSgpO1xcbiIsICIgICAgaWYgKHN0YXRlLnRhYiA9PT0gJ3N0cmF0ZWd5JykgcmV0dXJuIHJlbmRlclN0cmF0ZWd5KCk7XFxuICAgIGlmIChzdGF0ZS50YWIgPT09ICdtYXJrZXQnKSByZXR1cm4gcmVuZGVyTWFya2V0QW5hbHl0aWNzKCk7XFxuIikKCmlmICdwbGFjZWhvbGRlcicgPT0gcy5zdHJpcCgpOgogICAgcmFpc2UgU3lzdGVtRXhpdCgnRGFzaGJvYXJkIHdhcyBub3QgcmVzdG9yZWQgYmVmb3JlIHBhdGNoaW5nJykKCnAud3JpdGVfdGV4dChzLCBlbmNvZGluZz0ndXRmLTgnKQp3ZiA9IFBhdGgoJy5naXRodWIvd29ya2Zsb3dzL3Jlc3RvcmUtZnVsbC10YWJzLnltbCcpCmlmIHdmLmV4aXN0cygpOgogICAgd2YudW5saW5rKCkK
+B64
+          base64 -d /tmp/restore_patch.b64 > /tmp/restore_patch.py
+      - name: Patch dashboard
+        run: python /tmp/restore_patch.py
       - name: Commit restored dashboard
         run: |
           git config user.name "github-actions[bot]"
