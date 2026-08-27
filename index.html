@@ -1322,22 +1322,24 @@ function closedPerformanceTrend(st) {
     .slice()
     .filter(p => p.exitDate)
     .sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol || '').localeCompare(String(b.symbol || '')));
+
   const rows = [];
-  let trades = 0, wins = 0, winTotal = 0, winCount = 0, lossTotal = 0, lossCount = 0, realisedTotal = 0;
-  closed.forEach(p => {
-    const pnl = num(p.realizedUsd) || 0;
-    trades++;
-    realisedTotal += pnl;
-    if (pnl > 0) { wins++; winTotal += pnl; winCount++; }
-    if (pnl < 0) { lossTotal += pnl; lossCount++; }
+  for (let i = 0; i < closed.length; i++) {
+    const window = closed.slice(Math.max(0, i - 19), i + 1);
+    if (window.length < 20) continue;
+    const pnls = window.map(p => num(p.realizedUsd) || 0);
+    const wins = pnls.filter(v => v > 0);
+    const losses = pnls.filter(v => v < 0);
+    const realised = pnls.reduce((a, v) => a + v, 0);
+    const latest = closed[i];
     rows.push({
-      label: String(p.symbol || '') + ' ' + shortDateLabel(p.exitDate),
-      winRate: trades ? (wins / trades) * 100 : 0,
-      avgWin: winCount ? winTotal / winCount : null,
-      avgLoss: lossCount ? lossTotal / lossCount : null,
-      expectancy: trades ? realisedTotal / trades : 0
+      label: String(latest.symbol || '') + ' ' + shortDateLabel(latest.exitDate),
+      winRate: (wins.length / window.length) * 100,
+      avgWin: wins.length ? wins.reduce((a, v) => a + v, 0) / wins.length : null,
+      avgLoss: losses.length ? losses.reduce((a, v) => a + v, 0) / losses.length : null,
+      expectancy: realised / window.length
     });
-  });
+  }
   return rows;
 }
 
@@ -1452,10 +1454,10 @@ function closedPerformanceTrend(st) {
       <h2>Strategy charts</h2>
       <div class="chartGrid">
         ${lineChart('Cumulative realised P&L trend', 'Running realised profit or loss from closed trades only.', cumulativeRealisedTrend(st), 'money')}
-        ${lineChart('Win rate over time', 'Cumulative win rate after each closed trade, sorted by exit date.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.winRate })), 'pct')}
-        ${lineChart('Average win over time', 'Cumulative average realised profit of winning closed trades.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.avgWin })).filter(d => d.value != null), 'money')}
-        ${lineChart('Average loss over time', 'Cumulative average realised loss of losing closed trades.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.avgLoss })).filter(d => d.value != null), 'money')}
-        ${lineChart('Expectancy over time', 'Cumulative average realised P&L per closed trade.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.expectancy })), 'money')}
+        ${lineChart('Win rate 20-trade MA', 'Rolling win rate over the last 20 closed trades, sorted by exit date.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.winRate })), 'pct')}
+        ${lineChart('Average win 20-trade MA', 'Rolling average realised profit of winning trades over the last 20 closed trades.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.avgWin })).filter(d => d.value != null), 'money')}
+        ${lineChart('Average loss 20-trade MA', 'Rolling average realised loss of losing trades over the last 20 closed trades.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.avgLoss })).filter(d => d.value != null), 'money')}
+        ${lineChart('Expectancy 20-trade MA', 'Rolling average realised P&L per trade over the last 20 closed trades.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.expectancy })), 'money')}
         ${multiLineChart('Strategy P&L by opening date', 'Realised and current unrealised P&L shown as separate cumulative lines, using each trade opening date as a proxy.', pnlByOpeningDate(st), pnlLineDefs(), 'money')}
         ${barChart('Monthly realised P&L', 'Realised profit or loss grouped by exit month.', monthlyPnlBars(st), { kind: 'money', diverging: true })}
         ${barChart('Closed trade distribution', 'Number of trades in loss/win size buckets. This helps show whether the strategy relies on a few big winners.', closedTradeDistribution(st), { kind: 'number' })}
