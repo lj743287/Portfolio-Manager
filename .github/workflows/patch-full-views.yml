@@ -1,0 +1,134 @@
+name: Patch full top button views
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch dashboard full views
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          market_func = '''  function showMarketMonitorPanel() {
+    if (!state.data) {
+      loadData();
+      return;
+    }
+    closeChartModal();
+    state.tab = 'market';
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', false));
+    renderTable();
+    setTimeout(() => el('tablePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+'''
+          s, n_market = re.subn(r"  function showMarketMonitorPanel\(\) \{.*?\n  \}\n\n  function openTradeAnalyser", market_func + "  function openTradeAnalyser", s, count=1, flags=re.S)
+          if n_market != 1:
+              raise SystemExit('Could not patch Market monitor function')
+
+          analyser_func = '''  function openTradeAnalyser() {
+    if (!state.data) {
+      loadData();
+      return;
+    }
+    closeChartModal();
+    state.tab = 'strategy';
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
+    renderTable();
+    setTimeout(() => el('tablePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+'''
+          s, n_analyser = re.subn(r"  function openTradeAnalyser\(\) \{.*?\n  \}\n\n  function render\(\)", analyser_func + "  function render()", s, count=1, flags=re.S)
+          if n_analyser != 1:
+              raise SystemExit('Could not patch Trade analyser function')
+
+          market_analytics = '''  function renderMarketAnalytics() {
+    const mc = state.data?.marketCondition || {};
+    const status = String(mc.status || 'unknown').toLowerCase();
+    const isNeg = status === 'negative';
+    const isPos = status === 'positive' || status === 'good';
+    const proxy = mc.proxy || 'ONEQ';
+    const fastDays = mc.fastDays || 10;
+    const slowDays = mc.slowDays || 20;
+    const fast = num(mc.fastMa);
+    const slow = num(mc.slowMa);
+    const close = num(mc.close);
+    const spread = fast != null && slow != null ? fast - slow : null;
+    const spreadPct = fast != null && slow != null && slow !== 0 ? ((fast - slow) / slow) * 100 : null;
+    const statusLabel = isNeg ? 'Negative' : isPos ? 'Positive' : 'Unknown';
+    const statusClass = isNeg ? 'neg' : isPos ? 'pos' : 'warn';
+    const message = mc.message || (isNeg
+      ? `${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression, avoid marginal setups and respect sell signals.`
+      : isPos
+        ? `${proxy} ${fastDays}MA is above its ${slowDays}MA. Market conditions are supportive.`
+        : `${proxy} market condition data is not available yet. Refresh stops/prices and redeploy the Apps Script if this persists.`);
+
+    const comparisonBars = [
+      { label: 'Close', value: close || 0, kind: 'barNeutral' },
+      { label: `${fastDays}MA`, value: fast || 0, kind: isNeg ? 'barBad' : 'barGood' },
+      { label: `${slowDays}MA`, value: slow || 0, kind: 'barWarn' }
+    ].filter(x => x.value !== 0);
+
+    const spreadBars = [
+      { label: `${fastDays}MA minus ${slowDays}MA`, value: spread || 0, kind: spread != null && spread >= 0 ? 'barGood' : 'barBad' }
+    ];
+
+    const charts = comparisonBars.length
+      ? `<div class="chartGrid">
+          ${barChart(`${proxy} market proxy`, `Latest close versus ${fastDays}MA and ${slowDays}MA. Your regime rule is positive when ${fastDays}MA is above ${slowDays}MA.`, comparisonBars)}
+          ${barChart('Market regime spread', `Positive spread means ${fastDays}MA is above ${slowDays}MA. Negative spread means defensive market conditions.`, spreadBars)}
+        </div>`
+      : `<div class="empty">No market chart data available yet. Refresh stops/prices in the Google Sheet and refresh this dashboard.</div>`;
+
+    el('statusline').textContent = `Market monitor · ${proxy} · ${statusLabel}`;
+    el('tablePanel').innerHTML = `
+      <div class="section">
+        <h2>Market monitor</h2>
+        <div class="noteBox"><strong class="${statusClass}">${escapeHtml(statusLabel)} market conditions</strong><br>${escapeHtml(message)}</div>
+        <div class="grid">
+          ${metricCard('Market status', statusLabel, `${proxy} ${fastDays}MA versus ${slowDays}MA`, statusClass)}
+          ${metricCard('Proxy', escapeHtml(proxy), 'Market regime indicator')}
+          ${metricCard('Latest close', close != null ? money(close) : '-', escapeHtml(mc.latestDate || state.data?.generatedAt || '-'))}
+          ${metricCard(`${fastDays}MA`, fast != null ? money(fast) : '-', 'Fast moving average', isNeg ? 'neg' : isPos ? 'pos' : 'warn')}
+          ${metricCard(`${slowDays}MA`, slow != null ? money(slow) : '-', 'Slow moving average')}
+          ${metricCard('MA spread', spread != null ? signedMoney(spread) : '-', spreadPct != null ? signedPct(spreadPct) : 'Fast MA minus slow MA', spread != null && spread >= 0 ? 'pos' : 'neg')}
+        </div>
+        ${charts}
+        <div class="noteBox">Rule: conditions are positive when ${escapeHtml(proxy)} ${fastDays}MA is above its ${slowDays}MA. Conditions are negative when ${fastDays}MA is below ${slowDays}MA.</div>
+      </div>`;
+  }
+
+'''
+          if 'function renderMarketAnalytics()' not in s:
+              s = s.replace('  function renderPortfolio() {', market_analytics + '  function renderPortfolio() {')
+
+          if "state.tab === 'market'" not in s:
+              s = s.replace("    if (state.tab === 'strategy') return renderStrategy();\n", "    if (state.tab === 'strategy') return renderStrategy();\n    if (state.tab === 'market') return renderMarketAnalytics();\n")
+
+          wf = Path('.github/workflows/patch-full-views.yml')
+          if wf.exists():
+              wf.unlink()
+
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit patched dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/patch-full-views.yml
+          git commit -m "Restore full market and trade analyser views" || exit 0
+          git push
