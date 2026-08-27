@@ -17,21 +17,13 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
+
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
 
-          old_market = """  function showMarketMonitorPanel() {
-    if (!state.data) {
-      loadData();
-      return;
-    }
-    state.showMarketMonitor = true;
-    renderMarketCondition();
-    setTimeout(() => marketBanner?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-  }
-"""
-
-          new_market = """  function openInfoModal(title, bodyHtml) {
+          if 'function openInfoModal(' not in s:
+              replacement_market = r'''  function openInfoModal(title, bodyHtml) {
     const body = el('chartModalBody');
     body.innerHTML = `<div class="chartCard" style="cursor:default;min-height:0"><div class="chartTitle">${escapeHtml(title)}</div>${bodyHtml}</div>`;
     el('chartModal').classList.remove('hidden');
@@ -75,21 +67,10 @@ jobs:
         <div class="noteBox">${escapeHtml(message)}</div>
       </div>`);
   }
-"""
+'''
+              s = re.sub(r"  function showMarketMonitorPanel\(\) \{.*?\n  \}\n\n  function openTradeAnalyser", replacement_market + "\n  function openTradeAnalyser", s, count=1, flags=re.S)
 
-          old_analyser = """  function openTradeAnalyser() {
-    if (!state.data) {
-      loadData();
-      return;
-    }
-    state.tab = 'strategy';
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
-    renderTable();
-    setTimeout(() => el('tablePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-  }
-"""
-
-          new_analyser = """  function openTradeAnalyser() {
+          replacement_analyser = r'''  function openTradeAnalyser() {
     if (!state.data) {
       loadData();
       return;
@@ -134,26 +115,13 @@ jobs:
       setTimeout(() => el('tablePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     });
   }
-"""
+'''
+          s = re.sub(r"  function openTradeAnalyser\(\) \{.*?\n  \}\n\n  function render\(\)", replacement_analyser + "\n  function render()", s, count=1, flags=re.S)
 
-          changed = False
-          if old_market in s:
-            s = s.replace(old_market, new_market)
-            changed = True
-          else:
-            print('Market monitor function was not found or was already changed.')
-
-          if old_analyser in s:
-            s = s.replace(old_analyser, new_analyser)
-            changed = True
-          else:
-            print('Trade analyser function was not found or was already changed.')
-
+          p.write_text(s, encoding='utf-8')
           wf = Path('.github/workflows/patch-top-button-modals.yml')
-          if changed:
-            p.write_text(s, encoding='utf-8')
           if wf.exists():
-            wf.unlink()
+              wf.unlink()
           PY
       - name: Commit patched dashboard
         run: |
