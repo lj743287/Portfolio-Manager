@@ -1317,6 +1317,30 @@ function render() {
     return Object.entries(map).map(([label, value]) => ({ label, value, kind: label === 'Awaiting' ? 'barWarn' : 'barNeutral' })).sort((a, b) => b.value - a.value);
   }
 
+function closedPerformanceTrend(st) {
+  const closed = (st.closed || [])
+    .slice()
+    .filter(p => p.exitDate)
+    .sort((a, b) => String(a.exitDate).localeCompare(String(b.exitDate)) || String(a.symbol || '').localeCompare(String(b.symbol || '')));
+  const rows = [];
+  let trades = 0, wins = 0, winTotal = 0, winCount = 0, lossTotal = 0, lossCount = 0, realisedTotal = 0;
+  closed.forEach(p => {
+    const pnl = num(p.realizedUsd) || 0;
+    trades++;
+    realisedTotal += pnl;
+    if (pnl > 0) { wins++; winTotal += pnl; winCount++; }
+    if (pnl < 0) { lossTotal += pnl; lossCount++; }
+    rows.push({
+      label: String(p.symbol || '') + ' ' + shortDateLabel(p.exitDate),
+      winRate: trades ? (wins / trades) * 100 : 0,
+      avgWin: winCount ? winTotal / winCount : null,
+      avgLoss: lossCount ? lossTotal / lossCount : null,
+      expectancy: trades ? realisedTotal / trades : 0
+    });
+  });
+  return rows;
+}
+
   function renderPortfolio() {
     const st = strategyStats();
     const openValue = st.open.reduce((a, p) => a + (p.value || 0), 0);
@@ -1428,6 +1452,10 @@ function render() {
       <h2>Strategy charts</h2>
       <div class="chartGrid">
         ${lineChart('Cumulative realised P&L trend', 'Running realised profit or loss from closed trades only.', cumulativeRealisedTrend(st), 'money')}
+        ${lineChart('Win rate over time', 'Cumulative win rate after each closed trade, sorted by exit date.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.winRate })), 'pct')}
+        ${lineChart('Average win over time', 'Cumulative average realised profit of winning closed trades.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.avgWin })).filter(d => d.value != null), 'money')}
+        ${lineChart('Average loss over time', 'Cumulative average realised loss of losing closed trades.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.avgLoss })).filter(d => d.value != null), 'money')}
+        ${lineChart('Expectancy over time', 'Cumulative average realised P&L per closed trade.', closedPerformanceTrend(st).map(d => ({ label: d.label, value: d.expectancy })), 'money')}
         ${multiLineChart('Strategy P&L by opening date', 'Realised and current unrealised P&L shown as separate cumulative lines, using each trade opening date as a proxy.', pnlByOpeningDate(st), pnlLineDefs(), 'money')}
         ${barChart('Monthly realised P&L', 'Realised profit or loss grouped by exit month.', monthlyPnlBars(st), { kind: 'money', diverging: true })}
         ${barChart('Closed trade distribution', 'Number of trades in loss/win size buckets. This helps show whether the strategy relies on a few big winners.', closedTradeDistribution(st), { kind: 'number' })}
