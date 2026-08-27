@@ -1,0 +1,28 @@
+name: Restore good dashboard
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore previous dashboard
+        run: |
+          git checkout f75189a871da6f92781e6f47ca41cf4f507e71b9 -- index.html
+          rm -f .github/workflows/restore-full-tabs.yml .github/workflows/restore-full-tabs-2.yml .github/workflows/restore-good.yml
+      - name: Commit restored dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows
+          git commit -m "Restore dashboard after failed patch" || exit 0
+          git push
