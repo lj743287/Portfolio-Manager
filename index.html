@@ -1,9 +1,10 @@
+
 <!doctype html>
 <html lang="en-GB">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trade Dashboard v11</title>
+  <title>Portfolio Manager</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -25,6 +26,18 @@
       font-family: Arial, Helvetica, sans-serif;
       background: radial-gradient(circle at top left, #1e293b, var(--bg) 50%);
       color: var(--text);
+    }
+
+    body.market-negative {
+      --bg: #2a0f12;
+      --panel: #1f1113;
+      --panel2: #2a171a;
+      --line: #7f1d1d;
+      background: radial-gradient(circle at top left, #7f1d1d, #2a0f12 52%, #120608 100%);
+    }
+    body.market-negative header {
+      background: rgba(42, 15, 18, 0.94);
+      border-bottom-color: rgba(248, 113, 113, .55);
     }
     header {
       padding: 22px 22px 12px;
@@ -543,12 +556,51 @@
     .chartModalBody .chartSub { font-size: 14px; }
     .chartModalBody .svgChart { min-height: 520px; }
 
+
+    .marketBanner {
+      margin: 0;
+      padding: 14px 22px;
+      border-bottom: 1px solid rgba(248, 113, 113, .55);
+      background: linear-gradient(90deg, rgba(127, 29, 29, .98), rgba(153, 27, 27, .92));
+      color: #fee2e2;
+      position: sticky;
+      top: 81px;
+      z-index: 4;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+    .marketBannerTitle {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .02em;
+      margin-bottom: 4px;
+    }
+    .marketBannerText {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #fecaca;
+    }
+    .marketBanner .marketStats {
+      display: inline-flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .marketBanner .marketStat {
+      border: 1px solid rgba(254, 202, 202, .35);
+      background: rgba(2, 6, 23, .22);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     @media (max-width: 900px) {
       .grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
       th { top: 0; }
     }
     @media (max-width: 560px) {
       main, header { padding-left: 14px; padding-right: 14px; }
+      .marketBanner { padding-left: 14px; padding-right: 14px; top: 78px; }
       .grid { grid-template-columns: 1fr; }
       h1 { font-size: 21px; }
     }
@@ -563,8 +615,6 @@
     </div>
     <div class="btns">
       <button id="refreshBtn" disabled>Refresh data</button>
-      <button id="marketMonitorBtn" class="secondary" disabled>Market monitor</button>
-      <button id="tradeAnalyserBtn" class="secondary" disabled>Trade analyser</button>
       <button id="settingsBtn" class="secondary">Settings</button>
     </div>
   </div>
@@ -594,13 +644,12 @@
       <div class="card"><div class="label">Open positions</div><div class="value" id="openCount">-</div><div class="sub" id="openSub">Live holdings</div></div>
       <div class="card"><div class="label">Open market value</div><div class="value" id="openValue">-</div><div class="sub">Based on latest refreshed close</div></div>
       <div class="card"><div class="label">Unrealised P&amp;L</div><div class="value" id="unrealised">-</div><div class="sub" id="unrealisedSub">Open trades only</div></div>
-      <div class="card"><div class="label">Partial realised</div><div class="value" id="partialRealised">-</div><div class="sub">Banked from open trades</div></div>
-      <div class="card"><div class="label">Realised P&amp;L</div><div class="value" id="realised">-</div><div class="sub">Closed + partial exits</div></div>
+      <div class="card"><div class="label">Realised P&amp;L</div><div class="value" id="realised">-</div><div class="sub">Closed trades plus partial sells</div></div>
     </div>
 
     <div class="grid">
-      <div class="card"><div class="label">Total P&amp;L</div><div class="value" id="totalPnl">-</div><div class="sub">Closed + partial + unrealised</div></div>
-      <div class="card"><div class="label">Open cost basis</div><div class="value" id="costBasis">-</div><div class="sub">Remaining open shares only</div></div>
+      <div class="card"><div class="label">Total P&amp;L</div><div class="value" id="totalPnl">-</div><div class="sub">Realised plus unrealised</div></div>
+      <div class="card"><div class="label">Open cost basis</div><div class="value" id="costBasis">-</div><div class="sub">From positions tab</div></div>
       <div class="card"><div class="label">Total stop risk</div><div class="value" id="totalStopRisk">-</div><div class="sub" id="totalStopRiskSub">Current close to stops</div></div>
       <div class="card"><div class="label">Stops awaiting info</div><div class="value" id="awaitingStops">-</div><div class="sub">Rows still set to Awaiting</div></div>
       <div class="card"><div class="label">Last stop update</div><div class="value" id="lastStopUpdate" style="font-size:18px">-</div><div class="sub" id="generatedAt">-</div></div>
@@ -685,14 +734,12 @@
 (function () {
   const STORAGE_KEY = 'tradeDashboard.feedSettings.v1';
   const BASELINE_BALANCE = 183330.61;
-  let state = { data: null, tab: 'live', search: '', showMarketMonitor: false, filters: { dateFrom: '', dateTo: '', status: 'all', stopType: 'all', result: 'all', minPnl: '', minRisk: '' } };
+  let state = { data: null, tab: 'live', search: '', filters: { dateFrom: '', dateTo: '', status: 'all', stopType: 'all', result: 'all', minPnl: '', minRisk: '' } };
 
   const el = id => document.getElementById(id);
   const setup = el('setup');
   const dashboard = el('dashboard');
   const refreshBtn = el('refreshBtn');
-  const marketMonitorBtn = el('marketMonitorBtn');
-  const tradeAnalyserBtn = el('tradeAnalyserBtn');
   const settingsBtn = el('settingsBtn');
   const saveConnectBtn = el('saveConnectBtn');
   const clearBtn = el('clearBtn');
@@ -778,7 +825,7 @@
   }
   function filterOpenRow(p) {
     if ((state.filters.status || 'all') === 'closed') return false;
-    return rowFilterSymbol(p) && datePass(p.entryDate) && stopTypePass(p.stop?.stopType || 'Awaiting') && pnlPass(p.totalTradePnl || 0) && riskPass(stopRiskForOpen(p));
+    return rowFilterSymbol(p) && datePass(p.entryDate) && stopTypePass(p.stop?.stopType || 'Awaiting') && pnlPass(p.pnl || 0) && riskPass(stopRiskForOpen(p));
   }
   function filterClosedRow(p) {
     if ((state.filters.status || 'all') === 'open') return false;
@@ -835,8 +882,21 @@
   function normaliseUrl(url) {
     return String(url || '').trim().replace(/\?.*$/, '');
   }
-  function showSetup() {document.body.classList.remove('market-negative'); if(marketBanner){marketBanner.classList.add('hidden');marketBanner.innerHTML='';} const settings=getSettings(); el('webUrl').value=settings.webUrl||''; el('webSecret').value=settings.webSecret||''; setup.classList.remove('hidden'); dashboard.classList.add('hidden'); refreshBtn.disabled=true; if(marketMonitorBtn)marketMonitorBtn.disabled=true; if(tradeAnalyserBtn)tradeAnalyserBtn.disabled=true;}
-  function showDashboard() {setup.classList.add('hidden');dashboard.classList.remove('hidden');refreshBtn.disabled=false;if(marketMonitorBtn)marketMonitorBtn.disabled=false;if(tradeAnalyserBtn)tradeAnalyserBtn.disabled=false;}
+  function showSetup() {
+    document.body.classList.remove('market-negative');
+    if (marketBanner) { marketBanner.classList.add('hidden'); marketBanner.innerHTML = ''; }
+    const settings = getSettings();
+    el('webUrl').value = settings.webUrl || '';
+    el('webSecret').value = settings.webSecret || '';
+    setup.classList.remove('hidden');
+    dashboard.classList.add('hidden');
+    refreshBtn.disabled = true;
+  }
+  function showDashboard() {
+    setup.classList.add('hidden');
+    dashboard.classList.remove('hidden');
+    refreshBtn.disabled = false;
+  }
   function showErr(node, msg) {
     node.textContent = msg;
     node.classList.remove('hidden');
@@ -912,10 +972,55 @@
     (state.data?.stops || []).forEach(s => { if (s.id) map[s.id] = s; });
     return map;
   }
-  function enrichOpen() {const smap=stopsById();return getOpenPositions().map(p=>{const s=smap[p.id]||{};const shares=num(p.shares)||0;const avgEntry=num(p.avgEntry)||0;const lastClose=num(s.lastClose);const cost=num(p.costBasisUsd)??shares*avgEntry;const value=lastClose!=null?shares*lastClose:null;const pnl=value!=null?value-cost:null;const partialRealized=num(p.realizedUsd)||0;const totalTradePnl=partialRealized+(pnl||0);const pnlPct=cost?(pnl/cost)*100:null;return {...p,stop:s,shares,avgEntry,lastClose,cost,value,pnl,pnlPct,partialRealized,totalTradePnl};});}
-  function renderMarketCondition(){const mc=state.data?.marketCondition||null;const status=String(mc?.status||'').toLowerCase();const isNegative=status==='negative';document.body.classList.toggle('market-negative',isNegative);if(!marketBanner)return;if(!isNegative&&!state.showMarketMonitor){marketBanner.classList.add('hidden');marketBanner.innerHTML='';return;}const fastDays=mc?.fastDays||10,slowDays=mc?.slowDays||20,proxy=mc?.proxy||'ONEQ';const fast=num(mc?.fastMa),slow=num(mc?.slowMa),close=num(mc?.close);const isPositive=status==='positive'||status==='good';const title=isNegative?'⚠ Market conditions negative':isPositive?'✅ Market conditions positive':'ℹ Market monitor';const msg=mc?.message||(isNegative?`${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression, avoid marginal setups and respect sell signals.`:isPositive?`${proxy} ${fastDays}MA is above its ${slowDays}MA. Conditions are supportive by your market proxy.`:`${proxy} market condition data is not available yet.`);marketBanner.classList.remove('hidden','marketPositive','marketNeutral');if(isPositive)marketBanner.classList.add('marketPositive');if(!isNegative&&!isPositive)marketBanner.classList.add('marketNeutral');marketBanner.innerHTML=`<div class="marketBannerTitle">${escapeHtml(title)}</div><div class="marketBannerText">${escapeHtml(msg)}</div><div class="marketStats"><span class="marketStat">Proxy: ${escapeHtml(proxy)}</span><span class="marketStat">${fastDays}MA: ${fast!=null?money(fast):'-'}</span><span class="marketStat">${slowDays}MA: ${slow!=null?money(slow):'-'}</span><span class="marketStat">Close: ${close!=null?money(close):'-'}</span><span class="marketStat">Updated: ${escapeHtml(mc?.latestDate||state.data?.generatedAt||'-')}</span></div>`;}
-  function openMarketMonitor(){if(!state.data){loadData();return;}state.showMarketMonitor=true;state.tab='market';render();setTimeout(()=>el('tablePanel')?.scrollIntoView({behavior:'smooth',block:'start'}),50);}
-  function openTradeAnalyser(){if(!state.data){loadData();return;}state.tab='strategy';render();setTimeout(()=>el('tablePanel')?.scrollIntoView({behavior:'smooth',block:'start'}),50);}
+  function enrichOpen() {
+    const smap = stopsById();
+    return getOpenPositions().map(p => {
+      const s = smap[p.id] || {};
+      const shares = num(p.shares) || 0;
+      const avgEntry = num(p.avgEntry) || 0;
+      const lastClose = num(s.lastClose);
+      const cost = num(p.costBasisUsd) ?? shares * avgEntry;
+      const value = lastClose != null ? shares * lastClose : null;
+      const pnl = value != null ? value - cost : null; // unrealised on remaining shares only
+      const partialRealized = num(p.realizedUsd) || 0; // realised P&L already banked from partial sells on still-open trades
+      const totalTradePnl = partialRealized + (pnl || 0);
+      const pnlPct = cost ? (pnl / cost) * 100 : null;
+      return { ...p, stop: s, shares, avgEntry, lastClose, cost, value, pnl, pnlPct, partialRealized, totalTradePnl };
+    });
+  }
+
+
+  function renderMarketCondition() {
+    const mc = state.data?.marketCondition || null;
+    const status = String(mc?.status || '').toLowerCase();
+    document.body.classList.toggle('market-negative', status === 'negative');
+
+    if (!marketBanner) return;
+    if (status !== 'negative') {
+      marketBanner.classList.add('hidden');
+      marketBanner.innerHTML = '';
+      return;
+    }
+
+    const fastDays = mc.fastDays || 10;
+    const slowDays = mc.slowDays || 20;
+    const proxy = mc.proxy || 'ONEQ';
+    const fast = num(mc.fastMa);
+    const slow = num(mc.slowMa);
+    const close = num(mc.close);
+
+    marketBanner.classList.remove('hidden');
+    marketBanner.innerHTML = `
+      <div class="marketBannerTitle">⚠ Market conditions negative</div>
+      <div class="marketBannerText">${escapeHtml(mc.message || `${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression and respect sell signals.`)}</div>
+      <div class="marketStats">
+        <span class="marketStat">Proxy: ${escapeHtml(proxy)}</span>
+        <span class="marketStat">${fastDays}MA: ${fast != null ? money(fast) : '-'}</span>
+        <span class="marketStat">${slowDays}MA: ${slow != null ? money(slow) : '-'}</span>
+        <span class="marketStat">Close: ${close != null ? money(close) : '-'}</span>
+        <span class="marketStat">Updated: ${escapeHtml(mc.latestDate || state.data?.generatedAt || '-')}</span>
+      </div>`;
+  }
 
   function render() {
     if (!state.data) return;
@@ -926,9 +1031,9 @@
     const openValue = open.reduce((a, p) => a + (p.value || 0), 0);
     const openCost = open.reduce((a, p) => a + (p.cost || 0), 0);
     const unrealised = open.reduce((a, p) => a + (p.pnl || 0), 0);
-    const partialRealised = open.reduce((a,p)=>a+(p.partialRealized||0),0);
-    const closedRealised = closed.reduce((a,p)=>a+(num(p.realizedUsd)||0),0);
-    const realised = closedRealised + partialRealised;
+    const openPartialRealised = open.reduce((a, p) => a + (p.partialRealized || 0), 0);
+    const closedRealised = closed.reduce((a, p) => a + (num(p.realizedUsd) || 0), 0);
+    const realised = num(summary.realisedUsd) || (closedRealised + openPartialRealised);
     const total = unrealised + realised;
     const awaiting = (state.data.stops || []).filter(s => String(s.stopType || '').toLowerCase() === 'awaiting').length;
     const smap = stopsById();
@@ -948,7 +1053,6 @@
     setText('openValue', money(openValue));
     setText('unrealised', money(unrealised), cls(unrealised));
     el('unrealisedSub').textContent = openCost ? pct((unrealised / openCost) * 100) + ' on open cost' : 'Open trades only';
-    setText('partialRealised', money(partialRealised), cls(partialRealised));
     setText('realised', money(realised), cls(realised));
     setText('totalPnl', money(total), cls(total));
     setText('costBasis', money(openCost));
@@ -1059,7 +1163,6 @@
     if (state.tab === 'stops') return renderStops();
     if (state.tab === 'portfolio') return renderPortfolio();
     if (state.tab === 'strategy') return renderStrategy();
-    if (state.tab === 'market') return renderMarketAnalytics();
     if (state.tab === 'closed') return renderClosed();
     if (state.tab === 'fills') return renderFills();
   }
@@ -1072,7 +1175,27 @@
     el('tablePanel').innerHTML = `<div class="tablewrap"><table><thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
   }
 
-  function renderLive() {const rows=filteredOpenPositions().map(p=>{const pnlType=p.totalTradePnl==null?'':(p.totalTradePnl>=0?'pos':'neg');return `<tr><td><strong>${escapeHtml(p.symbol)}</strong></td><td>${escapeHtml(p.entryDate)}</td><td>${p.shares.toLocaleString('en-GB')}</td><td>${money(p.avgEntry)}</td><td>${p.lastClose==null?'-':money(p.lastClose)}</td><td>${p.value==null?'-':money(p.value)}</td><td class="${cls(p.pnl||0)}">${p.pnl==null?'-':money(p.pnl)}</td><td class="${cls(p.partialRealized||0)}">${money(p.partialRealized||0)}</td><td class="${pnlType}"><strong>${money(p.totalTradePnl||0)}</strong></td><td class="${cls(p.pnlPct||0)}">${p.pnlPct==null?'-':pct(p.pnlPct)}</td><td>${chip(p.stop.stopType||'Awaiting',p.stop.stopType==='Awaiting'?'warn':'good')}</td></tr>`;});table(['Symbol','Entry date','Shares','Avg entry','Last close','Value','Unrealised','Partial realised','Total trade P&L','P&L %','Stop type'],rows);}
+  function renderLive() {
+    const rows = filteredOpenPositions().map(p => {
+      const pnlType = p.pnl == null ? '' : (p.pnl >= 0 ? 'pos' : 'neg');
+      const partialType = p.partialRealized == null ? '' : (p.partialRealized >= 0 ? 'pos' : 'neg');
+      const totalType = p.totalTradePnl == null ? '' : (p.totalTradePnl >= 0 ? 'pos' : 'neg');
+      return `<tr>
+        <td><strong>${escapeHtml(p.symbol)}</strong></td>
+        <td>${escapeHtml(p.entryDate)}</td>
+        <td>${p.shares.toLocaleString('en-GB')}</td>
+        <td>${money(p.avgEntry)}</td>
+        <td>${p.lastClose == null ? '-' : money(p.lastClose)}</td>
+        <td>${p.value == null ? '-' : money(p.value)}</td>
+        <td class="${pnlType}">${p.pnl == null ? '-' : money(p.pnl)}</td>
+        <td class="${partialType}">${p.partialRealized ? money(p.partialRealized) : '-'}</td>
+        <td class="${totalType}">${money(p.totalTradePnl || 0)}</td>
+        <td class="${pnlType}">${p.pnlPct == null ? '-' : pct(p.pnlPct)}</td>
+        <td>${chip(p.stop.stopType || 'Awaiting', p.stop.stopType === 'Awaiting' ? 'warn' : 'good')}</td>
+      </tr>`;
+    });
+    table(['Symbol','Entry date','Shares','Avg entry','Last close','Value','Unrealised P&L','Partial realised','Total trade P&L','P&L %','Stop type'], rows);
+  }
 
   function renderStops() {
     const openMap = {};
@@ -1084,7 +1207,7 @@
       const stop = num(s.stopPrice);
       const lastClose = num(s.lastClose);
       const riskCash = (stop != null && lastClose != null && shares) ? Math.max(0, (lastClose - stop) * shares) : null;
-      const pnlValue = p ? ((num(s.lastClose) != null && num(p.avgEntry) != null && shares) ? (num(s.lastClose) - num(p.avgEntry)) * shares : 0) : 0;
+      const pnlValue = p ? (((num(s.lastClose) != null && num(p.avgEntry) != null && shares) ? (num(s.lastClose) - num(p.avgEntry)) * shares : 0) + (num(p.realizedUsd) || 0)) : 0;
       return rowFilterSymbol(s) && datePass(s.entryDate) && (state.filters.status !== 'closed') && stopTypePass(s.stopType || 'Awaiting') && pnlPass(pnlValue) && riskPass(riskCash);
     }).map(s => {
       const dist = num(s.stopDistancePct);
@@ -1161,13 +1284,13 @@
     const open = filteredOpenPositions();
     const closed = filteredClosedPositions();
     const closedPnl = closed.map(p => num(p.realizedUsd) || 0);
-    const wins = closedPnl.filter(v => v > 0);
-    const losses = closedPnl.filter(v => v < 0);
-    const flats = closedPnl.filter(v => v === 0);
-    const closedRealised = closedPnl.reduce((a,b)=>a+b,0);
-    const partialRealised = open.reduce((a,p)=>a+(p.partialRealized||0),0);
-    const realised = closedRealised + partialRealised;
-    const unrealised = open.reduce((a,p)=>a+(p.pnl||0),0);
+    const openPartialPnl = open.map(p => p.partialRealized || 0).filter(v => v !== 0);
+    const realisedPnl = closedPnl.concat(openPartialPnl);
+    const wins = realisedPnl.filter(v => v > 0);
+    const losses = realisedPnl.filter(v => v < 0);
+    const flats = realisedPnl.filter(v => v === 0);
+    const realised = realisedPnl.reduce((a, b) => a + b, 0);
+    const unrealised = open.reduce((a, p) => a + (p.pnl || 0), 0);
     const total = realised + unrealised;
     const grossWin = wins.reduce((a, b) => a + b, 0);
     const grossLoss = losses.reduce((a, b) => a + Math.abs(b), 0);
@@ -1183,7 +1306,7 @@
       if (stop != null && lastClose != null && p.shares) return acc + Math.max(0, (lastClose - stop) * p.shares);
       return acc;
     }, 0);
-    return { open,closed,closedPnl,wins,losses,flats,closedRealised,partialRealised,realised,unrealised,total,grossWin:grossWin+Math.max(0,partialRealised),grossLoss:grossLoss+Math.abs(Math.min(0,partialRealised)),openWinners,openLosers,avgHold,best,worst,partialTrades,totalStopRisk };
+    return { open, closed, closedPnl, openPartialPnl, realisedPnl, wins, losses, flats, realised, unrealised, total, grossWin, grossLoss, openWinners, openLosers, avgHold, best, worst, partialTrades, totalStopRisk };
   }
 
 
@@ -1440,7 +1563,7 @@
   }
 
   function currentPositionPnlBars(open) {
-    return open.slice().sort((a,b)=>(b.totalTradePnl||0)-(a.totalTradePnl||0)).map(p=>({label:p.symbol,value:p.totalTradePnl||0,kind:(p.totalTradePnl||0)>=0?'barGood':'barBad'}));
+    return open.slice().sort((a, b) => (b.pnl || 0) - (a.pnl || 0)).map(p => ({ label: p.symbol, value: p.pnl || 0, kind: (p.pnl || 0) >= 0 ? 'barGood' : 'barBad' }));
   }
   function stopRiskByType(st) {
     const map = {};
@@ -1452,8 +1575,6 @@
     });
     return Object.entries(map).map(([label, value]) => ({ label, value, kind: label === 'Awaiting' ? 'barWarn' : 'barNeutral' })).sort((a, b) => b.value - a.value);
   }
-
-  function renderMarketAnalytics(){const mc=state.data?.marketCondition||{};const status=String(mc.status||'unknown').toLowerCase();const isNeg=status==='negative',isPos=status==='positive'||status==='good';const proxy=mc.proxy||'ONEQ',fastDays=mc.fastDays||10,slowDays=mc.slowDays||20;const fast=num(mc.fastMa),slow=num(mc.slowMa),close=num(mc.close);const spread=fast!=null&&slow!=null?fast-slow:null;const spreadPct=fast!=null&&slow!=null&&slow!==0?((fast-slow)/slow)*100:null;const statusLabel=isNeg?'Negative':isPos?'Positive':'Unknown';const statusClass=isNeg?'neg':isPos?'pos':'warn';const message=mc.message||(isNeg?`${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression, avoid marginal setups and respect sell signals.`:isPos?`${proxy} ${fastDays}MA is above its ${slowDays}MA. Market conditions are supportive.`:`${proxy} market condition data is not available yet.`);const bars=[{label:'Close',value:close||0,kind:'barNeutral'},{label:`${fastDays}MA`,value:fast||0,kind:isNeg?'barBad':'barGood'},{label:`${slowDays}MA`,value:slow||0,kind:'barWarn'}].filter(x=>x.value!==0);const spreadBars=[{label:`${fastDays}MA minus ${slowDays}MA`,value:spread||0,kind:spread!=null&&spread>=0?'barGood':'barBad'}];const charts=bars.length?`<div class="chartGrid">${barChart(`${proxy} market proxy`,`Latest close versus ${fastDays}MA and ${slowDays}MA. Your regime rule is positive when ${fastDays}MA is above ${slowDays}MA.`,bars,{kind:'money'})}${barChart('Market regime spread',`Positive spread means ${fastDays}MA is above ${slowDays}MA. Negative spread means defensive market conditions.`,spreadBars,{kind:'money',diverging:true})}</div>`:`<div class="empty">No market chart data available yet. Refresh stops/prices in the Google Sheet and refresh this dashboard.</div>`;el('statusline').textContent=`Market monitor · ${proxy} · ${statusLabel}`;el('tablePanel').innerHTML=`<div class="section"><h2>Market monitor</h2><div class="noteBox"><strong class="${statusClass}">${escapeHtml(statusLabel)} market conditions</strong><br>${escapeHtml(message)}</div><div class="miniGrid">${metricCard('Market status',statusLabel,`${proxy} ${fastDays}MA versus ${slowDays}MA`,statusClass)}${metricCard('Proxy',proxy,'Market regime indicator')}${metricCard('Latest close',close!=null?money(close):'-',escapeHtml(mc.latestDate||state.data.generatedAt||'-'))}${metricCard(`${fastDays}MA`,fast!=null?money(fast):'-','Fast moving average',isNeg?'neg':isPos?'pos':'warn')}${metricCard(`${slowDays}MA`,slow!=null?money(slow):'-','Slow moving average')}${metricCard('MA spread',spread!=null?signedMoney(spread):'-',spreadPct!=null?signedPct(spreadPct):'Fast MA minus slow MA',spread!=null&&spread>=0?'pos':'neg')}</div></div><div class="section"><h2>Market status charts</h2>${charts}</div><div class="section"><div class="noteBox">Rule: conditions are positive when ${escapeHtml(proxy)} ${fastDays}MA is above its ${slowDays}MA. Conditions are negative when ${fastDays}MA is below ${slowDays}MA.</div></div>`;}
 
   function renderPortfolio() {
     const st = strategyStats();
@@ -1488,14 +1609,13 @@
 
     el('tablePanel').innerHTML = `<div class="section">
       <h2>Portfolio performance</h2>
-      <p>This is measured against the hard-coded starting balance before your first trade: <strong>${money(BASELINE_BALANCE)}</strong>. It uses realised P&amp;L from closed trades, banked partial exits on open trades, plus unrealised P&amp;L from the latest refreshed closes. The realised equity chart stays closed-trade only; the separate P&amp;L line chart uses each trade's opening date as a proxy for where the realised or unrealised profit belongs on the timeline.</p>
+      <p>This is measured against the hard-coded starting balance before your first trade: <strong>${money(BASELINE_BALANCE)}</strong>. It uses realised P&amp;L from closed trades plus unrealised P&amp;L from the latest refreshed closes. The realised equity chart stays closed-trade plus partial-sell; the separate P&amp;L line chart uses each trade's opening date as a proxy for where the realised or unrealised profit belongs on the timeline.</p>
       <div class="miniGrid">
         ${metricCard('Starting balance', money(BASELINE_BALANCE), 'Hard-coded baseline')}
         ${metricCard('Current equity estimate', money(currentEquity), 'Baseline + realised + unrealised', cls(currentEquity - BASELINE_BALANCE))}
         ${metricCard('Total portfolio P&L', signedMoney(st.total), signedPct(returnPct), cls(st.total))}
         ${metricCard('Return %', signedPct(returnPct), 'Total return versus baseline', cls(returnPct))}
         ${metricCard('Realised P&L', signedMoney(st.realised), signedPct(realisedPct), cls(st.realised))}
-        ${metricCard('Partial realised', signedMoney(st.partialRealised || 0), 'Banked from still-open trades', cls(st.partialRealised || 0))}
         ${metricCard('Unrealised P&L', signedMoney(st.unrealised), signedPct(unrealisedPct), cls(st.unrealised))}
         ${metricCard('Open market value', money(openValue), 'Latest close × shares')}
         ${metricCard('Estimated cash', money(cashEstimate), 'Equity estimate less open value', cashEstimate < 0 ? 'warn' : '')}
@@ -1583,9 +1703,7 @@
       <div class="miniGrid">
         ${metricCard('Closed trades', String(st.closed.length), `${st.wins.length} winners · ${st.losses.length} losers · ${st.flats.length} flat`)}
         ${metricCard('Win rate', pct(winRate), pct(lossRate) + ' loss rate', winRate >= 40 ? 'pos' : winRate >= 30 ? 'warn' : 'neg')}
-        ${metricCard('Closed realised', signedMoney(st.closedRealised || 0), 'Fully closed trades only', cls(st.closedRealised || 0))}
-        ${metricCard('Partial realised', signedMoney(st.partialRealised || 0), 'Banked from still-open trades', cls(st.partialRealised || 0))}
-        ${metricCard('Total realised P&L', signedMoney(st.realised), 'Closed + partial exits', cls(st.realised))}
+        ${metricCard('Realised P&L', signedMoney(st.realised), 'Closed trades plus partial sells', cls(st.realised))}
         ${metricCard('Unrealised P&L', signedMoney(st.unrealised), `${st.openWinners} open winners · ${st.openLosers} open losers`, cls(st.unrealised))}
         ${metricCard('Total strategy P&L', signedMoney(combinedPnl), 'Realised plus unrealised', cls(combinedPnl))}
         ${metricCard('Average win', money(avgWin), `${st.wins.length} winning trades`, 'pos')}
@@ -1686,8 +1804,6 @@
     showSetup();
   });
   settingsBtn.addEventListener('click', showSetup);
-  if (marketMonitorBtn) marketMonitorBtn.addEventListener('click', openMarketMonitor);
-  if (tradeAnalyserBtn) tradeAnalyserBtn.addEventListener('click', openTradeAnalyser);
   refreshBtn.addEventListener('click', loadData);
   search.addEventListener('input', () => {
     state.search = search.value.trim();
