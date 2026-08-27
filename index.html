@@ -280,106 +280,6 @@
       color: var(--muted);
       line-height: 1.45;
     }
-
-
-
-
-    .coachPanel {
-      background: rgba(17,24,39,0.94);
-      border: 1px solid rgba(96,165,250,.35);
-      border-radius: 18px;
-      padding: 16px;
-      margin: 16px 0 12px;
-      box-shadow: 0 16px 48px rgba(0,0,0,.18);
-    }
-    .coachHeader {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-    .coachTitle {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 900;
-      letter-spacing: .01em;
-    }
-    .coachSummary {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-      margin-top: 5px;
-      max-width: 900px;
-    }
-    .coachMeta {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 6px;
-    }
-    .coachBadge {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 5px 10px;
-      font-size: 12px;
-      font-weight: 900;
-      border: 1px solid var(--line);
-      background: var(--chip);
-    }
-    .coachBadge.act { background: rgba(239,68,68,.16); color: #fecaca; border-color: rgba(239,68,68,.35); }
-    .coachBadge.watch { background: rgba(245,158,11,.16); color: #fde68a; border-color: rgba(245,158,11,.35); }
-    .coachBadge.hold, .coachBadge.calm { background: rgba(34,197,94,.14); color: #86efac; border-color: rgba(34,197,94,.3); }
-    .coachControls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .coachGrid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .coachCard {
-      background: rgba(31,41,55,.74);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px;
-      min-height: 155px;
-    }
-    .coachCard.act { border-color: rgba(239,68,68,.45); background: rgba(69,10,10,.22); }
-    .coachCard.watch { border-color: rgba(245,158,11,.42); background: rgba(69,46,13,.22); }
-    .coachCard.hold { border-color: rgba(34,197,94,.28); }
-    .coachCardTop {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .coachSymbol { font-size: 18px; font-weight: 950; }
-    .coachText { color: var(--text); font-size: 13px; line-height: 1.42; margin-top: 7px; }
-    .coachText strong { color: #f8fafc; }
-    .coachMuted { color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 7px; }
-    .coachPriorityList {
-      display: grid;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .coachPriority {
-      display: grid;
-      grid-template-columns: 84px 1fr;
-      gap: 10px;
-      align-items: start;
-      padding: 10px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: rgba(2,6,23,.34);
-    }
-    .coachEmpty {
-      color: var(--muted);
-      line-height: 1.45;
-      margin-top: 8px;
-    }
-
     .actionPanel {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -618,9 +518,6 @@
       <div class="card"><div class="label">Stops awaiting info</div><div class="value" id="awaitingStops">-</div><div class="sub">Rows still set to Awaiting</div></div>
       <div class="card"><div class="label">Last stop update</div><div class="value" id="lastStopUpdate" style="font-size:18px">-</div><div class="sub" id="generatedAt">-</div></div>
     </div>
-
-    <div id="coachPanel" class="coachPanel"></div>
-
     <div id="actionPanel" class="actionPanel"></div>
 
     <div class="filters" id="filters" style="display:none">
@@ -879,7 +776,6 @@
       return;
     }
     showDashboard();
-    const isCoachAction = action === 'coach';
     el('statusline').textContent = isCoachAction ? 'Generating Trade Coach...' : 'Loading from Google Sheet...';
     refreshBtn.disabled = true;
 
@@ -891,10 +787,10 @@
 
     let timer = setTimeout(() => {
       cleanup();
-      showErr(mainError, isCoachAction ? 'The Trade Coach took too long to respond. It may still have completed in the Google Sheet. Refresh the dashboard in a moment, or check the Apps Script execution log.' : 'The dashboard could not load the Google Sheet feed. Check the Web app URL, the Web app secret, and that the Apps Script deployment is still set to Anyone.');
+      showErr(mainError, 'The dashboard could not load the Google Sheet feed. Check the Web app URL, the Web app secret, and that the Apps Script deployment is still set to Anyone.');
       el('statusline').textContent = 'Load failed';
       refreshBtn.disabled = false;
-    }, isCoachAction ? 70000 : 20000);
+    }, 20000);
 
     function cleanup() {
       clearTimeout(timer);
@@ -993,73 +889,11 @@ function render() {
     el('statusline').textContent = `${open.length} open · ${closed.length} closed · ${state.data.clean?.length || 0} clean fills`;
     el('subtitle').textContent = 'Read-only dashboard powered by your Google Sheet';
     renderFilterOptions();
-    renderCoachPanel();
     renderActionPanel(open);
 
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
     renderTable();
   }
-
-
-  function coachRatingClass(rating) {
-    const r = String(rating || '').toLowerCase();
-    if (r === 'act' || r === 'high') return 'act';
-    if (r === 'watch' || r === 'medium') return 'watch';
-    if (r === 'hold' || r === 'calm' || r === 'low') return 'hold';
-    return '';
-  }
-  function renderCoachPanel() {
-    const panel = el('coachPanel');
-    if (!panel) return;
-    const rows = state.data?.coach || [];
-    const overall = rows.find(r => String(r.type || '').toLowerCase() === 'overall');
-    const priorities = rows.filter(r => String(r.type || '').toLowerCase() === 'priority').sort((a,b)=>(num(a.rank)||0)-(num(b.rank)||0));
-    const positions = rows.filter(r => String(r.type || '').toLowerCase() === 'position').sort((a,b)=>String(a.symbol||'').localeCompare(String(b.symbol||'')));
-
-    if (!rows.length || !overall) {
-      panel.innerHTML = `<div class="coachHeader">
-        <div>
-          <h2 class="coachTitle">Trade Coach</h2>
-          <div class="coachSummary">No coach report has been generated yet. This will use your Google Sheet positions, stop settings, Twelve Data market data and the OpenAI API key stored privately in the sheet config.</div>
-          <div class="coachMeta">It analyses existing open trades only. It does not suggest new buys.</div>
-        </div>
-        <div class="coachControls"><button id="generateCoachBtn" type="button">Generate Trade Coach</button></div>
-      </div>`;
-      return;
-    }
-
-    const overallRating = overall.rating || 'Watch';
-    const priorityHtml = priorities.length ? `<div class="coachPriorityList">${priorities.slice(0,5).map(p => `
-      <div class="coachPriority">
-        <div>${chip(p.symbol || 'Portfolio', coachRatingClass(p.priority || 'Medium'))}</div>
-        <div><div class="coachText"><strong>${escapeHtml(p.suggestedAction || p.action || '-')}</strong></div><div class="coachMuted">${escapeHtml(p.reason || '')}</div></div>
-      </div>`).join('')}</div>` : '<div class="coachEmpty">No priority actions flagged in the latest report.</div>';
-
-    const positionHtml = positions.length ? `<div class="coachGrid">${positions.map(p => {
-      const rc = coachRatingClass(p.rating);
-      return `<div class="coachCard ${rc}">
-        <div class="coachCardTop"><div class="coachSymbol">${escapeHtml(p.symbol || '-')}</div><span class="coachBadge ${rc}">${escapeHtml(p.rating || '-')}</span></div>
-        <div class="coachText"><strong>Action:</strong> ${escapeHtml(p.suggestedAction || '-')}</div>
-        <div class="coachText"><strong>Stop:</strong> ${escapeHtml(p.suggestedStop || '-')}</div>
-        <div class="coachMuted">${escapeHtml(p.reason || '')}</div>
-        <div class="coachMuted"><strong>Risk:</strong> ${escapeHtml(p.riskNote || '-')}</div>
-        ${p.dataWarning ? `<div class="coachMuted warn"><strong>Data:</strong> ${escapeHtml(p.dataWarning)}</div>` : ''}
-      </div>`;
-    }).join('')}</div>` : '<div class="coachEmpty">No position coach cards available.</div>';
-
-    panel.innerHTML = `<div class="coachHeader">
-      <div>
-        <h2 class="coachTitle">Trade Coach <span class="coachBadge ${coachRatingClass(overallRating)}">${escapeHtml(overallRating)}</span></h2>
-      </div>
-      <div class="coachControls"><button id="generateCoachBtn" type="button">Generate new coach report</button></div>
-    </div>
-    <div>
-      <h2>Today’s coach priorities</h2>
-      ${priorityHtml}
-    </div>
-    ${positionHtml}`;
-  }
-
   function renderActionPanel(open) {
     const rows = open || [];
     const awaiting = rows.filter(p => String(p.stop?.stopType || '').toLowerCase() === 'awaiting');
@@ -1748,16 +1582,7 @@ function render() {
       render();
     });
   });
-
-
-
-  dashboard.addEventListener('click', e => {
-    if (e.target && e.target.id === 'generateCoachBtn') {
-      loadData('coach');
-    }
-  });
-
-  el('tablePanel').addEventListener('click', e => {
+el('tablePanel').addEventListener('click', e => {
     const card = e.target.closest('.chartCard');
     if (card && el('tablePanel').contains(card)) openChartModal(card);
   });
