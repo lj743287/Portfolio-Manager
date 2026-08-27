@@ -27,14 +27,6 @@
       background: radial-gradient(circle at top left, #1e293b, var(--bg) 50%);
       color: var(--text);
     }
-
-    body.market-negative {
-      --bg: #2a0f12;
-      --panel: #1f1113;
-      --panel2: #2a171a;
-      --line: #7f1d1d;
-      background: radial-gradient(circle at top left, #7f1d1d, #2a0f12 52%, #120608 100%);
-    }
     body.market-negative header {
       background: rgba(42, 15, 18, 0.94);
       border-bottom-color: rgba(248, 113, 113, .55);
@@ -555,30 +547,6 @@
     .chartModalBody .chartTitle { font-size: 22px; }
     .chartModalBody .chartSub { font-size: 14px; }
     .chartModalBody .svgChart { min-height: 520px; }
-
-
-    .marketBanner {
-      margin: 0;
-      padding: 14px 22px;
-      border-bottom: 1px solid rgba(248, 113, 113, .55);
-      background: linear-gradient(90deg, rgba(127, 29, 29, .98), rgba(153, 27, 27, .92));
-      color: #fee2e2;
-      position: sticky;
-      top: 81px;
-      z-index: 4;
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
-    }
-    .marketBannerTitle {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: .02em;
-      margin-bottom: 4px;
-    }
-    .marketBannerText {
-      font-size: 14px;
-      line-height: 1.4;
-      color: #fecaca;
-    }
     .marketBanner .marketStats {
       display: inline-flex;
       gap: 10px;
@@ -600,7 +568,6 @@
     }
     @media (max-width: 560px) {
       main, header { padding-left: 14px; padding-right: 14px; }
-      .marketBanner { padding-left: 14px; padding-right: 14px; top: 78px; }
       .grid { grid-template-columns: 1fr; }
       h1 { font-size: 21px; }
     }
@@ -619,9 +586,6 @@
     </div>
   </div>
 </header>
-
-<div id="marketBanner" class="marketBanner hidden"></div>
-
 <main>
   <section id="setup" class="setup hidden">
     <h2>Connect to your Google Sheet feed</h2>
@@ -745,7 +709,6 @@
   const clearBtn = el('clearBtn');
   const setupError = el('setupError');
   const mainError = el('mainError');
-  const marketBanner = el('marketBanner');
   const search = el('search');
   const dateFrom = el('dateFrom');
   const dateTo = el('dateTo');
@@ -988,41 +951,7 @@
       return { ...p, stop: s, shares, avgEntry, lastClose, cost, value, pnl, pnlPct, partialRealized, totalTradePnl };
     });
   }
-
-
-  function renderMarketCondition() {
-    const mc = state.data?.marketCondition || null;
-    const status = String(mc?.status || '').toLowerCase();
-    document.body.classList.toggle('market-negative', status === 'negative');
-
-    if (!marketBanner) return;
-    if (status !== 'negative') {
-      marketBanner.classList.add('hidden');
-      marketBanner.innerHTML = '';
-      return;
-    }
-
-    const fastDays = mc.fastDays || 10;
-    const slowDays = mc.slowDays || 20;
-    const proxy = mc.proxy || 'ONEQ';
-    const fast = num(mc.fastMa);
-    const slow = num(mc.slowMa);
-    const close = num(mc.close);
-
-    marketBanner.classList.remove('hidden');
-    marketBanner.innerHTML = `
-      <div class="marketBannerTitle">⚠ Market conditions negative</div>
-      <div class="marketBannerText">${escapeHtml(mc.message || `${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression and respect sell signals.`)}</div>
-      <div class="marketStats">
-        <span class="marketStat">Proxy: ${escapeHtml(proxy)}</span>
-        <span class="marketStat">${fastDays}MA: ${fast != null ? money(fast) : '-'}</span>
-        <span class="marketStat">${slowDays}MA: ${slow != null ? money(slow) : '-'}</span>
-        <span class="marketStat">Close: ${close != null ? money(close) : '-'}</span>
-        <span class="marketStat">Updated: ${escapeHtml(mc.latestDate || state.data?.generatedAt || '-')}</span>
-      </div>`;
-  }
-
-  function render() {
+function render() {
     if (!state.data) return;
     const open = enrichOpen();
     const closed = getClosedPositions();
@@ -1063,7 +992,6 @@
     el('generatedAt').textContent = 'Feed generated: ' + (state.data.generatedAt || '-');
     el('statusline').textContent = `${open.length} open · ${closed.length} closed · ${state.data.clean?.length || 0} clean fills`;
     el('subtitle').textContent = 'Read-only dashboard powered by your Google Sheet';
-    renderMarketCondition();
     renderFilterOptions();
     renderCoachPanel();
     renderActionPanel(open);
