@@ -878,14 +878,49 @@
       </div>`;
   }
 
+  function openInfoModal(title, bodyHtml) {
+    const body = el('chartModalBody');
+    body.innerHTML = `<div class="chartCard" style="cursor:default;min-height:0"><div class="chartTitle">${escapeHtml(title)}</div>${bodyHtml}</div>`;
+    el('chartModal').classList.remove('hidden');
+    el('chartModal').setAttribute('aria-hidden', 'false');
+  }
+
   function showMarketMonitorPanel() {
     if (!state.data) {
       loadData();
       return;
     }
-    state.showMarketMonitor = true;
-    renderMarketCondition();
-    setTimeout(() => marketBanner?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    const mc = state.data?.marketCondition || {};
+    const status = String(mc.status || '').toLowerCase();
+    const fastDays = mc.fastDays || 10;
+    const slowDays = mc.slowDays || 20;
+    const proxy = mc.proxy || 'ONEQ';
+    const fast = num(mc.fastMa);
+    const slow = num(mc.slowMa);
+    const close = num(mc.close);
+    const updated = mc.latestDate || state.data?.generatedAt || '-';
+    const isNegative = status === 'negative';
+    const isPositive = status === 'positive' || status === 'good';
+    const statusText = isNegative ? 'Negative' : isPositive ? 'Positive' : 'Unavailable';
+    const statusClass = isNegative ? 'neg' : isPositive ? 'pos' : 'warn';
+    const message = mc.message || (isNegative
+      ? `${proxy} ${fastDays}MA is below its ${slowDays}MA. Reduce aggression, avoid marginal setups and respect sell signals.`
+      : isPositive
+        ? `${proxy} ${fastDays}MA is above its ${slowDays}MA. Conditions are supportive by your proxy.`
+        : `${proxy} market data is not available yet.`);
+
+    openInfoModal('Market monitor', `
+      <div class="section" style="padding:12px 0 0;border-bottom:0">
+        <div class="grid">
+          ${metricCard('Market status', statusText, 'ONEQ 10MA versus 20MA', statusClass)}
+          ${metricCard('Proxy', escapeHtml(proxy), 'Market regime indicator')}
+          ${metricCard(`${fastDays}MA`, fast != null ? money(fast) : '-', 'Fast moving average', isNegative ? 'neg' : 'pos')}
+          ${metricCard(`${slowDays}MA`, slow != null ? money(slow) : '-', 'Slow moving average')}
+          ${metricCard('Latest close', close != null ? money(close) : '-', 'ONEQ close')}
+          ${metricCard('Updated', escapeHtml(updated), 'Latest market data date')}
+        </div>
+        <div class="noteBox">${escapeHtml(message)}</div>
+      </div>`);
   }
 
   function openTradeAnalyser() {
@@ -893,10 +928,45 @@
       loadData();
       return;
     }
-    state.tab = 'strategy';
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
-    renderTable();
-    setTimeout(() => el('tablePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    const open = enrichOpen();
+    const closed = getClosedPositions();
+    const closedRealised = closed.reduce((a,p)=>a+(num(p.realizedUsd)||0),0);
+    const partialRealised = open.reduce((a,p)=>a+(p.partialRealized||0),0);
+    const unrealised = open.reduce((a,p)=>a+(p.pnl||0),0);
+    const total = closedRealised + partialRealised + unrealised;
+    const winners = closed.filter(p => (num(p.realizedUsd)||0) > 0).length;
+    const losers = closed.filter(p => (num(p.realizedUsd)||0) < 0).length;
+    const winRate = closed.length ? (winners / closed.length) * 100 : 0;
+    const stopRisk = open.reduce((a,p)=>a+(stopRiskForOpen(p)||0),0);
+    const biggestRisk = open.map(p => ({ symbol: p.symbol, risk: stopRiskForOpen(p) || 0 })).sort((a,b)=>b.risk-a.risk)[0];
+    const bestOpen = open.slice().sort((a,b)=>(b.totalTradePnl||0)-(a.totalTradePnl||0))[0];
+    const worstOpen = open.slice().sort((a,b)=>(a.totalTradePnl||0)-(b.totalTradePnl||0))[0];
+
+    openInfoModal('Trade analyser', `
+      <div class="section" style="padding:12px 0 0;border-bottom:0">
+        <div class="grid">
+          ${metricCard('Total P&L', money(total), 'Closed + partial + unrealised', cls(total))}
+          ${metricCard('Closed realised', money(closedRealised), 'Fully closed trades', cls(closedRealised))}
+          ${metricCard('Partial realised', money(partialRealised), 'Banked from open trades', cls(partialRealised))}
+          ${metricCard('Unrealised', money(unrealised), 'Remaining open shares', cls(unrealised))}
+          ${metricCard('Win rate', pct(winRate), `${winners} winners · ${losers} losers`, winRate >= 40 ? 'pos' : 'warn')}
+          ${metricCard('Total stop risk', money(stopRisk), `${open.length} open positions`, stopRisk ? 'warn' : 'pos')}
+          ${metricCard('Largest risk', biggestRisk ? escapeHtml(biggestRisk.symbol) : '-', biggestRisk ? money(biggestRisk.risk) + ' to stop' : 'No priced stop risk', 'warn')}
+          ${metricCard('Best open trade', bestOpen ? escapeHtml(bestOpen.symbol) : '-', bestOpen ? signedMoney(bestOpen.totalTradePnl || 0) : '-', bestOpen ? cls(bestOpen.totalTradePnl || 0) : '')}
+          ${metricCard('Worst open trade', worstOpen ? escapeHtml(worstOpen.symbol) : '-', worstOpen ? signedMoney(worstOpen.totalTradePnl || 0) : '-', worstOpen ? cls(worstOpen.totalTradePnl || 0) : '')}
+        </div>
+        <div class="noteBox">This is a quick snapshot. Use the full Strategy analytics tab for the charts and detailed breakdown.</div>
+        <button id="openFullStrategyBtn" type="button">Open full Strategy analytics</button>
+      </div>`);
+
+    const btn = document.getElementById('openFullStrategyBtn');
+    if (btn) btn.addEventListener('click', () => {
+      closeChartModal();
+      state.tab = 'strategy';
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
+      renderTable();
+      setTimeout(() => el('tablePanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    });
   }
 
   function render() {
