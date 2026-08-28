@@ -133,8 +133,9 @@
     .legend .down-candle { background: var(--red); }
     .legend .open-mark { width: 13px; height: 2px; background: var(--green); }
     .legend .close-mark { width: 13px; height: 2px; background: var(--red); }
-    .chart-wrap { min-height: 540px; padding: 8px 10px 3px; position: relative; }
-    .chart-wrap svg { width: 100%; height: auto; min-height: 500px; display: block; overflow: visible; }
+    .legend .volume-mark { background: rgba(96,165,250,.55); }
+    .chart-wrap { min-height: 620px; padding: 8px 10px 3px; position: relative; }
+    .chart-wrap svg { width: 100%; height: auto; min-height: 580px; display: block; overflow: visible; }
     .chart-wrap text { fill: var(--muted); font: 10px Inter, system-ui, sans-serif; }
     .grid-line { stroke: rgba(148,163,184,.15); stroke-width: 1; }
     .axis-line { stroke: rgba(148,163,184,.38); stroke-width: 1; }
@@ -143,6 +144,10 @@
     .wick-down { stroke: var(--red); }
     .body-up { fill: var(--green); }
     .body-down { fill: var(--red); }
+    .volume-up { fill: rgba(34,197,94,.48); }
+    .volume-down { fill: rgba(239,68,68,.48); }
+    .volume-separator { stroke: rgba(148,163,184,.28); stroke-width: 1; }
+    .volume-label { fill: #718198 !important; font-size: 9px !important; font-weight: 800 !important; letter-spacing: .08em; }
     .trade-window { fill: rgba(96,165,250,.045); }
     .open-line { stroke: var(--green); stroke-width: 1.5; stroke-dasharray: 6 4; }
     .close-line { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 6 4; }
@@ -242,6 +247,7 @@
               <span><i class="down-candle"></i>Down candle</span>
               <span><i class="open-mark"></i>Open</span>
               <span><i class="close-mark"></i>Closed</span>
+              <span><i class="volume-mark"></i>Volume</span>
             </div>
           </div>
           <div id="chart" class="chart-wrap"><div class="initial"><div><strong>No trade selected</strong>Choose a trade from the list to load its chart.</div></div></div>
@@ -533,10 +539,15 @@
       }
 
       function candleChart(candles, trade) {
-        const width = 1200, height = 520;
+        const width = 1200, height = 600;
         const pad = { left: 20, right: 150, top: 28, bottom: 38 };
         const plotW = width - pad.left - pad.right;
-        const plotH = height - pad.top - pad.bottom;
+        const volumeHeight = 92;
+        const volumeGap = 24;
+        const volumeBottom = height - pad.bottom;
+        const volumeTop = volumeBottom - volumeHeight;
+        const priceBottom = volumeTop - volumeGap;
+        const plotH = priceBottom - pad.top;
         const lows = candles.map(candle => candle.low);
         const highs = candles.map(candle => candle.high);
         const rawMin = Math.min(...lows, num(trade.avgEntry) ?? Infinity, num(trade.avgExit) ?? Infinity);
@@ -573,6 +584,13 @@
             <rect class="${up ? 'body-up' : 'body-down'}" x="${cx-bodyW/2}" y="${top}" width="${bodyW}" height="${bodyHeight}" rx=".8"><title>${escapeHtml(candle.date)} · O ${candle.open.toFixed(2)} · H ${candle.high.toFixed(2)} · L ${candle.low.toFixed(2)} · C ${candle.close.toFixed(2)}</title></rect></g>`;
         }).join('');
 
+        const maxVolume = Math.max(1, ...candles.map(candle => candle.volume || 0));
+        const volumeSvg = candles.map((candle,index) => {
+          const barHeight = Math.max(1, (candle.volume || 0) / maxVolume * volumeHeight);
+          const up = candle.close >= candle.open;
+          return `<rect class="${up ? 'volume-up' : 'volume-down'}" x="${x(index)-bodyW/2}" y="${volumeBottom-barHeight}" width="${bodyW}" height="${barHeight}" rx=".7"><title>${escapeHtml(candle.date)} · Volume ${Number(candle.volume || 0).toLocaleString('en-GB')}</title></rect>`;
+        }).join('');
+
         const labelIndexes = [...new Set([0, openIndex, closeIndex, candles.length-1, ...Array.from({length:5},(_,i)=>Math.round(i*(candles.length-1)/4))])].filter(index => index >= 0 && index < candles.length).sort((a,b)=>a-b);
         const dateLabels = labelIndexes.map(index => `<text x="${x(index)}" y="${height-12}" text-anchor="middle">${escapeHtml(shortDate(candles[index].date))}</text>`).join('');
         const plotRight = width - pad.right;
@@ -580,7 +598,7 @@
         const badgeWidth = 94;
         const badgeHeight = 18;
         const labelTop = pad.top;
-        const labelBottom = height - pad.bottom - badgeHeight;
+        const labelBottom = priceBottom - badgeHeight;
         const labelItems = [
           entryPrice == null ? null : { key: 'open', desired: Math.max(labelTop, Math.min(labelBottom, y(entryPrice) - badgeHeight / 2)) },
           exitPrice == null ? null : { key: 'closed', desired: Math.max(labelTop, Math.min(labelBottom, y(exitPrice) - badgeHeight / 2)) }
@@ -593,14 +611,18 @@
           labelItems.forEach(item => { item.top -= shift; });
         }
         const labelY = Object.fromEntries(labelItems.map(item => [item.key, item.top]));
-        const entryPriceSvg = entryPrice == null ? '' : `<line class="open-line" x1="${pad.left}" x2="${plotRight}" y1="${y(entryPrice)}" y2="${y(entryPrice)}"/><rect class="open-badge" x="${badgeX}" y="${labelY.open}" width="${badgeWidth}" height="${badgeHeight}" rx="5"/><text class="badge-text" x="${badgeX+badgeWidth/2}" y="${labelY.open+12.5}" text-anchor="middle">OPEN ${entryPrice.toFixed(2)}</text>`;
-        const exitPriceSvg = exitPrice == null ? '' : `<line class="close-line" x1="${pad.left}" x2="${plotRight}" y1="${y(exitPrice)}" y2="${y(exitPrice)}"/><rect class="close-badge" x="${badgeX}" y="${labelY.closed}" width="${badgeWidth}" height="${badgeHeight}" rx="5"/><text class="badge-text" x="${badgeX+badgeWidth/2}" y="${labelY.closed+12.5}" text-anchor="middle">CLOSED ${exitPrice.toFixed(2)}</text>`;
+        const entryPriceSvg = entryPrice == null ? '' : `<line class="open-line" x1="${openX}" x2="${plotRight}" y1="${y(entryPrice)}" y2="${y(entryPrice)}"/><rect class="open-badge" x="${badgeX}" y="${labelY.open}" width="${badgeWidth}" height="${badgeHeight}" rx="5"/><text class="badge-text" x="${badgeX+badgeWidth/2}" y="${labelY.open+12.5}" text-anchor="middle">OPEN ${entryPrice.toFixed(2)}</text>`;
+        const exitPriceSvg = exitPrice == null ? '' : `<line class="close-line" x1="${closeX}" x2="${plotRight}" y1="${y(exitPrice)}" y2="${y(exitPrice)}"/><rect class="close-badge" x="${badgeX}" y="${labelY.closed}" width="${badgeWidth}" height="${badgeHeight}" rx="5"/><text class="badge-text" x="${badgeX+badgeWidth/2}" y="${labelY.closed+12.5}" text-anchor="middle">CLOSED ${exitPrice.toFixed(2)}</text>`;
 
         return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(trade.symbol)} daily candlestick chart with trade open and close markers">
-          <rect class="trade-window" x="${Math.min(openX,closeX)}" y="${pad.top}" width="${Math.max(1,Math.abs(closeX-openX))}" height="${plotH}"/>
+          <rect class="trade-window" x="${Math.min(openX,closeX)}" y="${pad.top}" width="${Math.max(1,Math.abs(closeX-openX))}" height="${volumeBottom-pad.top}"/>
           ${horizontalGrid}
-          <line class="axis-line" x1="${pad.left}" x2="${width-pad.right}" y1="${height-pad.bottom}" y2="${height-pad.bottom}"/>
+          <line class="axis-line" x1="${pad.left}" x2="${width-pad.right}" y1="${priceBottom}" y2="${priceBottom}"/>
           ${candleSvg}
+          <line class="volume-separator" x1="${pad.left}" x2="${plotRight}" y1="${volumeTop}" y2="${volumeTop}"/>
+          <text class="volume-label" x="${pad.left}" y="${volumeTop-7}">VOLUME</text>
+          ${volumeSvg}
+          <line class="axis-line" x1="${pad.left}" x2="${plotRight}" y1="${volumeBottom}" y2="${volumeBottom}"/>
           ${entryPriceSvg}${exitPriceSvg}${dateLabels}
         </svg>`;
       }
