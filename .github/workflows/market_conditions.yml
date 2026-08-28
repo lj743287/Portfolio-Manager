@@ -1,0 +1,52 @@
+name: Market Conditions (09:00 GMT)
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 09:00 UTC is 09:00 GMT throughout the year.
+    - cron: "0 9 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-conditions
+  cancel-in-progress: false
+
+jobs:
+  update-market-conditions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+
+    steps:
+      - name: Check out Portfolio Manager
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Calculate market conditions
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+          TD_CREDITS_PER_MINUTE: "55"
+          TD_BATCH_SIZE: "50"
+        run: python scripts/build_market_conditions.py
+
+      - name: Publish the latest aggregate data
+        run: |
+          set -e
+          if git diff --quiet -- data/market-conditions.json; then
+            echo "Market conditions are unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/market-conditions.json
+          git commit -m "Update daily market conditions"
+          git pull --rebase origin main
+          git push origin main
+
