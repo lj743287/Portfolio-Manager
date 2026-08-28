@@ -285,6 +285,7 @@
         sortDirection: 'desc',
         selectedId: '',
         chartRequest: 0,
+        chartAbort: null,
         candleCache: new Map()
       };
 
@@ -503,7 +504,42 @@
         return result;
       }
 
-      async function fetchCandles(trade) {
+      function abortableDelay(milliseconds, signal) {
+        return new Promise((resolve, reject) => {
+          let timer;
+          const aborted = () => {
+            clearTimeout(timer);
+            signal?.removeEventListener('abort', aborted);
+            const error = new Error('Request cancelled.');
+            error.name = 'AbortError';
+            reject(error);
+          };
+          if (signal?.aborted) return aborted();
+          timer = setTimeout(() => {
+            signal?.removeEventListener('abort', aborted);
+            resolve();
+          }, milliseconds);
+          signal?.addEventListener('abort', aborted, { once: true });
+        });
+      }
+
+      async function waitForCreditReset(milliseconds, signal, onTick) {
+        const finishAt = Date.now() + milliseconds;
+        while (Date.now() < finishAt) {
+          const seconds = Math.max(1, Math.ceil((finishAt - Date.now()) / 1000));
+          onTick?.(seconds);
+          await abortableDelay(Math.min(1000, finishAt - Date.now()), signal);
+        }
+      }
+
+      function rateLimitWait(response) {
+        const retryAfter = Number(response.headers.get('retry-after'));
+        if (Number.isFinite(retryAfter) && retryAfter > 0) return Math.max(3000, retryAfter * 1000);
+        const now = new Date();
+        return Math.max(3000, (62 - now.getUTCSeconds()) * 1000 - now.getUTCMilliseconds());
+      }
+
+      async function fetchCandles(trade, signal, onRetry) {
         const startDate = addMonths(trade.entryDate, -2);
         const endDate = addDays(trade.exitDate, 35);
         const cacheKey = `${trade.symbol}|${startDate}|${endDate}`;
@@ -518,12 +554,21 @@
           format: 'JSON',
           apikey: apiKey()
         });
-        const response = await fetch(`https://api.twelvedata.com/time_series?${params.toString()}`, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`Twelve Data request failed (${response.status}).`);
-        const candles = trimAfterExit(normaliseCandles(await response.json()), trade.exitDate);
-        if (!candles.length) throw new Error('No daily candles were returned for this trade.');
-        state.candleCache.set(cacheKey, candles);
-        return candles;
+        for (let attempt = 1; attempt <= 4; attempt += 1) {
+          const response = await fetch(`https://api.twelvedata.com/time_series?${params.toString()}`, { cache: 'no-store', signal });
+          if (response.status === 429) {
+            await response.text();
+            if (attempt === 4) throw new Error('Twelve Data is still busy. The market-conditions scan may be using the allowance; try this chart again in a minute.');
+            await waitForCreditReset(rateLimitWait(response), signal, seconds => onRetry?.(seconds, attempt));
+            continue;
+          }
+          if (!response.ok) throw new Error(`Twelve Data request failed (${response.status}).`);
+          const candles = trimAfterExit(normaliseCandles(await response.json()), trade.exitDate);
+          if (!candles.length) throw new Error('No daily candles were returned for this trade.');
+          state.candleCache.set(cacheKey, candles);
+          return candles;
+        }
+        throw new Error('The daily candles could not be loaded.');
       }
 
       function nearestIndex(candles, date, mode) {
@@ -629,6 +674,9 @@
 
       async function loadTradeChart(trade) {
         const requestId = ++state.chartRequest;
+        state.chartAbort?.abort();
+        const controller = new AbortController();
+        state.chartAbort = controller;
         const start = addMonths(trade.entryDate, -2);
         el('chartSubtitle').textContent = `${displayDate(start)} through ten trading sessions after exit`;
         if (!apiKey()) {
@@ -638,15 +686,20 @@
         }
         el('chart').innerHTML = '<div class="chart-loading">Loading daily candles…</div>';
         try {
-          const candles = await fetchCandles(trade);
+          const candles = await fetchCandles(trade, controller.signal, (seconds, attempt) => {
+            if (requestId !== state.chartRequest) return;
+            el('chart').innerHTML = `<div class="chart-loading">Twelve Data limit reached while the market scan is running.<br>Retrying automatically in ${seconds} second${seconds === 1 ? '' : 's'}… <span class="muted">Attempt ${attempt + 1} of 4</span></div>`;
+          });
           if (requestId !== state.chartRequest) return;
           el('chart').innerHTML = candleChart(candles, trade);
           const postExit = candles.filter(candle => candle.date > isoDate(trade.exitDate)).length;
           el('chartSubtitle').textContent = `${candles.length} daily candles · two months before entry · ${postExit} available after exit`;
         } catch (error) {
-          if (requestId !== state.chartRequest) return;
+          if (error?.name === 'AbortError' || requestId !== state.chartRequest) return;
           el('chart').innerHTML = `<div class="chart-error">${escapeHtml(error.message || 'The candles could not be loaded.')}</div>`;
-          if (/api|key|credit|unauthor/i.test(String(error.message || ''))) openApiModal(error.message);
+          if (/invalid.*key|api.?key|unauthor|\b401\b|\b403\b/i.test(String(error.message || ''))) openApiModal(error.message);
+        } finally {
+          if (state.chartAbort === controller) state.chartAbort = null;
         }
       }
 
