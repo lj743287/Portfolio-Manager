@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Stockbee-style US market breadth and trading conditions dashboard" />
+  <title>Market Conditions | Portfolio Manager</title>
+  <style>
+    :root {
+      --bg: #07101f;
+      --panel: #111827;
+      --panel-2: #172033;
+      --line: #2d3a50;
+      --text: #e5edf8;
+      --muted: #93a4bb;
+      --green: #22c55e;
+      --green-soft: rgba(34,197,94,.14);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245,158,11,.14);
+      --red: #ef4444;
+      --red-soft: rgba(239,68,68,.14);
+      --blue: #60a5fa;
+      --cyan: #22d3ee;
+      --purple: #a78bfa;
+      --state: var(--amber);
+      --state-soft: var(--amber-soft);
+    }
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% -10%, rgba(37,99,235,.22), transparent 34%),
+        radial-gradient(circle at 95% 0%, rgba(34,211,238,.09), transparent 25%),
+        var(--bg);
+    }
+    body[data-state="green"] { --state: var(--green); --state-soft: var(--green-soft); }
+    body[data-state="red"] { --state: var(--red); --state-soft: var(--red-soft); }
+    a { color: inherit; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid rgba(45,58,80,.8);
+      background: rgba(7,16,31,.86);
+      backdrop-filter: blur(16px);
+    }
+    .topbar {
+      width: min(1440px, 100%);
+      margin: auto;
+      padding: 17px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .eyebrow {
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+    h1 { margin: 3px 0 0; font-size: clamp(21px, 3vw, 28px); letter-spacing: -.02em; }
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel-2);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .back:hover { border-color: var(--blue); }
+    main { width: min(1440px, 100%); margin: auto; padding: 22px 24px 50px; }
+    .loading, .error {
+      margin: 42px auto;
+      max-width: 740px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(17,24,39,.92);
+      text-align: center;
+      color: var(--muted);
+    }
+    .error { border-color: rgba(239,68,68,.4); color: #fecaca; }
+    .hidden { display: none !important; }
+    .status-shell {
+      display: grid;
+      grid-template-columns: minmax(250px, .7fr) minmax(420px, 1.3fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(23,32,51,.95), rgba(12,20,35,.95));
+      box-shadow: 0 24px 70px rgba(0,0,0,.18);
+    }
+    .condition-panel {
+      min-height: 270px;
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 156px 1fr;
+      align-items: center;
+      gap: 24px;
+      border-color: color-mix(in srgb, var(--state) 48%, var(--line));
+      background: linear-gradient(145deg, var(--state-soft), rgba(12,20,35,.96) 62%);
+    }
+    .gauge {
+      --score: 0;
+      width: 150px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--state) calc(var(--score) * 1%), rgba(148,163,184,.13) 0);
+      position: relative;
+      box-shadow: 0 0 44px var(--state-soft);
+    }
+    .gauge::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      background: #0c1423;
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    .gauge-value { z-index: 1; text-align: center; font-size: 33px; font-weight: 850; }
+    .gauge-value small { display: block; margin-top: -1px; color: var(--muted); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+    .state-label { color: var(--state); font-size: clamp(28px, 4vw, 43px); line-height: 1; font-weight: 900; letter-spacing: -.035em; }
+    .state-copy { margin: 12px 0 0; color: #c7d3e3; line-height: 1.48; font-size: 14px; }
+    .asof { margin-top: 15px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .signal-panel { padding: 18px; }
+    .panel-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 13px; }
+    h2 { margin: 0; font-size: 17px; letter-spacing: -.01em; }
+    .panel-sub { color: var(--muted); font-size: 12px; }
+    .signal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .signal-card {
+      min-height: 97px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(7,16,31,.54);
+    }
+    .signal-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .signal-name { color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+    .dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; background: var(--red); box-shadow: 0 0 14px rgba(239,68,68,.55); }
+    .signal-card.positive .dot { background: var(--green); box-shadow: 0 0 14px rgba(34,197,94,.55); }
+    .signal-value { margin-top: 9px; font-size: 20px; font-weight: 850; }
+    .signal-detail { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .metric-grid { display: grid; grid-template-columns: repeat(6, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .metric { min-height: 112px; padding: 15px; }
+    .metric-label { color: var(--muted); font-size: 10px; font-weight: 850; text-transform: uppercase; letter-spacing: .075em; }
+    .metric-value { margin-top: 8px; font-size: 27px; font-weight: 900; letter-spacing: -.025em; }
+    .metric-detail { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .up { color: var(--green); }
+    .down { color: var(--red); }
+    .neutral { color: var(--amber); }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .chart-panel { padding: 18px; min-height: 365px; overflow: hidden; }
+    .chart { min-height: 275px; margin-top: 8px; }
+    .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .chart text { fill: var(--muted); font: 10px Inter, system-ui, sans-serif; }
+    .chart .grid-line { stroke: rgba(148,163,184,.16); stroke-width: 1; }
+    .chart .zero-line { stroke: rgba(148,163,184,.42); stroke-width: 1.2; }
+    .chart .threshold { stroke: rgba(245,158,11,.58); stroke-width: 1; stroke-dasharray: 5 5; }
+    .chart .up-bar { fill: rgba(34,197,94,.8); }
+    .chart .down-bar { fill: rgba(239,68,68,.8); }
+    .chart .primary-up { fill: none; stroke: var(--green); stroke-width: 2.5; }
+    .chart .primary-down { fill: none; stroke: var(--red); stroke-width: 2.5; }
+    .chart .ratio-line { fill: none; stroke: var(--blue); stroke-width: 2.8; }
+    .chart .ratio-area { fill: rgba(96,165,250,.11); }
+    .chart .point { fill: var(--blue); stroke: #07101f; stroke-width: 1.5; }
+    .legend { display: flex; gap: 15px; flex-wrap: wrap; color: var(--muted); font-size: 11px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 18px; height: 3px; border-radius: 4px; background: var(--blue); }
+    .swatch.green { background: var(--green); }
+    .swatch.red { background: var(--red); }
+    .insight-panel { margin-top: 16px; padding: 18px; }
+    .insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .insight-list { display: grid; gap: 9px; margin-top: 12px; }
+    .insight-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid rgba(45,58,80,.72); font-size: 12px; }
+    .insight-row:last-child { border-bottom: 0; }
+    .insight-row span:first-child { color: var(--muted); }
+    details { margin-top: 15px; border-top: 1px solid var(--line); padding-top: 14px; }
+    summary { cursor: pointer; color: #cbd5e1; font-size: 12px; font-weight: 750; }
+    .methodology { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .methodology p { margin: 7px 0; }
+    footer { padding-top: 20px; text-align: center; color: #66758b; font-size: 11px; }
+    @media (max-width: 1120px) {
+      .metric-grid { grid-template-columns: repeat(3, 1fr); }
+      .status-shell { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .topbar, main { padding-left: 14px; padding-right: 14px; }
+      .condition-panel { grid-template-columns: 112px 1fr; gap: 16px; }
+      .gauge { width: 110px; }
+      .gauge::before { inset: 9px; }
+      .gauge-value { font-size: 27px; }
+      .metric-grid, .signal-grid, .chart-grid, .insight-grid { grid-template-columns: 1fr 1fr; }
+      .chart-panel { grid-column: 1 / -1; }
+    }
+    @media (max-width: 520px) {
+      .condition-panel { grid-template-columns: 1fr; text-align: center; }
+      .gauge { margin: auto; }
+      .metric-grid, .signal-grid, .insight-grid { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; }
+      .back span { display: none; }
+    }
+  </style>
+</head>
+<body data-state="amber">
+  <header>
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Portfolio Manager</div>
+        <h1>US Market Conditions</h1>
+      </div>
+      <a class="back" href="index.html" aria-label="Back to Portfolio Manager">← <span>Portfolio Manager</span></a>
+    </div>
+  </header>
+
+  <main>
+    <div id="loading" class="loading">Loading the latest market breadth reading…</div>
+    <div id="error" class="error hidden"></div>
+
+    <div id="dashboard" class="hidden">
+      <section class="status-shell" aria-label="Current market condition">
+        <article class="panel condition-panel">
+          <div id="gauge" class="gauge"><div class="gauge-value"><span id="score">–</span><small>condition score</small></div></div>
+          <div>
+            <div id="stateLabel" class="state-label">Loading</div>
+            <p id="stateAction" class="state-copy"></p>
+            <div id="asOf" class="asof"></div>
+          </div>
+        </article>
+
+        <article class="panel signal-panel">
+          <div class="panel-heading">
+            <h2>Decision signals</h2>
+            <div id="signalCount" class="panel-sub"></div>
+          </div>
+          <div id="signalGrid" class="signal-grid"></div>
+        </article>
+      </section>
+
+      <section id="metricGrid" class="metric-grid" aria-label="Current breadth readings"></section>
+
+      <section class="chart-grid">
+        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>Daily 4% breadth</h2><div class="panel-sub">Significant high-volume movers by session</div></div></div>
+          <div class="legend"><span><i class="swatch green"></i>Up 4%+</span><span><i class="swatch red"></i>Down 4%+</span></div>
+          <div id="dailyChart" class="chart"></div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>10-day breadth ratio</h2><div class="panel-sub">Above 2.0 is a bullish thrust; below 0.5 is bearish</div></div></div>
+          <div class="legend"><span><i class="swatch"></i>10-day ratio</span></div>
+          <div id="ratioChart" class="chart"></div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>Primary breadth</h2><div class="panel-sub">25% moves measured across 65 sessions</div></div></div>
+          <div class="legend"><span><i class="swatch green"></i>Up from 65-day low</span><span><i class="swatch red"></i>Down from 65-day high</span></div>
+          <div id="primaryChart" class="chart"></div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>Fast breadth</h2><div class="panel-sub">13% moves measured across 34 sessions</div></div></div>
+          <div class="legend"><span><i class="swatch green"></i>Bull 34/13</span><span><i class="swatch red"></i>Bear 34/13</span></div>
+          <div id="fastChart" class="chart"></div>
+        </article>
+      </section>
+
+      <section class="panel insight-panel">
+        <div class="insight-grid">
+          <div>
+            <h2>Momentum and extremes</h2>
+            <div id="extremes" class="insight-list"></div>
+          </div>
+          <div>
+            <h2>Data quality</h2>
+            <div id="coverage" class="insight-list"></div>
+          </div>
+        </div>
+        <details>
+          <summary>How this reading is calculated</summary>
+          <div id="methodology" class="methodology"></div>
+        </details>
+      </section>
+      <footer>Market breadth is a risk filter, not a prediction or an instruction to trade.</footer>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const byId = id => document.getElementById(id);
+      const number = value => Number(value || 0).toLocaleString('en-GB');
+      const money = value => '$' + Number(value || 0).toLocaleString('en-GB', { maximumFractionDigits: 0 });
+      const shortDate = value => {
+        const date = new Date(String(value) + 'T12:00:00Z');
+        return Number.isNaN(date.getTime()) ? String(value || '') : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      };
+      const fullDate = value => {
+        const date = new Date(String(value) + 'T12:00:00Z');
+        return Number.isNaN(date.getTime()) ? String(value || '') : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      };
+      const updatedTime = value => {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }) + ' GMT';
+      };
+      const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
+
+      function ratioLabel(record) {
+        if (record?.infinite) return '∞';
+        return record?.ratio == null ? 'n/a' : Number(record.ratio).toFixed(2);
+      }
+
+      function metric(label, value, detail, tone = '') {
+        return `<article class="panel metric"><div class="metric-label">${escapeHtml(label)}</div><div class="metric-value ${tone}">${escapeHtml(value)}</div><div class="metric-detail">${escapeHtml(detail)}</div></article>`;
+      }
+
+      function linePath(points) {
+        return points.map((point, index) => `${index ? 'L' : 'M'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(' ');
+      }
+
+      function axisLabels(items, width, height, pad) {
+        if (!items.length) return '';
+        const picks = [...new Set([0, Math.floor((items.length - 1) / 2), items.length - 1])];
+        return picks.map(index => {
+          const x = pad.left + (items.length === 1 ? 0 : index * (width - pad.left - pad.right) / (items.length - 1));
+          return `<text x="${x}" y="${height - 7}" text-anchor="middle">${escapeHtml(shortDate(items[index].date))}</text>`;
+        }).join('');
+      }
+
+      function breadthBars(items, upKey, downKey) {
+        const width = 720, height = 285, pad = { left: 44, right: 13, top: 12, bottom: 29 };
+        const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+        const max = Math.max(1, ...items.flatMap(item => [Number(item[upKey] || 0), Number(item[downKey] || 0)]));
+        const half = plotH / 2, zero = pad.top + half;
+        const slot = plotW / Math.max(1, items.length), barW = Math.max(3, slot * .64);
+        const bars = items.map((item, index) => {
+          const x = pad.left + index * slot + (slot - barW) / 2;
+          const upH = Number(item[upKey] || 0) / max * (half - 8);
+          const downH = Number(item[downKey] || 0) / max * (half - 8);
+          return `<rect class="up-bar" x="${x}" y="${zero - upH}" width="${barW}" height="${upH}"><title>${item.date}: ${number(item[upKey])} up</title></rect>
+            <rect class="down-bar" x="${x}" y="${zero}" width="${barW}" height="${downH}"><title>${item.date}: ${number(item[downKey])} down</title></rect>`;
+        }).join('');
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Breadth bar chart">
+          <line class="zero-line" x1="${pad.left}" x2="${width-pad.right}" y1="${zero}" y2="${zero}" />
+          <text x="${pad.left-7}" y="${pad.top+9}" text-anchor="end">${number(max)}</text>
+          <text x="${pad.left-7}" y="${zero+4}" text-anchor="end">0</text>
+          <text x="${pad.left-7}" y="${height-pad.bottom-2}" text-anchor="end">${number(max)}</text>
+          ${bars}${axisLabels(items, width, height, pad)}
+        </svg>`;
+      }
+
+      function twoLineChart(items, firstKey, secondKey, firstClass, secondClass) {
+        const width = 720, height = 285, pad = { left: 47, right: 14, top: 14, bottom: 29 };
+        const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+        const max = Math.max(1, ...items.flatMap(item => [Number(item[firstKey] || 0), Number(item[secondKey] || 0)]));
+        const x = index => pad.left + (items.length === 1 ? 0 : index * plotW / (items.length - 1));
+        const y = value => pad.top + plotH - Number(value || 0) / max * plotH;
+        const first = items.map((item, index) => ({ x:x(index), y:y(item[firstKey]) }));
+        const second = items.map((item, index) => ({ x:x(index), y:y(item[secondKey]) }));
+        const grid = [0, .5, 1].map(part => {
+          const gy = pad.top + plotH - part * plotH;
+          return `<line class="grid-line" x1="${pad.left}" x2="${width-pad.right}" y1="${gy}" y2="${gy}" /><text x="${pad.left-7}" y="${gy+4}" text-anchor="end">${number(max*part)}</text>`;
+        }).join('');
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Market breadth line chart">
+          ${grid}<path class="${firstClass}" d="${linePath(first)}" /><path class="${secondClass}" d="${linePath(second)}" />
+          ${axisLabels(items, width, height, pad)}
+        </svg>`;
+      }
+
+      function ratioChart(items) {
+        const width = 720, height = 285, pad = { left: 43, right: 14, top: 14, bottom: 29 };
+        const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+        const chartValues = items.map(item => item.infinite ? 3 : Math.min(3, Number(item.ratio ?? 0)));
+        const x = index => pad.left + (items.length === 1 ? 0 : index * plotW / (items.length - 1));
+        const y = value => pad.top + plotH - value / 3 * plotH;
+        const points = chartValues.map((value, index) => ({ x:x(index), y:y(value) }));
+        const area = points.length ? `${linePath(points)} L ${points[points.length-1].x} ${y(0)} L ${points[0].x} ${y(0)} Z` : '';
+        const grid = [0, .5, 1, 2, 3].map(value => `<line class="${value === .5 || value === 2 ? 'threshold' : 'grid-line'}" x1="${pad.left}" x2="${width-pad.right}" y1="${y(value)}" y2="${y(value)}" /><text x="${pad.left-7}" y="${y(value)+4}" text-anchor="end">${value === 3 ? '3+' : value}</text>`).join('');
+        const dots = points.map((point, index) => `<circle class="point" cx="${point.x}" cy="${point.y}" r="3"><title>${items[index].date}: ${escapeHtml(ratioLabel(items[index]))}</title></circle>`).join('');
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Ten-day breadth ratio line chart">${grid}<path class="ratio-area" d="${area}"/><path class="ratio-line" d="${linePath(points)}"/>${dots}${axisLabels(items,width,height,pad)}</svg>`;
+      }
+
+      function signalCard(name, positive, value, detail) {
+        return `<article class="signal-card ${positive ? 'positive' : ''}"><div class="signal-top"><div class="signal-name">${escapeHtml(name)}</div><span class="dot"></span></div><div class="signal-value ${positive ? 'up' : 'down'}">${escapeHtml(value)}</div><div class="signal-detail">${escapeHtml(detail)}</div></article>`;
+      }
+
+      function row(label, value, tone = '') {
+        return `<div class="insight-row"><span>${escapeHtml(label)}</span><strong class="${tone}">${escapeHtml(value)}</strong></div>`;
+      }
+
+      function render(data) {
+        const condition = data.condition;
+        const current = data.current;
+        const tests = condition.tests;
+        const ratio = data.ten_day_ratio;
+        const oneq = data.oneq;
+
+        document.body.dataset.state = condition.colour;
+        byId('score').textContent = condition.score;
+        byId('gauge').style.setProperty('--score', condition.score);
+        byId('stateLabel').textContent = condition.label;
+        byId('stateAction').textContent = condition.action;
+        byId('asOf').textContent = `Market data to ${fullDate(data.as_of_market_date)} · calculated ${updatedTime(data.generated_at_utc)}`;
+        byId('signalCount').textContent = `${condition.positive_signals} of ${condition.total_signals} positive`;
+
+        byId('signalGrid').innerHTML = [
+          signalCard('Primary breadth', tests.primary_breadth, tests.primary_breadth ? 'Bullish' : 'Bearish', `${number(current.up_25_quarter)} up vs ${number(current.down_25_quarter)} down`),
+          signalCard('Fast breadth', tests.fast_breadth, tests.fast_breadth ? 'Bullish' : 'Bearish', `${number(current.bull_34_13)} bull vs ${number(current.bear_34_13)} bear`),
+          signalCard('10-day breadth', tests.ten_day_breadth, ratioLabel(ratio), tests.ten_day_breadth ? 'Buying breadth dominates' : 'Selling breadth dominates'),
+          signalCard('ONEQ trend', tests.oneq_trend, tests.oneq_trend ? '10 MA > 20 MA' : '10 MA < 20 MA', `${Number(oneq.ma10).toFixed(2)} vs ${Number(oneq.ma20).toFixed(2)}`)
+        ].join('');
+
+        const dailyNet = current.up_4 - current.down_4;
+        const primaryRatio = current.down_25_quarter ? current.up_25_quarter / current.down_25_quarter : null;
+        byId('metricGrid').innerHTML = [
+          metric('4% up today', number(current.up_4), 'High-volume movers', 'up'),
+          metric('4% down today', number(current.down_4), 'High-volume movers', 'down'),
+          metric('Daily breadth net', `${dailyNet > 0 ? '+' : ''}${number(dailyNet)}`, 'Up count less down count', dailyNet > 0 ? 'up' : dailyNet < 0 ? 'down' : 'neutral'),
+          metric('10-day ratio', ratioLabel(ratio), ratio.infinite || ratio.ratio >= 2 ? 'Bullish breadth thrust' : ratio.ratio != null && ratio.ratio < .5 ? 'Bearish breadth thrust' : 'No extreme thrust', tests.ten_day_breadth ? 'up' : 'down'),
+          metric('Primary ratio', primaryRatio == null ? '∞' : primaryRatio.toFixed(2), '65-session breadth', tests.primary_breadth ? 'up' : 'down'),
+          metric('ONEQ trend', tests.oneq_trend ? 'Positive' : 'Negative', `10 MA ${Number(oneq.ma10).toFixed(2)} · 20 MA ${Number(oneq.ma20).toFixed(2)}`, tests.oneq_trend ? 'up' : 'down')
+        ].join('');
+
+        byId('dailyChart').innerHTML = breadthBars(data.history.daily_breadth, 'up_4', 'down_4');
+        byId('ratioChart').innerHTML = ratioChart(data.history.ten_day_ratio);
+        byId('primaryChart').innerHTML = twoLineChart(data.history.primary_breadth, 'up', 'down', 'primary-up', 'primary-down');
+        byId('fastChart').innerHTML = twoLineChart(data.history.fast_breadth, 'bull', 'bear', 'primary-up', 'primary-down');
+
+        const heatTone = current.up_50_month > 20 ? 'neutral' : '';
+        const washoutTone = current.down_50_month > 20 ? 'neutral' : '';
+        byId('extremes').innerHTML = [
+          row('Strong buying days in last 10', number(current.strong_buying_days_10), current.strong_buying_days_10 ? 'up' : ''),
+          row('Strong selling days in last 10', number(current.strong_selling_days_10), current.strong_selling_days_10 ? 'down' : ''),
+          row('Stocks up 50% in a month', number(current.up_50_month), heatTone),
+          row('Stocks down 50% in a month', number(current.down_50_month), washoutTone),
+          row('Stocks up 25% in a month', number(current.up_25_month)),
+          row('Stocks down 25% in a month', number(current.down_25_month))
+        ].join('');
+
+        byId('coverage').innerHTML = [
+          row('Eligible shares today', number(data.universe.eligible_symbols)),
+          row('Valid price histories', number(data.universe.valid_symbols)),
+          row('NASDAQ/NYSE catalogue', number(data.universe.catalogue_symbols)),
+          row('Failed or unavailable symbols', number(data.universe.failed_symbols), data.universe.failed_symbols ? 'neutral' : ''),
+          row('Minimum price', money(data.universe.minimum_price)),
+          row('Minimum 20-day dollar volume', money(data.universe.minimum_average_dollar_volume))
+        ].join('');
+
+        const method = data.methodology || {};
+        byId('methodology').innerHTML = Object.entries(method).map(([key, value]) => `<p><strong>${escapeHtml(key.replaceAll('_',' '))}:</strong> ${escapeHtml(value)}</p>`).join('');
+
+        byId('loading').classList.add('hidden');
+        byId('dashboard').classList.remove('hidden');
+      }
+
+      function fail(message) {
+        byId('loading').classList.add('hidden');
+        byId('error').textContent = message;
+        byId('error').classList.remove('hidden');
+      }
+
+      fetch(`data/market-conditions.json?v=${Date.now()}`, { cache: 'no-store' })
+        .then(response => {
+          if (!response.ok) throw new Error(`Data request failed (${response.status})`);
+          return response.json();
+        })
+        .then(data => {
+          if (data.status !== 'ok') throw new Error(data.message || 'The first market conditions calculation is still pending.');
+          render(data);
+        })
+        .catch(error => fail(error.message || 'The market conditions data could not be loaded.'));
+    })();
+  </script>
+</body>
+</html>
