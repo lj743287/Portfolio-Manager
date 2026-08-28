@@ -1,5 +1,884 @@
 {
   "schema_version": 1,
-  "status": "pending",
-  "message": "The first scheduled market breadth calculation has not run yet."
+  "status": "ok",
+  "generated_at_utc": "2026-08-28T14:15:02Z",
+  "as_of_market_date": "2026-08-27",
+  "source": "Twelve Data",
+  "universe": {
+    "exchanges": [
+      "NASDAQ",
+      "NYSE"
+    ],
+    "catalogue_symbols": 6395,
+    "valid_symbols": 6008,
+    "eligible_symbols": 3900,
+    "failed_symbols": 387,
+    "minimum_price": 3.0,
+    "minimum_average_dollar_volume": 250000.0
+  },
+  "condition": {
+    "label": "Favourable",
+    "colour": "green",
+    "score": 75,
+    "positive_signals": 3,
+    "total_signals": 4,
+    "action": "Normal long exposure is permitted, subject to setup quality and your usual risk limits.",
+    "tests": {
+      "primary_breadth": true,
+      "fast_breadth": true,
+      "ten_day_breadth": true,
+      "oneq_trend": false
+    }
+  },
+  "current": {
+    "date": "2026-08-27",
+    "coverage": 5627,
+    "eligible": 3900,
+    "up_4": 210,
+    "down_4": 79,
+    "up_25_quarter": 1316,
+    "down_25_quarter": 649,
+    "bull_34_13": 1568,
+    "bear_34_13": 962,
+    "up_25_month": 315,
+    "down_25_month": 65,
+    "up_50_month": 54,
+    "down_50_month": 8,
+    "strong_buying_days_10": 1,
+    "strong_selling_days_10": 0
+  },
+  "ten_day_ratio": {
+    "date": "2026-08-27",
+    "up_total": 1736,
+    "down_total": 1273,
+    "ratio": 1.364,
+    "infinite": false
+  },
+  "oneq": {
+    "date": "2026-08-27",
+    "close": 104.52,
+    "ma10": 103.644,
+    "ma20": 103.7755,
+    "bullish": false
+  },
+  "history": {
+    "daily_breadth": [
+      {
+        "date": "2026-07-24",
+        "coverage": 5811,
+        "eligible": 3905,
+        "up_4": 108,
+        "down_4": 228,
+        "up_25_quarter": 997,
+        "down_25_quarter": 841,
+        "bull_34_13": 1290,
+        "bear_34_13": 1270,
+        "up_25_month": 72,
+        "down_25_month": 199,
+        "up_50_month": 13,
+        "down_50_month": 31
+      },
+      {
+        "date": "2026-07-27",
+        "coverage": 5796,
+        "eligible": 3888,
+        "up_4": 312,
+        "down_4": 120,
+        "up_25_quarter": 1101,
+        "down_25_quarter": 784,
+        "bull_34_13": 1418,
+        "bear_34_13": 1161,
+        "up_25_month": 56,
+        "down_25_month": 201,
+        "up_50_month": 9,
+        "down_50_month": 29
+      },
+      {
+        "date": "2026-07-28",
+        "coverage": 5799,
+        "eligible": 3879,
+        "up_4": 284,
+        "down_4": 277,
+        "up_25_quarter": 1168,
+        "down_25_quarter": 813,
+        "bull_34_13": 1483,
+        "bear_34_13": 1158,
+        "up_25_month": 82,
+        "down_25_month": 296,
+        "up_50_month": 9,
+        "down_50_month": 35
+      },
+      {
+        "date": "2026-07-29",
+        "coverage": 5806,
+        "eligible": 3868,
+        "up_4": 132,
+        "down_4": 429,
+        "up_25_quarter": 1084,
+        "down_25_quarter": 890,
+        "bull_34_13": 1348,
+        "bear_34_13": 1276,
+        "up_25_month": 111,
+        "down_25_month": 373,
+        "up_50_month": 15,
+        "down_50_month": 44
+      },
+      {
+        "date": "2026-07-30",
+        "coverage": 5808,
+        "eligible": 3872,
+        "up_4": 335,
+        "down_4": 132,
+        "up_25_quarter": 1124,
+        "down_25_quarter": 797,
+        "bull_34_13": 1426,
+        "bear_34_13": 1181,
+        "up_25_month": 86,
+        "down_25_month": 265,
+        "up_50_month": 17,
+        "down_50_month": 30
+      },
+      {
+        "date": "2026-07-31",
+        "coverage": 5812,
+        "eligible": 3866,
+        "up_4": 106,
+        "down_4": 145,
+        "up_25_quarter": 1089,
+        "down_25_quarter": 818,
+        "bull_34_13": 1373,
+        "bear_34_13": 1216,
+        "up_25_month": 85,
+        "down_25_month": 195,
+        "up_50_month": 14,
+        "down_50_month": 27
+      },
+      {
+        "date": "2026-08-03",
+        "coverage": 5806,
+        "eligible": 3880,
+        "up_4": 457,
+        "down_4": 42,
+        "up_25_quarter": 1206,
+        "down_25_quarter": 753,
+        "bull_34_13": 1656,
+        "bear_34_13": 1074,
+        "up_25_month": 81,
+        "down_25_month": 160,
+        "up_50_month": 16,
+        "down_50_month": 29
+      },
+      {
+        "date": "2026-08-04",
+        "coverage": 5810,
+        "eligible": 3883,
+        "up_4": 560,
+        "down_4": 76,
+        "up_25_quarter": 1360,
+        "down_25_quarter": 665,
+        "bull_34_13": 1926,
+        "bear_34_13": 924,
+        "up_25_month": 119,
+        "down_25_month": 105,
+        "up_50_month": 21,
+        "down_50_month": 25
+      },
+      {
+        "date": "2026-08-05",
+        "coverage": 5806,
+        "eligible": 3874,
+        "up_4": 180,
+        "down_4": 152,
+        "up_25_quarter": 1330,
+        "down_25_quarter": 686,
+        "bull_34_13": 1837,
+        "bear_34_13": 946,
+        "up_25_month": 149,
+        "down_25_month": 110,
+        "up_50_month": 22,
+        "down_50_month": 25
+      },
+      {
+        "date": "2026-08-06",
+        "coverage": 5813,
+        "eligible": 3887,
+        "up_4": 231,
+        "down_4": 220,
+        "up_25_quarter": 1294,
+        "down_25_quarter": 710,
+        "bull_34_13": 1770,
+        "bear_34_13": 1014,
+        "up_25_month": 130,
+        "down_25_month": 139,
+        "up_50_month": 25,
+        "down_50_month": 28
+      },
+      {
+        "date": "2026-08-07",
+        "coverage": 5811,
+        "eligible": 3894,
+        "up_4": 402,
+        "down_4": 93,
+        "up_25_quarter": 1404,
+        "down_25_quarter": 671,
+        "bull_34_13": 1879,
+        "bear_34_13": 941,
+        "up_25_month": 189,
+        "down_25_month": 111,
+        "up_50_month": 29,
+        "down_50_month": 26
+      },
+      {
+        "date": "2026-08-10",
+        "coverage": 5801,
+        "eligible": 3898,
+        "up_4": 213,
+        "down_4": 187,
+        "up_25_quarter": 1344,
+        "down_25_quarter": 674,
+        "bull_34_13": 1773,
+        "bear_34_13": 999,
+        "up_25_month": 218,
+        "down_25_month": 115,
+        "up_50_month": 37,
+        "down_50_month": 24
+      },
+      {
+        "date": "2026-08-11",
+        "coverage": 5802,
+        "eligible": 3907,
+        "up_4": 163,
+        "down_4": 122,
+        "up_25_quarter": 1409,
+        "down_25_quarter": 668,
+        "bull_34_13": 1766,
+        "bear_34_13": 993,
+        "up_25_month": 230,
+        "down_25_month": 124,
+        "up_50_month": 44,
+        "down_50_month": 23
+      },
+      {
+        "date": "2026-08-12",
+        "coverage": 5797,
+        "eligible": 3905,
+        "up_4": 217,
+        "down_4": 90,
+        "up_25_quarter": 1411,
+        "down_25_quarter": 646,
+        "bull_34_13": 1772,
+        "bear_34_13": 973,
+        "up_25_month": 223,
+        "down_25_month": 115,
+        "up_50_month": 41,
+        "down_50_month": 22
+      },
+      {
+        "date": "2026-08-13",
+        "coverage": 5808,
+        "eligible": 3909,
+        "up_4": 248,
+        "down_4": 97,
+        "up_25_quarter": 1465,
+        "down_25_quarter": 642,
+        "bull_34_13": 1780,
+        "bear_34_13": 946,
+        "up_25_month": 274,
+        "down_25_month": 85,
+        "up_50_month": 47,
+        "down_50_month": 19
+      },
+      {
+        "date": "2026-08-14",
+        "coverage": 5809,
+        "eligible": 3919,
+        "up_4": 162,
+        "down_4": 65,
+        "up_25_quarter": 1485,
+        "down_25_quarter": 610,
+        "bull_34_13": 1815,
+        "bear_34_13": 892,
+        "up_25_month": 297,
+        "down_25_month": 88,
+        "up_50_month": 56,
+        "down_50_month": 20
+      },
+      {
+        "date": "2026-08-17",
+        "coverage": 5800,
+        "eligible": 3913,
+        "up_4": 144,
+        "down_4": 175,
+        "up_25_quarter": 1433,
+        "down_25_quarter": 622,
+        "bull_34_13": 1734,
+        "bear_34_13": 945,
+        "up_25_month": 299,
+        "down_25_month": 91,
+        "up_50_month": 52,
+        "down_50_month": 17
+      },
+      {
+        "date": "2026-08-18",
+        "coverage": 5795,
+        "eligible": 3913,
+        "up_4": 110,
+        "down_4": 270,
+        "up_25_quarter": 1346,
+        "down_25_quarter": 660,
+        "bull_34_13": 1628,
+        "bear_34_13": 1000,
+        "up_25_month": 217,
+        "down_25_month": 105,
+        "up_50_month": 43,
+        "down_50_month": 17
+      },
+      {
+        "date": "2026-08-19",
+        "coverage": 5804,
+        "eligible": 3928,
+        "up_4": 407,
+        "down_4": 140,
+        "up_25_quarter": 1391,
+        "down_25_quarter": 638,
+        "bull_34_13": 1696,
+        "bear_34_13": 952,
+        "up_25_month": 309,
+        "down_25_month": 96,
+        "up_50_month": 48,
+        "down_50_month": 17
+      },
+      {
+        "date": "2026-08-20",
+        "coverage": 5792,
+        "eligible": 3933,
+        "up_4": 96,
+        "down_4": 200,
+        "up_25_quarter": 1298,
+        "down_25_quarter": 684,
+        "bull_34_13": 1600,
+        "bear_34_13": 1095,
+        "up_25_month": 307,
+        "down_25_month": 94,
+        "up_50_month": 56,
+        "down_50_month": 18
+      },
+      {
+        "date": "2026-08-21",
+        "coverage": 5798,
+        "eligible": 3938,
+        "up_4": 229,
+        "down_4": 44,
+        "up_25_quarter": 1369,
+        "down_25_quarter": 662,
+        "bull_34_13": 1692,
+        "bear_34_13": 986,
+        "up_25_month": 365,
+        "down_25_month": 83,
+        "up_50_month": 71,
+        "down_50_month": 14
+      },
+      {
+        "date": "2026-08-24",
+        "coverage": 5780,
+        "eligible": 3927,
+        "up_4": 91,
+        "down_4": 166,
+        "up_25_quarter": 1300,
+        "down_25_quarter": 690,
+        "bull_34_13": 1601,
+        "bear_34_13": 1072,
+        "up_25_month": 302,
+        "down_25_month": 84,
+        "up_50_month": 62,
+        "down_50_month": 6
+      },
+      {
+        "date": "2026-08-25",
+        "coverage": 5781,
+        "eligible": 3928,
+        "up_4": 194,
+        "down_4": 53,
+        "up_25_quarter": 1350,
+        "down_25_quarter": 652,
+        "bull_34_13": 1618,
+        "bear_34_13": 985,
+        "up_25_month": 326,
+        "down_25_month": 69,
+        "up_50_month": 76,
+        "down_50_month": 9
+      },
+      {
+        "date": "2026-08-26",
+        "coverage": 5754,
+        "eligible": 3927,
+        "up_4": 93,
+        "down_4": 81,
+        "up_25_quarter": 1300,
+        "down_25_quarter": 659,
+        "bull_34_13": 1550,
+        "bear_34_13": 981,
+        "up_25_month": 353,
+        "down_25_month": 66,
+        "up_50_month": 79,
+        "down_50_month": 8
+      },
+      {
+        "date": "2026-08-27",
+        "coverage": 5627,
+        "eligible": 3900,
+        "up_4": 210,
+        "down_4": 79,
+        "up_25_quarter": 1316,
+        "down_25_quarter": 649,
+        "bull_34_13": 1568,
+        "bear_34_13": 962,
+        "up_25_month": 315,
+        "down_25_month": 65,
+        "up_50_month": 54,
+        "down_50_month": 8,
+        "strong_buying_days_10": 1,
+        "strong_selling_days_10": 0
+      }
+    ],
+    "ten_day_ratio": [
+      {
+        "date": "2026-07-24",
+        "up_total": 1559,
+        "down_total": 1892,
+        "ratio": 0.824,
+        "infinite": false
+      },
+      {
+        "date": "2026-07-27",
+        "up_total": 1718,
+        "down_total": 1706,
+        "ratio": 1.007,
+        "infinite": false
+      },
+      {
+        "date": "2026-07-28",
+        "up_total": 1851,
+        "down_total": 1857,
+        "ratio": 0.997,
+        "infinite": false
+      },
+      {
+        "date": "2026-07-29",
+        "up_total": 1813,
+        "down_total": 2136,
+        "ratio": 0.849,
+        "infinite": false
+      },
+      {
+        "date": "2026-07-30",
+        "up_total": 1932,
+        "down_total": 1895,
+        "ratio": 1.02,
+        "infinite": false
+      },
+      {
+        "date": "2026-07-31",
+        "up_total": 1949,
+        "down_total": 1920,
+        "ratio": 1.015,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-03",
+        "up_total": 2317,
+        "down_total": 1852,
+        "ratio": 1.251,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-04",
+        "up_total": 2503,
+        "down_total": 1855,
+        "ratio": 1.349,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-05",
+        "up_total": 2569,
+        "down_total": 1840,
+        "ratio": 1.396,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-06",
+        "up_total": 2705,
+        "down_total": 1821,
+        "ratio": 1.485,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-07",
+        "up_total": 2999,
+        "down_total": 1686,
+        "ratio": 1.779,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-10",
+        "up_total": 2900,
+        "down_total": 1753,
+        "ratio": 1.654,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-11",
+        "up_total": 2779,
+        "down_total": 1598,
+        "ratio": 1.739,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-12",
+        "up_total": 2864,
+        "down_total": 1259,
+        "ratio": 2.275,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-13",
+        "up_total": 2777,
+        "down_total": 1224,
+        "ratio": 2.269,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-14",
+        "up_total": 2833,
+        "down_total": 1144,
+        "ratio": 2.476,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-17",
+        "up_total": 2520,
+        "down_total": 1277,
+        "ratio": 1.973,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-18",
+        "up_total": 2070,
+        "down_total": 1471,
+        "ratio": 1.407,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-19",
+        "up_total": 2297,
+        "down_total": 1459,
+        "ratio": 1.574,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-20",
+        "up_total": 2162,
+        "down_total": 1439,
+        "ratio": 1.502,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-21",
+        "up_total": 1989,
+        "down_total": 1390,
+        "ratio": 1.431,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-24",
+        "up_total": 1867,
+        "down_total": 1369,
+        "ratio": 1.364,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-25",
+        "up_total": 1898,
+        "down_total": 1300,
+        "ratio": 1.46,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-26",
+        "up_total": 1774,
+        "down_total": 1291,
+        "ratio": 1.374,
+        "infinite": false
+      },
+      {
+        "date": "2026-08-27",
+        "up_total": 1736,
+        "down_total": 1273,
+        "ratio": 1.364,
+        "infinite": false
+      }
+    ],
+    "primary_breadth": [
+      {
+        "date": "2026-07-24",
+        "up": 997,
+        "down": 841
+      },
+      {
+        "date": "2026-07-27",
+        "up": 1101,
+        "down": 784
+      },
+      {
+        "date": "2026-07-28",
+        "up": 1168,
+        "down": 813
+      },
+      {
+        "date": "2026-07-29",
+        "up": 1084,
+        "down": 890
+      },
+      {
+        "date": "2026-07-30",
+        "up": 1124,
+        "down": 797
+      },
+      {
+        "date": "2026-07-31",
+        "up": 1089,
+        "down": 818
+      },
+      {
+        "date": "2026-08-03",
+        "up": 1206,
+        "down": 753
+      },
+      {
+        "date": "2026-08-04",
+        "up": 1360,
+        "down": 665
+      },
+      {
+        "date": "2026-08-05",
+        "up": 1330,
+        "down": 686
+      },
+      {
+        "date": "2026-08-06",
+        "up": 1294,
+        "down": 710
+      },
+      {
+        "date": "2026-08-07",
+        "up": 1404,
+        "down": 671
+      },
+      {
+        "date": "2026-08-10",
+        "up": 1344,
+        "down": 674
+      },
+      {
+        "date": "2026-08-11",
+        "up": 1409,
+        "down": 668
+      },
+      {
+        "date": "2026-08-12",
+        "up": 1411,
+        "down": 646
+      },
+      {
+        "date": "2026-08-13",
+        "up": 1465,
+        "down": 642
+      },
+      {
+        "date": "2026-08-14",
+        "up": 1485,
+        "down": 610
+      },
+      {
+        "date": "2026-08-17",
+        "up": 1433,
+        "down": 622
+      },
+      {
+        "date": "2026-08-18",
+        "up": 1346,
+        "down": 660
+      },
+      {
+        "date": "2026-08-19",
+        "up": 1391,
+        "down": 638
+      },
+      {
+        "date": "2026-08-20",
+        "up": 1298,
+        "down": 684
+      },
+      {
+        "date": "2026-08-21",
+        "up": 1369,
+        "down": 662
+      },
+      {
+        "date": "2026-08-24",
+        "up": 1300,
+        "down": 690
+      },
+      {
+        "date": "2026-08-25",
+        "up": 1350,
+        "down": 652
+      },
+      {
+        "date": "2026-08-26",
+        "up": 1300,
+        "down": 659
+      },
+      {
+        "date": "2026-08-27",
+        "up": 1316,
+        "down": 649
+      }
+    ],
+    "fast_breadth": [
+      {
+        "date": "2026-07-24",
+        "bull": 1290,
+        "bear": 1270
+      },
+      {
+        "date": "2026-07-27",
+        "bull": 1418,
+        "bear": 1161
+      },
+      {
+        "date": "2026-07-28",
+        "bull": 1483,
+        "bear": 1158
+      },
+      {
+        "date": "2026-07-29",
+        "bull": 1348,
+        "bear": 1276
+      },
+      {
+        "date": "2026-07-30",
+        "bull": 1426,
+        "bear": 1181
+      },
+      {
+        "date": "2026-07-31",
+        "bull": 1373,
+        "bear": 1216
+      },
+      {
+        "date": "2026-08-03",
+        "bull": 1656,
+        "bear": 1074
+      },
+      {
+        "date": "2026-08-04",
+        "bull": 1926,
+        "bear": 924
+      },
+      {
+        "date": "2026-08-05",
+        "bull": 1837,
+        "bear": 946
+      },
+      {
+        "date": "2026-08-06",
+        "bull": 1770,
+        "bear": 1014
+      },
+      {
+        "date": "2026-08-07",
+        "bull": 1879,
+        "bear": 941
+      },
+      {
+        "date": "2026-08-10",
+        "bull": 1773,
+        "bear": 999
+      },
+      {
+        "date": "2026-08-11",
+        "bull": 1766,
+        "bear": 993
+      },
+      {
+        "date": "2026-08-12",
+        "bull": 1772,
+        "bear": 973
+      },
+      {
+        "date": "2026-08-13",
+        "bull": 1780,
+        "bear": 946
+      },
+      {
+        "date": "2026-08-14",
+        "bull": 1815,
+        "bear": 892
+      },
+      {
+        "date": "2026-08-17",
+        "bull": 1734,
+        "bear": 945
+      },
+      {
+        "date": "2026-08-18",
+        "bull": 1628,
+        "bear": 1000
+      },
+      {
+        "date": "2026-08-19",
+        "bull": 1696,
+        "bear": 952
+      },
+      {
+        "date": "2026-08-20",
+        "bull": 1600,
+        "bear": 1095
+      },
+      {
+        "date": "2026-08-21",
+        "bull": 1692,
+        "bear": 986
+      },
+      {
+        "date": "2026-08-24",
+        "bull": 1601,
+        "bear": 1072
+      },
+      {
+        "date": "2026-08-25",
+        "bull": 1618,
+        "bear": 985
+      },
+      {
+        "date": "2026-08-26",
+        "bull": 1550,
+        "bear": 981
+      },
+      {
+        "date": "2026-08-27",
+        "bull": 1568,
+        "bear": 962
+      }
+    ]
+  },
+  "methodology": {
+    "daily": "Stocks moving at least 4% on the day, with at least 100,000 shares and volume above the prior session.",
+    "liquidity": "Latest price at least $3 and 20-session average dollar volume at least $250,000.",
+    "primary": "Stocks 25% above their 65-session low versus stocks 25% below their 65-session high.",
+    "fast": "Stocks 13% above their 34-session low versus stocks 13% below their 34-session high.",
+    "ratio": "Ten-session total of 4% up moves divided by 4% down moves.",
+    "condition": "Four equal signals: primary breadth, fast breadth, 10-day breadth dominance and ONEQ 10/20-day trend."
+  }
 }
