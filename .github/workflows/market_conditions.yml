@@ -33,7 +33,8 @@ jobs:
         env:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
           TD_CREDITS_PER_MINUTE: "55"
-          TD_BATCH_SIZE: "50"
+          # Leave ten credits per minute available for interactive trade charts.
+          TD_BATCH_SIZE: "45"
         run: python scripts/build_market_conditions.py
 
       - name: Publish the latest aggregate data
@@ -49,4 +50,3 @@ jobs:
           git commit -m "Update daily market conditions"
           git pull --rebase origin main
           git push origin main
-
