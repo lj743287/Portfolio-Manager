@@ -353,6 +353,12 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
                 flush=True,
             )
 
+    minimum_valid = max(500, math.ceil(len(universe) * 0.80))
+    if valid_symbols < minimum_valid:
+        raise RuntimeError(
+            f"Coverage check failed: only {valid_symbols}/{len(universe)} symbols returned valid history"
+        )
+
     history = [counts[date] for date in target_dates]
     ratio_history = [record for index in range(len(history)) if (record := ratio_record(history, index))]
     current = history[-1]
