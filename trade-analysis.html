@@ -146,8 +146,6 @@
     .trade-window { fill: rgba(96,165,250,.045); }
     .open-line { stroke: var(--green); stroke-width: 1.5; stroke-dasharray: 6 4; }
     .close-line { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 6 4; }
-    .open-price-line { stroke: rgba(34,197,94,.58); stroke-width: 1; stroke-dasharray: 4 4; }
-    .close-price-line { stroke: rgba(239,68,68,.58); stroke-width: 1; stroke-dasharray: 4 4; }
     .open-badge { fill: #166534; }
     .close-badge { fill: #991b1b; }
     .badge-text { fill: #fff !important; font-size: 9px !important; font-weight: 900 !important; letter-spacing: .04em; }
@@ -536,7 +534,7 @@
 
       function candleChart(candles, trade) {
         const width = 1200, height = 520;
-        const pad = { left: 20, right: 76, top: 28, bottom: 38 };
+        const pad = { left: 20, right: 150, top: 28, bottom: 38 };
         const plotW = width - pad.left - pad.right;
         const plotH = height - pad.top - pad.bottom;
         const lows = candles.map(candle => candle.low);
@@ -562,7 +560,7 @@
           const fraction = index / 5;
           const price = maxPrice - fraction * priceRange;
           const gy = pad.top + fraction * plotH;
-          return `<line class="grid-line" x1="${pad.left}" x2="${width-pad.right}" y1="${gy}" y2="${gy}"/><text x="${width-pad.right+8}" y="${gy+4}">$${price.toFixed(price < 10 ? 2 : 1)}</text>`;
+          return `<line class="grid-line" x1="${pad.left}" x2="${width-pad.right}" y1="${gy}" y2="${gy}"/><text x="${width-4}" y="${gy+4}" text-anchor="end">$${price.toFixed(price < 10 ? 2 : 1)}</text>`;
         }).join('');
 
         const candleSvg = candles.map((candle, index) => {
@@ -577,16 +575,32 @@
 
         const labelIndexes = [...new Set([0, openIndex, closeIndex, candles.length-1, ...Array.from({length:5},(_,i)=>Math.round(i*(candles.length-1)/4))])].filter(index => index >= 0 && index < candles.length).sort((a,b)=>a-b);
         const dateLabels = labelIndexes.map(index => `<text x="${x(index)}" y="${height-12}" text-anchor="middle">${escapeHtml(shortDate(candles[index].date))}</text>`).join('');
-        const entryPriceSvg = entryPrice == null ? '' : `<line class="open-price-line" x1="${openX}" x2="${closeX}" y1="${y(entryPrice)}" y2="${y(entryPrice)}"/><rect class="open-badge" x="${Math.max(pad.left, openX-25)}" y="${Math.max(3,y(entryPrice)-23)}" width="50" height="18" rx="5"/><text class="badge-text" x="${Math.max(pad.left+25,openX)}" y="${Math.max(15,y(entryPrice)-10)}" text-anchor="middle">OPEN ${entryPrice.toFixed(2)}</text>`;
-        const exitPriceSvg = exitPrice == null ? '' : `<line class="close-price-line" x1="${closeX}" x2="${width-pad.right}" y1="${y(exitPrice)}" y2="${y(exitPrice)}"/><rect class="close-badge" x="${Math.min(width-pad.right-62,closeX+5)}" y="${Math.max(3,y(exitPrice)-23)}" width="62" height="18" rx="5"/><text class="badge-text" x="${Math.min(width-pad.right-31,closeX+36)}" y="${Math.max(15,y(exitPrice)-10)}" text-anchor="middle">CLOSED ${exitPrice.toFixed(2)}</text>`;
+        const plotRight = width - pad.right;
+        const badgeX = plotRight + 8;
+        const badgeWidth = 94;
+        const badgeHeight = 18;
+        const labelTop = pad.top;
+        const labelBottom = height - pad.bottom - badgeHeight;
+        const labelItems = [
+          entryPrice == null ? null : { key: 'open', desired: Math.max(labelTop, Math.min(labelBottom, y(entryPrice) - badgeHeight / 2)) },
+          exitPrice == null ? null : { key: 'closed', desired: Math.max(labelTop, Math.min(labelBottom, y(exitPrice) - badgeHeight / 2)) }
+        ].filter(Boolean).sort((a,b) => a.desired - b.desired);
+        labelItems.forEach((item,index) => {
+          item.top = index ? Math.max(item.desired, labelItems[index-1].top + badgeHeight + 4) : item.desired;
+        });
+        if (labelItems.length && labelItems[labelItems.length-1].top > labelBottom) {
+          const shift = labelItems[labelItems.length-1].top - labelBottom;
+          labelItems.forEach(item => { item.top -= shift; });
+        }
+        const labelY = Object.fromEntries(labelItems.map(item => [item.key, item.top]));
+        const entryPriceSvg = entryPrice == null ? '' : `<line class="open-line" x1="${pad.left}" x2="${plotRight}" y1="${y(entryPrice)}" y2="${y(entryPrice)}"/><rect class="open-badge" x="${badgeX}" y="${labelY.open}" width="${badgeWidth}" height="${badgeHeight}" rx="5"/><text class="badge-text" x="${badgeX+badgeWidth/2}" y="${labelY.open+12.5}" text-anchor="middle">OPEN ${entryPrice.toFixed(2)}</text>`;
+        const exitPriceSvg = exitPrice == null ? '' : `<line class="close-line" x1="${pad.left}" x2="${plotRight}" y1="${y(exitPrice)}" y2="${y(exitPrice)}"/><rect class="close-badge" x="${badgeX}" y="${labelY.closed}" width="${badgeWidth}" height="${badgeHeight}" rx="5"/><text class="badge-text" x="${badgeX+badgeWidth/2}" y="${labelY.closed+12.5}" text-anchor="middle">CLOSED ${exitPrice.toFixed(2)}</text>`;
 
         return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(trade.symbol)} daily candlestick chart with trade open and close markers">
           <rect class="trade-window" x="${Math.min(openX,closeX)}" y="${pad.top}" width="${Math.max(1,Math.abs(closeX-openX))}" height="${plotH}"/>
           ${horizontalGrid}
           <line class="axis-line" x1="${pad.left}" x2="${width-pad.right}" y1="${height-pad.bottom}" y2="${height-pad.bottom}"/>
           ${candleSvg}
-          <line class="open-line" x1="${openX}" x2="${openX}" y1="${pad.top}" y2="${height-pad.bottom}"/>
-          <line class="close-line" x1="${closeX}" x2="${closeX}" y1="${pad.top}" y2="${height-pad.bottom}"/>
           ${entryPriceSvg}${exitPriceSvg}${dateLabels}
         </svg>`;
       }
