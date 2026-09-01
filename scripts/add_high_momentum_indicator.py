@@ -1,0 +1,166 @@
+#!/usr/bin/env python3
+"""One-off idempotent patch for the market conditions high-momentum indicator."""
+from pathlib import Path
+
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise SystemExit(message)
+
+
+script_path = Path("scripts/build_market_conditions.py")
+script = script_path.read_text()
+
+if '"up_45_10"' not in script:
+    old = '        "down_4": 0,\n        "up_25_quarter": 0,'
+    new = '        "down_4": 0,\n        "up_45_10": 0,\n        "up_25_quarter": 0,'
+    require(old in script, "Could not find empty_count insertion point")
+    script = script.replace(old, new)
+
+if 'current["up_45_10"] += 1' not in script:
+    old = '''        if index >= 1 and volumes[index] >= MIN_DAILY_VOLUME and volumes[index] > volumes[index - 1]:
+            daily_change = close / closes[index - 1] - 1
+            if daily_change >= 0.04:
+                current["up_4"] += 1
+            elif daily_change <= -0.04:
+                current["down_4"] += 1
+
+        if index >= 64:'''
+    new = '''        if index >= 1 and volumes[index] >= MIN_DAILY_VOLUME and volumes[index] > volumes[index - 1]:
+            daily_change = close / closes[index - 1] - 1
+            if daily_change >= 0.04:
+                current["up_4"] += 1
+            elif daily_change <= -0.04:
+                current["down_4"] += 1
+
+        if index >= 10 and closes[index - 10] > 0:
+            ten_session_change = close / closes[index - 10] - 1
+            if ten_session_change > 0.45:
+                current["up_45_10"] += 1
+
+        if index >= 64:'''
+    require(old in script, "Could not find aggregate_symbol insertion point")
+    script = script.replace(old, new)
+
+if "up45_ma_history" not in script:
+    old = '''    state = final_state(current, current_ratio, oneq)
+    buying_days = sum(1 for item in history[-10:] if item["up_4"] >= 300)'''
+    new = '''    up45_ma_history = []
+    for index, item in enumerate(history):
+        if index < 9:
+            continue
+        window = history[index - 9 : index + 1]
+        ma10 = sum(day["up_45_10"] for day in window) / 10
+        up45_ma_history.append({"date": item["date"], "count": item["up_45_10"], "ma10": round(ma10, 2)})
+
+    current["up_45_10_ma"] = up45_ma_history[-1]["ma10"] if up45_ma_history else None
+
+    state = final_state(current, current_ratio, oneq)
+    buying_days = sum(1 for item in history[-10:] if item["up_4"] >= 300)'''
+    require(old in script, "Could not find up45 history insertion point")
+    script = script.replace(old, new)
+
+if '"up_45_10_ma": up45_ma_history[-DISPLAY_SESSIONS:],' not in script:
+    old = '''            "ten_day_ratio": ratio_history[-DISPLAY_SESSIONS:],
+            "primary_breadth": ['''
+    new = '''            "ten_day_ratio": ratio_history[-DISPLAY_SESSIONS:],
+            "up_45_10_ma": up45_ma_history[-DISPLAY_SESSIONS:],
+            "primary_breadth": ['''
+    require(old in script, "Could not find history output insertion point")
+    script = script.replace(old, new)
+
+if '"high_momentum"' not in script:
+    old = '''            "ratio": "Ten-session total of 4% up moves divided by 4% down moves.",
+            "condition": "Four equal signals: primary breadth, fast breadth, 10-day breadth dominance and ONEQ 10/20-day trend.",'''
+    new = '''            "ratio": "Ten-session total of 4% up moves divided by 4% down moves.",
+            "high_momentum": "Stocks up more than 45% over the previous 10 sessions; chart shows the 10-session moving average of the daily count.",
+            "condition": "Four equal signals: primary breadth, fast breadth, 10-day breadth dominance and ONEQ 10/20-day trend.",'''
+    require(old in script, "Could not find methodology insertion point")
+    script = script.replace(old, new)
+
+for term in ['"up_45_10": 0', 'ten_session_change > 0.45', '"up_45_10_ma": up45_ma_history[-DISPLAY_SESSIONS:]', '"high_momentum"']:
+    require(term in script, f"Missing script term: {term}")
+
+script_path.write_text(script)
+
+html_path = Path("market-conditions.html")
+html = html_path.read_text()
+
+if '<h2>45% in 10 sessions</h2>' not in html:
+    old = '''        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>10-day breadth ratio</h2><div class="panel-sub">Above 2.0 is a bullish thrust; below 0.5 is bearish</div></div></div>
+          <div class="legend"><span><i class="swatch"></i>10-day ratio</span></div>
+          <div id="ratioChart" class="chart"></div>
+        </article>
+
+        <article class="panel chart-panel">'''
+    new = '''        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>10-day breadth ratio</h2><div class="panel-sub">Above 2.0 is a bullish thrust; below 0.5 is bearish</div></div></div>
+          <div class="legend"><span><i class="swatch"></i>10-day ratio</span></div>
+          <div id="ratioChart" class="chart"></div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>45% in 10 sessions</h2><div class="panel-sub">10-session moving average of stocks up more than 45% over the prior 10 sessions</div></div></div>
+          <div class="legend"><span><i class="swatch green"></i>10-session MA</span><span><i class="swatch"></i>Daily count</span></div>
+          <div id="highMomentumChart" class="chart"></div>
+        </article>
+
+        <article class="panel chart-panel">'''
+    require(old in html, "Could not find chart insertion point in HTML")
+    html = html.replace(old, new)
+
+if "function highMomentumChart(items)" not in html:
+    old = '''      function signalCard(name, positive, value, detail) {'''
+    new = r'''      function highMomentumChart(items) {
+        const width = 720, height = 285, pad = { left: 47, right: 14, top: 14, bottom: 29 };
+        const rows = items || [];
+        const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+        const max = Math.max(1, ...rows.flatMap(item => [Number(item.count || 0), Number(item.ma10 || 0)]));
+        const x = index => pad.left + (rows.length === 1 ? 0 : index * plotW / (rows.length - 1));
+        const y = value => pad.top + plotH - Number(value || 0) / max * plotH;
+        const grid = [0, .5, 1].map(part => {
+          const gy = pad.top + plotH - part * plotH;
+          return `<line class="grid-line" x1="${pad.left}" x2="${width-pad.right}" y1="${gy}" y2="${gy}" /><text x="${pad.left-7}" y="${gy+4}" text-anchor="end">${number(max*part)}</text>`;
+        }).join('');
+        const slot = plotW / Math.max(1, rows.length), barW = Math.max(2, slot * .48);
+        const bars = rows.map((item, index) => {
+          const count = Number(item.count || 0);
+          const h = count / max * plotH;
+          const bx = pad.left + index * slot + (slot - barW) / 2;
+          return `<rect class="up-bar" x="${bx}" y="${pad.top + plotH - h}" width="${barW}" height="${h}" opacity=".32"><title>${item.date}: ${number(count)} stocks up 45%+ in 10 sessions</title></rect>`;
+        }).join('');
+        const points = rows.map((item, index) => ({ x:x(index), y:y(item.ma10) }));
+        const dots = points.map((point, index) => `<circle class="point" cx="${point.x}" cy="${point.y}" r="3"><title>${rows[index].date}: 10-session MA ${Number(rows[index].ma10 || 0).toFixed(1)}</title></circle>`).join('');
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="45 percent 10 session momentum moving average chart">${grid}${bars}<path class="primary-up" d="${linePath(points)}"/>${dots}${axisLabels(rows,width,height,pad)}</svg>`;
+      }
+
+      function signalCard(name, positive, value, detail) {'''
+    require(old in html, "Could not find signalCard marker")
+    html = html.replace(old, new)
+
+if "metric('45% / 10d MA'" not in html:
+    old = '''          metric('Primary ratio', primaryRatio == null ? '∞' : primaryRatio.toFixed(2), '65-session breadth', tests.primary_breadth ? 'up' : 'down'),
+          metric('ONEQ trend', tests.oneq_trend ? 'Positive' : 'Negative', `10 MA ${Number(oneq.ma10).toFixed(2)} · 20 MA ${Number(oneq.ma20).toFixed(2)}`, tests.oneq_trend ? 'up' : 'down')'''
+    new = '''          metric('Primary ratio', primaryRatio == null ? '∞' : primaryRatio.toFixed(2), '65-session breadth', tests.primary_breadth ? 'up' : 'down'),
+          metric('45% / 10d MA', current.up_45_10_ma == null ? 'n/a' : Number(current.up_45_10_ma).toFixed(1), `${number(current.up_45_10)} stocks currently up 45%+ over 10 sessions`, current.up_45_10_ma >= 20 ? 'up' : current.up_45_10_ma >= 5 ? 'neutral' : ''),
+          metric('ONEQ trend', tests.oneq_trend ? 'Positive' : 'Negative', `10 MA ${Number(oneq.ma10).toFixed(2)} · 20 MA ${Number(oneq.ma20).toFixed(2)}`, tests.oneq_trend ? 'up' : 'down')'''
+    require(old in html, "Could not find metric insertion point")
+    html = html.replace(old, new)
+
+if "byId('highMomentumChart').innerHTML" not in html:
+    old = '''        byId('dailyChart').innerHTML = breadthBars(data.history.daily_breadth, 'up_4', 'down_4');
+        byId('ratioChart').innerHTML = ratioChart(data.history.ten_day_ratio);
+        byId('primaryChart').innerHTML = twoLineChart(data.history.primary_breadth, 'up', 'down', 'primary-up', 'primary-down');'''
+    new = '''        byId('dailyChart').innerHTML = breadthBars(data.history.daily_breadth, 'up_4', 'down_4');
+        byId('ratioChart').innerHTML = ratioChart(data.history.ten_day_ratio);
+        byId('highMomentumChart').innerHTML = highMomentumChart(data.history.up_45_10_ma || []);
+        byId('primaryChart').innerHTML = twoLineChart(data.history.primary_breadth, 'up', 'down', 'primary-up', 'primary-down');'''
+    require(old in html, "Could not find chart render insertion point")
+    html = html.replace(old, new)
+
+for term in ['<h2>45% in 10 sessions</h2>', 'function highMomentumChart(items)', "byId('highMomentumChart').innerHTML", "metric('45% / 10d MA'"]:
+    require(term in html, f"Missing HTML term: {term}")
+
+html_path.write_text(html)
+print("High momentum indicator patch applied")
