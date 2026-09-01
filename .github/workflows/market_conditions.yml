@@ -5,6 +5,10 @@ on:
   schedule:
     # 09:00 UTC is 09:00 GMT throughout the year.
     - cron: "0 9 * * *"
+  push:
+    paths:
+      - ".github/workflows/market_conditions.yml"
+      - "scripts/add_high_momentum_indicator.py"
 
 permissions:
   contents: write
@@ -29,6 +33,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Apply dashboard indicator patch
+        run: python scripts/add_high_momentum_indicator.py
+
       - name: Calculate market conditions
         env:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
@@ -40,13 +47,13 @@ jobs:
       - name: Publish the latest aggregate data
         run: |
           set -e
-          if git diff --quiet -- data/market-conditions.json; then
+          if git diff --quiet -- data/market-conditions.json scripts/build_market_conditions.py market-conditions.html; then
             echo "Market conditions are unchanged"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/market-conditions.json
-          git commit -m "Update daily market conditions"
+          git add data/market-conditions.json scripts/build_market_conditions.py market-conditions.html
+          git commit -m "Update market conditions and high momentum indicator"
           git pull --rebase origin main
           git push origin main
