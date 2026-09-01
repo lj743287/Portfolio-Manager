@@ -178,6 +178,7 @@ def empty_count(date: str) -> dict[str, Any]:
         "eligible": 0,
         "up_4": 0,
         "down_4": 0,
+        "up_45_10": 0,
         "up_25_quarter": 0,
         "down_25_quarter": 0,
         "bull_34_13": 0,
@@ -222,6 +223,11 @@ def aggregate_symbol(bars: list[dict[str, Any]], counts: dict[str, dict[str, Any
                 current["up_4"] += 1
             elif daily_change <= -0.04:
                 current["down_4"] += 1
+
+        if index >= 10 and closes[index - 10] > 0:
+            ten_session_change = close / closes[index - 10] - 1
+            if ten_session_change > 0.45:
+                current["up_45_10"] += 1
 
         if index >= 64:
             quarter = closes[index - 64 : index + 1]
@@ -376,6 +382,16 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
         "bullish": bool(ma10 is not None and ma20 is not None and ma10 > ma20),
     }
 
+    up45_ma_history = []
+    for index, item in enumerate(history):
+        if index < 9:
+            continue
+        window = history[index - 9 : index + 1]
+        ma10 = sum(day["up_45_10"] for day in window) / 10
+        up45_ma_history.append({"date": item["date"], "count": item["up_45_10"], "ma10": round(ma10, 2)})
+
+    current["up_45_10_ma"] = up45_ma_history[-1]["ma10"] if up45_ma_history else None
+
     state = final_state(current, current_ratio, oneq)
     buying_days = sum(1 for item in history[-10:] if item["up_4"] >= 300)
     selling_days = sum(1 for item in history[-10:] if item["down_4"] >= 300)
@@ -404,6 +420,7 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
         "history": {
             "daily_breadth": history[-DISPLAY_SESSIONS:],
             "ten_day_ratio": ratio_history[-DISPLAY_SESSIONS:],
+            "up_45_10_ma": up45_ma_history[-DISPLAY_SESSIONS:],
             "primary_breadth": [
                 {
                     "date": item["date"],
@@ -427,6 +444,7 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
             "primary": "Stocks 25% above their 65-session low versus stocks 25% below their 65-session high.",
             "fast": "Stocks 13% above their 34-session low versus stocks 13% below their 34-session high.",
             "ratio": "Ten-session total of 4% up moves divided by 4% down moves.",
+            "high_momentum": "Stocks up more than 45% over the previous 10 sessions; chart shows the 10-session moving average of the daily count.",
             "condition": "Four equal signals: primary breadth, fast breadth, 10-day breadth dominance and ONEQ 10/20-day trend.",
         },
     }

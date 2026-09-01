@@ -268,6 +268,12 @@
         </article>
 
         <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>45% in 10 sessions</h2><div class="panel-sub">10-session moving average of stocks up more than 45% over the prior 10 sessions</div></div></div>
+          <div class="legend"><span><i class="swatch green"></i>10-session MA</span><span><i class="swatch"></i>Daily count</span></div>
+          <div id="highMomentumChart" class="chart"></div>
+        </article>
+
+        <article class="panel chart-panel">
           <div class="panel-heading"><div><h2>Primary breadth</h2><div class="panel-sub">25% moves measured across 65 sessions</div></div></div>
           <div class="legend"><span><i class="swatch green"></i>Up from 65-day low</span><span><i class="swatch red"></i>Down from 65-day high</span></div>
           <div id="primaryChart" class="chart"></div>
@@ -401,6 +407,29 @@ function breadthBars(items, upKey, downKey) {
         return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Ten-day breadth ratio line chart">${grid}<path class="ratio-area" d="${area}"/><path class="ratio-line" d="${linePath(points)}"/>${dots}${axisLabels(items,width,height,pad)}</svg>`;
       }
 
+      function highMomentumChart(items) {
+        const width = 720, height = 285, pad = { left: 47, right: 14, top: 14, bottom: 29 };
+        const rows = items || [];
+        const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+        const max = Math.max(1, ...rows.flatMap(item => [Number(item.count || 0), Number(item.ma10 || 0)]));
+        const x = index => pad.left + (rows.length === 1 ? 0 : index * plotW / (rows.length - 1));
+        const y = value => pad.top + plotH - Number(value || 0) / max * plotH;
+        const grid = [0, .5, 1].map(part => {
+          const gy = pad.top + plotH - part * plotH;
+          return `<line class="grid-line" x1="${pad.left}" x2="${width-pad.right}" y1="${gy}" y2="${gy}" /><text x="${pad.left-7}" y="${gy+4}" text-anchor="end">${number(max*part)}</text>`;
+        }).join('');
+        const slot = plotW / Math.max(1, rows.length), barW = Math.max(2, slot * .48);
+        const bars = rows.map((item, index) => {
+          const count = Number(item.count || 0);
+          const h = count / max * plotH;
+          const bx = pad.left + index * slot + (slot - barW) / 2;
+          return `<rect class="up-bar" x="${bx}" y="${pad.top + plotH - h}" width="${barW}" height="${h}" opacity=".32"><title>${item.date}: ${number(count)} stocks up 45%+ in 10 sessions</title></rect>`;
+        }).join('');
+        const points = rows.map((item, index) => ({ x:x(index), y:y(item.ma10) }));
+        const dots = points.map((point, index) => `<circle class="point" cx="${point.x}" cy="${point.y}" r="3"><title>${rows[index].date}: 10-session MA ${Number(rows[index].ma10 || 0).toFixed(1)}</title></circle>`).join('');
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="45 percent 10 session momentum moving average chart">${grid}${bars}<path class="primary-up" d="${linePath(points)}"/>${dots}${axisLabels(rows,width,height,pad)}</svg>`;
+      }
+
       function signalCard(name, positive, value, detail) {
         return `<article class="signal-card ${positive ? 'positive' : ''}"><div class="signal-top"><div class="signal-name">${escapeHtml(name)}</div><span class="dot"></span></div><div class="signal-value ${positive ? 'up' : 'down'}">${escapeHtml(value)}</div><div class="signal-detail">${escapeHtml(detail)}</div></article>`;
       }
@@ -439,11 +468,13 @@ function breadthBars(items, upKey, downKey) {
           metric('Daily breadth net', `${dailyNet > 0 ? '+' : ''}${number(dailyNet)}`, 'Up count less down count', dailyNet > 0 ? 'up' : dailyNet < 0 ? 'down' : 'neutral'),
           metric('10-day ratio', ratioLabel(ratio), ratio.infinite || ratio.ratio >= 2 ? 'Bullish breadth thrust' : ratio.ratio != null && ratio.ratio < .5 ? 'Bearish breadth thrust' : 'No extreme thrust', tests.ten_day_breadth ? 'up' : 'down'),
           metric('Primary ratio', primaryRatio == null ? '∞' : primaryRatio.toFixed(2), '65-session breadth', tests.primary_breadth ? 'up' : 'down'),
+          metric('45% / 10d MA', current.up_45_10_ma == null ? 'n/a' : Number(current.up_45_10_ma).toFixed(1), `${number(current.up_45_10)} stocks currently up 45%+ over 10 sessions`, current.up_45_10_ma >= 20 ? 'up' : current.up_45_10_ma >= 5 ? 'neutral' : ''),
           metric('ONEQ trend', tests.oneq_trend ? 'Positive' : 'Negative', `10 MA ${Number(oneq.ma10).toFixed(2)} · 20 MA ${Number(oneq.ma20).toFixed(2)}`, tests.oneq_trend ? 'up' : 'down')
         ].join('');
 
         byId('dailyChart').innerHTML = breadthBars(data.history.daily_breadth, 'up_4', 'down_4');
         byId('ratioChart').innerHTML = ratioChart(data.history.ten_day_ratio);
+        byId('highMomentumChart').innerHTML = highMomentumChart(data.history.up_45_10_ma || []);
         byId('primaryChart').innerHTML = twoLineChart(data.history.primary_breadth, 'up', 'down', 'primary-up', 'primary-down');
         byId('fastChart').innerHTML = twoLineChart(data.history.fast_breadth, 'bull', 'bear', 'primary-up', 'primary-down');
 
