@@ -1,0 +1,53 @@
+name: Extend market condition history
+on:
+  push:
+    paths:
+      - '.github/workflows/extend-market-condition-history.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch market condition history length
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          p = Path('scripts/build_market_conditions.py')
+          s = p.read_text()
+
+          s = s.replace('HISTORY_SESSIONS = 40', 'HISTORY_SESSIONS = 120')
+          s = s.replace('OUTPUTSIZE = 110', 'OUTPUTSIZE = 200')
+
+          if 'DISPLAY_SESSIONS = 90' not in s:
+              s = s.replace('OUTPUTSIZE = 200\n', 'OUTPUTSIZE = 200\nDISPLAY_SESSIONS = 90\n')
+
+          s = s.replace('"daily_breadth": history[-25:]', '"daily_breadth": history[-DISPLAY_SESSIONS:]')
+          s = s.replace('"ten_day_ratio": ratio_history[-25:]', '"ten_day_ratio": ratio_history[-DISPLAY_SESSIONS:]')
+          s = s.replace('for item in history[-25:]', 'for item in history[-DISPLAY_SESSIONS:]')
+
+          required = [
+              'HISTORY_SESSIONS = 120',
+              'OUTPUTSIZE = 200',
+              'DISPLAY_SESSIONS = 90',
+              '"daily_breadth": history[-DISPLAY_SESSIONS:]',
+              '"ten_day_ratio": ratio_history[-DISPLAY_SESSIONS:]',
+              'for item in history[-DISPLAY_SESSIONS:]'
+          ]
+          missing = [item for item in required if item not in s]
+          if missing:
+              raise SystemExit('Patch missing required text: ' + ', '.join(missing))
+
+          p.write_text(s)
+          PY
+      - name: Remove temporary workflow
+        run: rm -f .github/workflows/extend-market-condition-history.yml
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/build_market_conditions.py .github/workflows/extend-market-condition-history.yml
+          git commit -m "Extend market condition chart history"
+          git push
