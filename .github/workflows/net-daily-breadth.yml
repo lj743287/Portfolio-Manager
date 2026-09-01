@@ -1,0 +1,80 @@
+name: Net daily breadth chart
+on:
+  push:
+    paths:
+      - '.github/workflows/net-daily-breadth.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch market conditions
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('market-conditions.html')
+          s = p.read_text()
+
+          old_heading = '<div class="panel-heading"><div><h2>Daily 4% breadth</h2><div class="panel-sub">Significant high-volume movers by session</div></div></div>\n          <div class="legend"><span><i class="swatch green"></i>Up 4%+</span><span><i class="swatch red"></i>Down 4%+</span></div>'
+          new_heading = '<div class="panel-heading"><div><h2>Daily 4% net breadth</h2><div class="panel-sub">Up 4%+ count minus down 4%+ count by session</div></div></div>\n          <div class="legend"><span><i class="swatch green"></i>Net positive</span><span><i class="swatch red"></i>Net negative</span></div>'
+          if old_heading in s:
+              s = s.replace(old_heading, new_heading)
+          elif 'Daily 4% net breadth' not in s:
+              raise SystemExit('Could not find Daily 4% chart heading')
+
+          new_function = r'''      function breadthBars(items, upKey, downKey) {
+        const width = 720, height = 285, pad = { left: 52, right: 13, top: 12, bottom: 29 };
+        const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+        const rows = (items || []).map(item => {
+          const up = Number(item[upKey] || 0);
+          const down = Number(item[downKey] || 0);
+          return { ...item, up, down, net: up - down };
+        });
+        const max = Math.max(1, ...rows.map(item => Math.abs(Number(item.net || 0))));
+        const half = plotH / 2, zero = pad.top + half;
+        const slot = plotW / Math.max(1, rows.length), barW = Math.max(3, slot * .64);
+        const bars = rows.map((item, index) => {
+          const x = pad.left + index * slot + (slot - barW) / 2;
+          const net = Number(item.net || 0);
+          const barH = Math.abs(net) / max * (half - 8);
+          const y = net >= 0 ? zero - barH : zero;
+          const cls = net >= 0 ? 'up-bar' : 'down-bar';
+          const sign = net > 0 ? '+' : '';
+          return `<rect class="${cls}" x="${x}" y="${y}" width="${barW}" height="${barH}"><title>${item.date}: ${number(item.up)} up, ${number(item.down)} down, net ${sign}${number(net)}</title></rect>`;
+        }).join('');
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Net daily 4 percent breadth bar chart">
+          <line class="zero-line" x1="${pad.left}" x2="${width-pad.right}" y1="${zero}" y2="${zero}" />
+          <text x="${pad.left-7}" y="${pad.top+9}" text-anchor="end">+${number(max)}</text>
+          <text x="${pad.left-7}" y="${zero+4}" text-anchor="end">0</text>
+          <text x="${pad.left-7}" y="${height-pad.bottom-2}" text-anchor="end">-${number(max)}</text>
+          ${bars}${axisLabels(rows, width, height, pad)}
+        </svg>`;
+      }'''
+
+          pattern = re.compile(r"      function breadthBars\(items, upKey, downKey\) \{.*?\n      \}\n\n      function twoLineChart", re.S)
+          s, count = pattern.subn(new_function + '\n\n      function twoLineChart', s, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected to replace one breadthBars function, replaced {count}')
+
+          if 'Daily 4% net breadth' not in s:
+              raise SystemExit('New chart heading missing')
+          if 'return { ...item, up, down, net: up - down };' not in s:
+              raise SystemExit('Net breadth calculation missing')
+          if 'Net positive' not in s or 'Net negative' not in s:
+              raise SystemExit('New legend missing')
+
+          p.write_text(s)
+          PY
+      - name: Remove temporary workflow
+        run: rm -f .github/workflows/net-daily-breadth.yml
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add market-conditions.html .github/workflows/net-daily-breadth.yml
+          git commit -m "Use net daily breadth bars"
+          git push
