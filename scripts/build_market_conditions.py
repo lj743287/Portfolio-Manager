@@ -35,8 +35,9 @@ ALLOWED_TYPES = {
 }
 EXCHANGES = ("NASDAQ", "NYSE")
 DEFAULT_OUTPUT = Path("data/market-conditions.json")
-HISTORY_SESSIONS = 40
-OUTPUTSIZE = 110
+HISTORY_SESSIONS = 120
+OUTPUTSIZE = 200
+DISPLAY_SESSIONS = 90
 MIN_PRICE = 3.0
 MIN_AVG_DOLLAR_VOLUME = 250_000.0
 MIN_DAILY_VOLUME = 100_000.0
@@ -401,15 +402,15 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
         "ten_day_ratio": current_ratio,
         "oneq": oneq,
         "history": {
-            "daily_breadth": history[-25:],
-            "ten_day_ratio": ratio_history[-25:],
+            "daily_breadth": history[-DISPLAY_SESSIONS:],
+            "ten_day_ratio": ratio_history[-DISPLAY_SESSIONS:],
             "primary_breadth": [
                 {
                     "date": item["date"],
                     "up": item["up_25_quarter"],
                     "down": item["down_25_quarter"],
                 }
-                for item in history[-25:]
+                for item in history[-DISPLAY_SESSIONS:]
             ],
             "fast_breadth": [
                 {
@@ -417,7 +418,7 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
                     "bull": item["bull_34_13"],
                     "bear": item["bear_34_13"],
                 }
-                for item in history[-25:]
+                for item in history[-DISPLAY_SESSIONS:]
             ],
         },
         "methodology": {
