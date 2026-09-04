@@ -1,3 +1,4 @@
+# Triggered for approved entry-quality backtest on 2026-09-04
 name: Temporary Entry Quality Backtest
 
 on:
@@ -41,7 +42,6 @@ jobs:
           if not API_KEY:
               raise SystemExit('TWELVEDATA_API_KEY secret is missing')
 
-          # Selected examples supplied for the winner/loser pattern comparison.
           trades = [
               ('OTLY','2026-08-13','Winner'),
               ('XNCR','2026-08-11','Winner'),
@@ -103,7 +103,6 @@ jobs:
               raise RuntimeError(f'{symbol}: rate limit retries exhausted')
 
           def rma(series, length):
-              # Pine ta.rma seed is SMA(length), then Wilder recursion.
               s = pd.Series(series, dtype='float64')
               out = pd.Series(np.nan, index=s.index, dtype='float64')
               if len(s) < length:
@@ -221,7 +220,6 @@ jobs:
                       rates[outcome]=float(g[c].mean())
                   rates['winner_minus_loser']=rates.get('Winner',0)-rates.get('Loser',0)
                   summary['features'][c]=rates
-              # simple point-biserial-style rank: difference in means standardised by pooled sd
               numeric=['atr_distance','rise5_pct','compression_ratio','pullback_pct','distance_from_prior_high_pct','expansion_count5','volume_ratio','score']
               summary['numeric_effects']={}
               for c in numeric:
@@ -234,7 +232,6 @@ jobs:
           prior_df, prior_summary=summarise('prior')
           eod_df, eod_summary=summarise('eod')
 
-          # Threshold sweep on score for descriptive separation only.
           threshold=[]
           for t in range(3,11):
               for name,df in [('prior',prior_df),('eod',eod_df)]:
