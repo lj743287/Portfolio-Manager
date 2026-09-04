@@ -1,0 +1,262 @@
+name: Temporary Entry Quality Backtest
+
+on:
+  push:
+    paths:
+      - ".github/workflows/temp_entry_quality_backtest.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install --quiet pandas numpy requests
+
+      - name: Run backtest
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+        run: |
+          cat > /tmp/backtest.py <<'PY'
+          import os, json, math, time
+          from datetime import datetime, timedelta
+          import requests
+          import numpy as np
+          import pandas as pd
+
+          API_KEY = os.environ.get('TWELVEDATA_API_KEY','').strip()
+          if not API_KEY:
+              raise SystemExit('TWELVEDATA_API_KEY secret is missing')
+
+          # Selected examples supplied for the winner/loser pattern comparison.
+          trades = [
+              ('OTLY','2026-08-13','Winner'),
+              ('XNCR','2026-08-11','Winner'),
+              ('OPHC','2026-08-14','Winner'),
+              ('PBF','2026-08-11','Winner'),
+              ('SATL','2026-08-06','Winner'),
+              ('LIND','2026-08-03','Winner'),
+              ('MLKN','2026-07-14','Winner'),
+              ('PAY','2026-07-27','Winner'),
+              ('LQDA','2026-06-10','Winner'),
+              ('OMDA','2026-06-23','Winner'),
+              ('PANW','2026-06-11','Winner'),
+              ('UMC','2026-06-12','Winner'),
+              ('SEZL','2026-06-12','Winner'),
+              ('HPP','2026-06-02','Winner'),
+              ('FORR','2026-08-28','Loser'),
+              ('TPG','2026-08-27','Loser'),
+              ('MATV','2026-08-21','Loser'),
+              ('RCMT','2026-08-31','Loser'),
+              ('JRSH','2026-08-24','Loser'),
+              ('III','2026-08-24','Loser'),
+              ('RDNT','2026-08-20','Loser'),
+              ('KNSA','2026-08-12','Loser'),
+              ('LMT','2026-08-10','Loser'),
+              ('OSPN','2026-08-05','Loser'),
+          ]
+
+          def fetch_daily(symbol, entry_date):
+              d = datetime.strptime(entry_date,'%Y-%m-%d').date()
+              params = {
+                  'symbol': symbol,
+                  'interval': '1day',
+                  'start_date': (d - timedelta(days=180)).isoformat(),
+                  'end_date': (d + timedelta(days=2)).isoformat(),
+                  'order': 'ASC',
+                  'format': 'JSON',
+                  'apikey': API_KEY,
+                  'outputsize': 250,
+              }
+              url = 'https://api.twelvedata.com/time_series'
+              for attempt in range(5):
+                  r = requests.get(url, params=params, timeout=30)
+                  if r.status_code == 429:
+                      time.sleep(65)
+                      continue
+                  r.raise_for_status()
+                  payload = r.json()
+                  if payload.get('status') == 'error':
+                      raise RuntimeError(f"{symbol}: {payload.get('message')}")
+                  vals = payload.get('values', [])
+                  if not vals:
+                      raise RuntimeError(f'{symbol}: no candles returned')
+                  df = pd.DataFrame(vals)
+                  for c in ['open','high','low','close','volume']:
+                      df[c] = pd.to_numeric(df[c], errors='coerce')
+                  df['date'] = pd.to_datetime(df['datetime']).dt.date
+                  df = df.sort_values('date').reset_index(drop=True)
+                  return df
+              raise RuntimeError(f'{symbol}: rate limit retries exhausted')
+
+          def rma(series, length):
+              # Pine ta.rma seed is SMA(length), then Wilder recursion.
+              s = pd.Series(series, dtype='float64')
+              out = pd.Series(np.nan, index=s.index, dtype='float64')
+              if len(s) < length:
+                  return out
+              seed = s.iloc[:length].mean()
+              out.iloc[length-1] = seed
+              alpha = 1.0/length
+              for i in range(length, len(s)):
+                  out.iloc[i] = alpha*s.iloc[i] + (1-alpha)*out.iloc[i-1]
+              return out
+
+          def compute(df):
+              d = df.copy()
+              prev_close = d['close'].shift(1)
+              tr = pd.concat([
+                  d['high']-d['low'],
+                  (d['high']-prev_close).abs(),
+                  (d['low']-prev_close).abs()
+              ], axis=1).max(axis=1)
+              d['tr'] = tr
+              d['ema10'] = d['close'].ewm(span=10, adjust=False).mean()
+              d['ema20'] = d['close'].ewm(span=20, adjust=False).mean()
+              d['ema50'] = d['close'].ewm(span=50, adjust=False).mean()
+              d['atr20'] = rma(d['tr'],20)
+              d['atr5sma'] = d['tr'].rolling(5).mean()
+              d['vol5'] = d['volume'].rolling(5).mean()
+              d['vol20'] = d['volume'].rolling(20).mean()
+              d['recentHigh15'] = d['high'].rolling(15).max()
+              d['recentLow15'] = d['low'].rolling(15).min()
+              d['priorHigh20'] = d['high'].shift(1).rolling(20).max()
+              d['expbar'] = d['tr'] > d['atr20']*1.25
+              d['expcount5'] = d['expbar'].astype(float).rolling(5).sum()
+              return d
+
+          def score_row(d, idx):
+              r = d.iloc[idx]
+              if idx < 55 or not np.isfinite(r['atr20']):
+                  return None
+              atr_dist = (r['close']-r['ema10'])/r['atr20'] if r['atr20'] else np.nan
+              rise5 = (r['close']/d.iloc[idx-5]['close']-1)*100
+              compression = r['atr5sma']/r['atr20'] if r['atr20'] else np.nan
+              pullback = ((r['recentHigh15']-r['recentLow15'])/r['recentHigh15'])*100 if r['recentHigh15'] else np.nan
+              dist_high = ((r['priorHigh20']-r['close'])/r['priorHigh20'])*100 if r['priorHigh20'] else np.nan
+              vol_ratio = r['vol5']/r['vol20'] if r['vol20'] else np.nan
+              trend = bool(r['close'] > r['ema10'] > r['ema20'] > r['ema50'])
+              extension_good = bool(atr_dist <= 2.0 and rise5 <= 12.0)
+              compression_good = bool(compression <= 0.85)
+              reset_good = bool(pullback >= 3.0 and pullback <= 15.0)
+              reclaim_good = bool(r['close'] > r['ema10'] and r['close'] > d.iloc[idx-1]['close'])
+              near_pivot = bool(abs(dist_high) <= 5.0)
+              expansion_good = bool(r['expcount5'] <= 2)
+              volume_good = bool(vol_ratio <= 0.85)
+              score = (1 if trend else 0) + (2 if extension_good else 0) + (2 if compression_good else 0) + (1 if reset_good else 0) + (1 if reclaim_good else 0) + (1 if near_pivot else 0) + (1 if expansion_good else 0) + (1 if volume_good else 0)
+              return {
+                  'score': int(score), 'trend': trend, 'extension_good': extension_good,
+                  'compression_good': compression_good, 'reset_good': reset_good,
+                  'reclaim_good': reclaim_good, 'near_pivot': near_pivot,
+                  'expansion_good': expansion_good, 'volume_good': volume_good,
+                  'atr_distance': float(atr_dist), 'rise5_pct': float(rise5),
+                  'compression_ratio': float(compression), 'pullback_pct': float(pullback),
+                  'distance_from_prior_high_pct': float(dist_high),
+                  'expansion_count5': float(r['expcount5']), 'volume_ratio': float(vol_ratio),
+              }
+
+          results=[]
+          errors=[]
+          for n,(symbol, entry_date, outcome) in enumerate(trades,1):
+              try:
+                  print(f'[{n}/{len(trades)}] {symbol} {entry_date}')
+                  raw=fetch_daily(symbol, entry_date)
+                  calc=compute(raw)
+                  ed=datetime.strptime(entry_date,'%Y-%m-%d').date()
+                  eligible=calc.index[calc['date']<=ed].tolist()
+                  if not eligible:
+                      raise RuntimeError('no candle on/before entry')
+                  eod_idx=eligible[-1]
+                  prior_idx=eod_idx-1 if calc.iloc[eod_idx]['date']==ed else eod_idx
+                  eod=score_row(calc,eod_idx)
+                  prior=score_row(calc,prior_idx)
+                  if eod is None or prior is None:
+                      raise RuntimeError('insufficient history')
+                  results.append({'symbol':symbol,'entry_date':entry_date,'outcome':outcome,'eod_date':str(calc.iloc[eod_idx]['date']),'prior_date':str(calc.iloc[prior_idx]['date']),'eod':eod,'prior':prior})
+                  time.sleep(1.25)
+              except Exception as e:
+                  errors.append({'symbol':symbol,'entry_date':entry_date,'error':str(e)})
+                  print('ERROR', symbol, e)
+
+          if not results:
+              raise SystemExit('No trades could be scored')
+
+          def summarise(mode):
+              rows=[]
+              for x in results:
+                  m=x[mode]
+                  rows.append({'symbol':x['symbol'],'entry_date':x['entry_date'],'outcome':x['outcome'],**m})
+              df=pd.DataFrame(rows)
+              summary={'n':len(df),'by_outcome':{},'score_bands':{},'features':{}}
+              for outcome,g in df.groupby('outcome'):
+                  summary['by_outcome'][outcome]={
+                      'n':int(len(g)), 'mean_score':float(g.score.mean()), 'median_score':float(g.score.median()),
+                      'score_ge_8':int((g.score>=8).sum()), 'score_ge_6':int((g.score>=6).sum()),
+                      'mean_atr_distance':float(g.atr_distance.mean()), 'mean_rise5_pct':float(g.rise5_pct.mean()),
+                      'mean_compression_ratio':float(g.compression_ratio.mean()), 'mean_pullback_pct':float(g.pullback_pct.mean()),
+                      'mean_expansion_count5':float(g.expansion_count5.mean()), 'mean_volume_ratio':float(g.volume_ratio.mean()),
+                  }
+              for lo,hi,label in [(0,3,'0-3'),(4,5,'4-5'),(6,7,'6-7'),(8,10,'8-10')]:
+                  g=df[(df.score>=lo)&(df.score<=hi)]
+                  if len(g):
+                      wins=int((g.outcome=='Winner').sum())
+                      summary['score_bands'][label]={'n':int(len(g)),'wins':wins,'losers':int(len(g)-wins),'win_rate':float(wins/len(g))}
+              bool_cols=['trend','extension_good','compression_good','reset_good','reclaim_good','near_pivot','expansion_good','volume_good']
+              for c in bool_cols:
+                  rates={}
+                  for outcome,g in df.groupby('outcome'):
+                      rates[outcome]=float(g[c].mean())
+                  rates['winner_minus_loser']=rates.get('Winner',0)-rates.get('Loser',0)
+                  summary['features'][c]=rates
+              # simple point-biserial-style rank: difference in means standardised by pooled sd
+              numeric=['atr_distance','rise5_pct','compression_ratio','pullback_pct','distance_from_prior_high_pct','expansion_count5','volume_ratio','score']
+              summary['numeric_effects']={}
+              for c in numeric:
+                  w=df[df.outcome=='Winner'][c].dropna(); l=df[df.outcome=='Loser'][c].dropna()
+                  pooled=math.sqrt(((len(w)-1)*w.var(ddof=1)+(len(l)-1)*l.var(ddof=1))/max(1,len(w)+len(l)-2)) if len(w)>1 and len(l)>1 else float('nan')
+                  dval=(w.mean()-l.mean())/pooled if pooled and np.isfinite(pooled) and pooled>0 else float('nan')
+                  summary['numeric_effects'][c]={'winner_mean':float(w.mean()),'loser_mean':float(l.mean()),'cohens_d':float(dval) if np.isfinite(dval) else None}
+              return df,summary
+
+          prior_df, prior_summary=summarise('prior')
+          eod_df, eod_summary=summarise('eod')
+
+          # Threshold sweep on score for descriptive separation only.
+          threshold=[]
+          for t in range(3,11):
+              for name,df in [('prior',prior_df),('eod',eod_df)]:
+                  kept=df[df.score>=t]
+                  if len(kept):
+                      wr=(kept.outcome=='Winner').mean()
+                      threshold.append({'mode':name,'threshold':t,'kept':int(len(kept)),'winners':int((kept.outcome=='Winner').sum()),'losers':int((kept.outcome=='Loser').sum()),'win_rate':float(wr)})
+
+          out={'generated_utc':datetime.utcnow().isoformat()+'Z','errors':errors,'prior_close_summary':prior_summary,'entry_day_eod_summary':eod_summary,'threshold_sweep':threshold}
+          with open('entry-quality-summary.json','w') as f: json.dump(out,f,indent=2)
+          prior_df.to_csv('entry-quality-prior.csv',index=False)
+          eod_df.to_csv('entry-quality-eod.csv',index=False)
+          print(json.dumps(out,indent=2))
+          PY
+          python /tmp/backtest.py
+
+      - name: Upload backtest artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: entry-quality-backtest
+          path: |
+            entry-quality-summary.json
+            entry-quality-prior.csv
+            entry-quality-eod.csv
+          retention-days: 1
