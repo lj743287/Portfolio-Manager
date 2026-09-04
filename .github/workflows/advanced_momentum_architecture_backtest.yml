@@ -10,256 +10,58 @@ permissions:
   contents: read
 
 jobs:
-  backtest:
+  fetch-history:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: pip install --quiet pandas numpy requests scikit-learn scipy
-      - name: Run advanced backtest
+        run: pip install --quiet pandas requests
+      - name: Fetch historical candles
         env:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
         run: |
-          cat > /tmp/advanced_backtest.py <<'PY'
-          import os, io, json, math, time, warnings
-          from datetime import datetime, timedelta
-          import numpy as np
-          import pandas as pd
-          import requests
-          from sklearn.preprocessing import StandardScaler
-          from sklearn.linear_model import LogisticRegression
-          from sklearn.metrics import roc_auc_score, accuracy_score, balanced_accuracy_score
-          from sklearn.model_selection import TimeSeriesSplit
-          warnings.filterwarnings('ignore')
+          cat > /tmp/fetch_history.py <<'PY'
+          import os, time, json
+          import requests, pandas as pd
 
-          API_KEY=os.environ.get('TWELVEDATA_API_KEY','').strip()
-          if not API_KEY:
-              raise SystemExit('TWELVEDATA_API_KEY missing')
-
-          SHEET_ID='1Iu-qDOrBgrbMxb1aAnvhZqFNIljO0MfM_sY_xeyphhA'
-          csv_url=f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=positions'
-          rr=requests.get(csv_url,timeout=30)
-          print('sheet status',rr.status_code,'bytes',len(rr.content))
-          rr.raise_for_status()
-          trades=pd.read_csv(io.BytesIO(rr.content))
-          print('sheet columns',list(trades.columns))
-          need=['Status','Symbol','Entry date','Exit date','Avg entry','Avg exit','Realized $']
-          miss=[c for c in need if c not in trades.columns]
-          if miss: raise RuntimeError(f'missing sheet columns: {miss}')
-          trades=trades[trades['Status'].astype(str).str.upper().eq('CLOSED')].copy()
-          trades['Entry date']=pd.to_datetime(trades['Entry date'],errors='coerce')
-          trades['Exit date']=pd.to_datetime(trades['Exit date'],errors='coerce')
-          trades['Realized $']=pd.to_numeric(trades['Realized $'],errors='coerce')
-          trades['Avg entry']=pd.to_numeric(trades['Avg entry'],errors='coerce')
-          trades['Avg exit']=pd.to_numeric(trades['Avg exit'],errors='coerce')
-          trades=trades.dropna(subset=['Symbol','Entry date','Realized $','Avg entry','Avg exit'])
-          trades['Symbol']=trades['Symbol'].astype(str).str.strip().str.upper()
-          trades['winner']=(trades['Realized $']>0).astype(int)
-          trades['trade_return_pct']=(trades['Avg exit']/trades['Avg entry']-1.0)*100.0
-          trades=trades.sort_values('Entry date').reset_index(drop=True)
-          print('closed trades',len(trades),'winners',int(trades.winner.sum()),'losers',int((1-trades.winner).sum()))
-
-          def rma(s,n):
-              s=pd.Series(s,dtype=float); out=pd.Series(np.nan,index=s.index,dtype=float)
-              if len(s)<n:return out
-              out.iloc[n-1]=s.iloc[:n].mean(); a=1.0/n
-              for i in range(n,len(s)): out.iloc[i]=a*s.iloc[i]+(1-a)*out.iloc[i-1]
-              return out
-
-          cache={}
-          def fetch_daily(symbol, entry_date):
-              key=symbol
-              if key in cache:return cache[key]
-              start=(trades['Entry date'].min()-pd.Timedelta(days=120)).date().isoformat()
-              end=(trades['Entry date'].max()+pd.Timedelta(days=3)).date().isoformat()
-              params={'symbol':symbol,'interval':'1day','start_date':start,'end_date':end,'order':'ASC','format':'JSON','apikey':API_KEY,'outputsize':500}
-              for attempt in range(8):
-                  r=requests.get('https://api.twelvedata.com/time_series',params=params,timeout=30)
-                  if r.status_code==429:
-                      print('rate limit',symbol,'sleeping'); time.sleep(65); continue
-                  r.raise_for_status(); p=r.json()
-                  if p.get('status')=='error': raise RuntimeError(p.get('message','TD error'))
-                  vals=p.get('values',[])
-                  if not vals: raise RuntimeError('no data')
-                  d=pd.DataFrame(vals)
-                  for c in ['open','high','low','close','volume']: d[c]=pd.to_numeric(d[c],errors='coerce')
-                  d['date']=pd.to_datetime(d['datetime']).dt.normalize()
-                  d=d.sort_values('date').reset_index(drop=True)
-                  pc=d.close.shift(1)
-                  d['tr']=pd.concat([(d.high-d.low),(d.high-pc).abs(),(d.low-pc).abs()],axis=1).max(axis=1)
-                  d['atr20']=rma(d.tr,20)
-                  for n in [10,20,50]: d[f'ema{n}']=d.close.ewm(span=n,adjust=False).mean()
-                  d['tr5']=d.tr.rolling(5).mean(); d['vol5']=d.volume.rolling(5).mean(); d['vol20']=d.volume.rolling(20).mean()
-                  d['hi5']=d.high.rolling(5).max(); d['lo5']=d.low.rolling(5).min(); d['hi10']=d.high.rolling(10).max(); d['lo10']=d.low.rolling(10).min(); d['hi20']=d.high.rolling(20).max(); d['lo20']=d.low.rolling(20).min(); d['priorhi20']=d.high.shift(1).rolling(20).max()
-                  d['up']=d.close>d.close.shift(1); d['large_up']=(d.tr>d.atr20*1.25)&(d.close>d.open)
-                  d['up5']=d.up.astype(float).rolling(5).sum(); d['large_up5']=d.large_up.astype(float).rolling(5).sum()
-                  d['below10']=(d.low<=d.ema10).astype(float); d['touch10_10']=d.below10.rolling(10).max()
-                  cache[key]=d; time.sleep(1.15); return d
-              raise RuntimeError('rate limit retries exhausted')
-
-          FEATURES=['trend','mom5','mom10','mom20','accel5','atr_dist10','atr_dist20','compression','range5_atr','close_pos20','dist_high20_atr','up_days5','large_up5','vol_ratio','ema10_slope5','r2_20','pullback10_atr','reset_reclaim','parabolic_ratio']
-
-          def feature_row(d, entry_date):
-              ed=pd.Timestamp(entry_date).normalize()
-              ix=d.index[d.date<ed].tolist()
-              if not ix:return None
-              i=ix[-1]
-              if i<60 or not np.isfinite(d.loc[i,'atr20']) or d.loc[i,'atr20']<=0:return None
-              r=d.loc[i]; atr=r.atr20
-              mom5=(r.close/d.loc[i-5,'close']-1)*100
-              mom10=(r.close/d.loc[i-10,'close']-1)*100
-              mom20=(r.close/d.loc[i-20,'close']-1)*100
-              accel5=mom5-(mom20/4.0)
-              rng20=r.hi20-r.lo20
-              cp20=(r.close-r.lo20)/rng20 if rng20>0 else .5
-              y=np.log(d.loc[i-19:i,'close'].astype(float).values)
-              x=np.arange(20,dtype=float)
-              corr=np.corrcoef(x,y)[0,1]; r2=float(corr*corr) if np.isfinite(corr) else 0.0
-              par=mom5/(abs(mom20)+2.0)
-              return {
-                'trend':float(r.close>r.ema10>r.ema20>r.ema50),
-                'mom5':mom5,'mom10':mom10,'mom20':mom20,'accel5':accel5,
-                'atr_dist10':(r.close-r.ema10)/atr,'atr_dist20':(r.close-r.ema20)/atr,
-                'compression':r.tr5/atr,'range5_atr':(r.hi5-r.lo5)/atr,
-                'close_pos20':cp20,'dist_high20_atr':(r.priorhi20-r.close)/atr,
-                'up_days5':r.up5,'large_up5':r.large_up5,'vol_ratio':r.vol5/r.vol20 if r.vol20 else 1.0,
-                'ema10_slope5':(r.ema10-d.loc[i-5,'ema10'])/atr,'r2_20':r2,
-                'pullback10_atr':(r.hi10-r.close)/atr,
-                'reset_reclaim':float(r.touch10_10>0 and r.close>r.ema10),
-                'parabolic_ratio':par,
-                'signal_date':str(r.date.date())
-              }
-
-          rows=[]; errors=[]
-          for n,t in trades.iterrows():
-              sym=t['Symbol']
+          key=os.environ.get('TWELVEDATA_API_KEY','').strip()
+          if not key: raise SystemExit('TWELVEDATA_API_KEY missing')
+          symbols='AAON,ACAD,ACHC,ACMR,AFRM,AGL,AGYS,AIN,AKAM,ALOT,AMBQ,AMKR,AMTX,AMWL,ANL,AP,APEI,ARM,AVT,BBCP,BBY,BDSX,BE,BHE,BLFS,BMA,BVS,BWEN,CADL,CBRL,CCCC,CDXS,CGNX,CLYM,CNC,COCO,CON,CRDO,CRSR,CRUD,CTRN,CTS,CVGI,DFTX,DSGN,DTIL,DY,EPC,ESOA,EVER,EVH,FBYD,FENC,FLXS,FNKO,FORR,FSTR,GEO,GHM,GLNG,GO,HLIT,HOV,HPK,HPP,HSTM,HUM,ICCC,ICHR,ICU,III,ILMN,INVA,JRSH,KALV,KFRC,KN,KNSA,KODK,KRO,LASR,LFST,LINC,LIND,LION,LJP3,LMT,LNZA,LQDA,LSCC,LXRX,MATV,MLKN,MLTX,MOV,MOVE,MRX,MYRG,NAVN,NBR,NVAX,NWPX,ODC,OII,OMDA,ON,OPHC,OSPN,OTLY,PANW,PAY,PAYS,PBF,PBI,PD,PGNY,QFIN,QMCO,RAL,RCMT,RDNT,RDVT,RFIL,RIOT,RMAU,RRGB,SATL,SCHL,SDGR,SEZL,SHEN,SHIP,SIF,SIMO,SND,SOLS,SPCX,SPHR,STAA,SWKS,SYRE,TK,TMCI,TNGX,TPG,UFI,UMC,VOYA,VRT,VSXY,WKC,XGN,XMTR,XNCR,YOU'.split(',')
+          rows=[]; errors=[]; calls=0; window_start=time.time()
+          for i,sym in enumerate(symbols,1):
+              if calls>=45:
+                  elapsed=time.time()-window_start
+                  if elapsed<65: time.sleep(65-elapsed)
+                  calls=0; window_start=time.time()
+              params={'symbol':sym,'interval':'1day','start_date':'2025-11-01','end_date':'2026-09-05','order':'ASC','format':'JSON','outputsize':500,'apikey':key}
               try:
-                  d=fetch_daily(sym,t['Entry date']); f=feature_row(d,t['Entry date'])
-                  if f is None: raise RuntimeError('insufficient history')
-                  rows.append({'symbol':sym,'entry_date':t['Entry date'],'exit_date':t['Exit date'],'pnl':float(t['Realized $']),'trade_return_pct':float(t.trade_return_pct),'winner':int(t.winner),**f})
+                  r=requests.get('https://api.twelvedata.com/time_series',params=params,timeout=30)
+                  calls+=1
+                  if r.status_code==429:
+                      time.sleep(65); window_start=time.time(); calls=1
+                      r=requests.get('https://api.twelvedata.com/time_series',params=params,timeout=30)
+                  r.raise_for_status(); p=r.json()
+                  if p.get('status')=='error': raise RuntimeError(p.get('message','Twelve Data error'))
+                  vals=p.get('values',[])
+                  if not vals: raise RuntimeError('no candles')
+                  for v in vals:
+                      rows.append({'symbol':sym,'datetime':v.get('datetime'),'open':v.get('open'),'high':v.get('high'),'low':v.get('low'),'close':v.get('close'),'volume':v.get('volume')})
+                  print(f'[{i}/{len(symbols)}] {sym}: {len(vals)}')
               except Exception as e:
-                  errors.append({'symbol':sym,'entry_date':str(t['Entry date'].date()),'error':str(e)})
-                  print('ERROR',sym,e)
-          df=pd.DataFrame(rows).sort_values('entry_date').reset_index(drop=True)
-          print('scored',len(df),'errors',len(errors))
-          if len(df)<60: raise RuntimeError('Too few scored trades for robust validation')
-
-          # Winsorise extreme feature tails using TRAIN ONLY later; chronological 70/30 holdout.
-          split=int(len(df)*0.70)
-          train=df.iloc[:split].copy(); test=df.iloc[split:].copy()
-          Xtr=train[FEATURES].replace([np.inf,-np.inf],np.nan); Xte=test[FEATURES].replace([np.inf,-np.inf],np.nan)
-          med=Xtr.median(); Xtr=Xtr.fillna(med); Xte=Xte.fillna(med)
-          qlo=Xtr.quantile(.02); qhi=Xtr.quantile(.98); Xtr=Xtr.clip(qlo,qhi,axis=1); Xte=Xte.clip(qlo,qhi,axis=1)
-
-          # Select regularisation via forward TimeSeries CV.
-          Cs=[0.02,0.05,0.1,0.2,0.5,1.0,2.0]
-          l1s=[0.0,0.25,0.5,0.75,1.0]
-          tscv=TimeSeriesSplit(n_splits=5)
-          candidates=[]
-          for C in Cs:
-            for l1 in l1s:
-              aucs=[]
-              for a,b in tscv.split(Xtr):
-                if len(np.unique(train.winner.iloc[a]))<2 or len(np.unique(train.winner.iloc[b]))<2: continue
-                sc=StandardScaler().fit(Xtr.iloc[a]); xa=sc.transform(Xtr.iloc[a]); xb=sc.transform(Xtr.iloc[b])
-                m=LogisticRegression(C=C,penalty='elasticnet',solver='saga',l1_ratio=l1,max_iter=5000,class_weight='balanced',random_state=7)
-                m.fit(xa,train.winner.iloc[a]); p=m.predict_proba(xb)[:,1]
-                aucs.append(roc_auc_score(train.winner.iloc[b],p))
-              if aucs:candidates.append((float(np.mean(aucs)),C,l1))
-          candidates.sort(reverse=True); best_auc,bestC,bestL1=candidates[0]
-          scaler=StandardScaler().fit(Xtr); model=LogisticRegression(C=bestC,penalty='elasticnet',solver='saga',l1_ratio=bestL1,max_iter=10000,class_weight='balanced',random_state=7).fit(scaler.transform(Xtr),train.winner)
-          ptr=model.predict_proba(scaler.transform(Xtr))[:,1]; pte=model.predict_proba(scaler.transform(Xte))[:,1]
-          train['prob']=ptr; test['prob']=pte
-
-          # Bootstrap coefficient sign stability on training set.
-          rng=np.random.default_rng(7); coefs=[]
-          for _ in range(200):
-            idx=rng.integers(0,len(train),len(train))
-            yy=train.winner.iloc[idx]
-            if yy.nunique()<2: continue
-            mm=LogisticRegression(C=bestC,penalty='elasticnet',solver='saga',l1_ratio=bestL1,max_iter=4000,class_weight='balanced',random_state=7)
-            mm.fit(scaler.transform(Xtr.iloc[idx]),yy); coefs.append(mm.coef_[0])
-          coefs=np.array(coefs)
-          base=model.coef_[0]
-          stability=[]
-          for j,f in enumerate(FEATURES):
-            if base[j]>0: st=float((coefs[:,j]>0).mean())
-            elif base[j]<0: st=float((coefs[:,j]<0).mean())
-            else: st=0.0
-            stability.append(st)
-
-          # Threshold chosen only on training data: preserve >=85% of positive P&L while maximising avoided negative P&L.
-          pos_total=train.loc[train.pnl>0,'pnl'].sum(); choices=[]
-          for th in np.arange(.30,.76,.01):
-            keep=train.prob>=th
-            retained=train.loc[keep & (train.pnl>0),'pnl'].sum()/pos_total if pos_total>0 else 0
-            avoided=-train.loc[(~keep)&(train.pnl<0),'pnl'].sum()
-            kept_pnl=train.loc[keep,'pnl'].sum()
-            if retained>=.85: choices.append((avoided,kept_pnl,-th,th,retained))
-          threshold=max(choices)[3] if choices else .50
-
-          def metrics(g,th):
-            keep=g.prob>=th
-            base_pnl=float(g.pnl.sum()); kept=float(g.loc[keep,'pnl'].sum()); removed=float(g.loc[~keep,'pnl'].sum())
-            pos=float(g.loc[g.pnl>0,'pnl'].sum()); retained_pos=float(g.loc[keep & (g.pnl>0),'pnl'].sum())
-            neg=float(-g.loc[g.pnl<0,'pnl'].sum()); avoided_neg=float(-g.loc[(~keep)&(g.pnl<0),'pnl'].sum())
-            return {'n':int(len(g)),'baseline_win_rate':float(g.winner.mean()),'auc':float(roc_auc_score(g.winner,g.prob)) if g.winner.nunique()>1 else None,'threshold':float(th),'kept_n':int(keep.sum()),'kept_win_rate':float(g.loc[keep,'winner'].mean()) if keep.sum() else None,'baseline_pnl':base_pnl,'kept_pnl':kept,'removed_pnl':removed,'positive_pnl_retained_pct':float(retained_pos/pos*100) if pos>0 else None,'negative_pnl_avoided_pct':float(avoided_neg/neg*100) if neg>0 else None}
-
-          # Robust top features = coefficient magnitude x bootstrap sign stability.
-          feature_table=[]
-          for f,c,st,mu,sd in zip(FEATURES,base,stability,scaler.mean_,scaler.scale_):
-            feature_table.append({'feature':f,'coef':float(c),'abs_coef':float(abs(c)),'sign_stability':float(st),'mean':float(mu),'scale':float(sd)})
-          feature_table=sorted(feature_table,key=lambda z:z['abs_coef']*z['sign_stability'],reverse=True)
-
-          # Continuous Momentum Architecture Score uses only stable non-zero coefficients, converted to 0-100 probability.
-          stable_idx=[i for i,(c,st) in enumerate(zip(base,stability)) if abs(c)>=0.03 and st>=0.65]
-          if len(stable_idx)<3: stable_idx=list(np.argsort(np.abs(base))[-6:])
-          XtrS=scaler.transform(Xtr); XteS=scaler.transform(Xte)
-          intercept=float(model.intercept_[0]); stable_coef=np.zeros_like(base); stable_coef[stable_idx]=base[stable_idx]
-          trlog=intercept+XtrS.dot(stable_coef); telog=intercept+XteS.dot(stable_coef)
-          train['stable_prob']=1/(1+np.exp(-trlog)); test['stable_prob']=1/(1+np.exp(-telog))
-          # Re-choose threshold using stable score on train.
-          pos_total=train.loc[train.pnl>0,'pnl'].sum(); choices=[]
-          for th in np.arange(.30,.76,.01):
-            keep=train.stable_prob>=th; retained=train.loc[keep&(train.pnl>0),'pnl'].sum()/pos_total if pos_total>0 else 0; avoided=-train.loc[(~keep)&(train.pnl<0),'pnl'].sum()
-            if retained>=.85: choices.append((avoided,-th,th,retained))
-          stable_th=max(choices)[2] if choices else .50
-          train_full_prob=train.prob.copy(); test_full_prob=test.prob.copy(); train['prob']=train.stable_prob; test['prob']=test.stable_prob
-
-          # Score bands on HOLDOUT only.
-          test['score100']=(test.prob*100).round(1)
-          bands=[]
-          for lo,hi in [(0,39.999),(40,49.999),(50,59.999),(60,69.999),(70,100.001)]:
-            gg=test[(test.score100>=lo)&(test.score100<=hi)]
-            if len(gg): bands.append({'band':f'{int(lo)}-{int(hi if hi<100 else 100)}','n':int(len(gg)),'win_rate':float(gg.winner.mean()),'pnl':float(gg.pnl.sum()),'avg_return_pct':float(gg.trade_return_pct.mean())})
-
-          report={
-            'generated_utc':datetime.utcnow().isoformat()+'Z','sheet_trade_count':int(len(trades)),'scored_trade_count':int(len(df)),'errors':errors,
-            'split':{'train_n':int(len(train)),'test_n':int(len(test)),'train_end':str(train.entry_date.max().date()),'test_start':str(test.entry_date.min().date())},
-            'cv':{'best_mean_auc':best_auc,'C':bestC,'l1_ratio':bestL1},
-            'stable_features':[FEATURES[i] for i in stable_idx],
-            'stable_coefficients':{FEATURES[i]:float(stable_coef[i]) for i in stable_idx},
-            'scaler':{f:{'mean':float(scaler.mean_[i]),'scale':float(scaler.scale_[i])} for i,f in enumerate(FEATURES) if i in stable_idx},
-            'intercept':intercept,'threshold':float(stable_th),'train_metrics':metrics(train,stable_th),'holdout_metrics':metrics(test,stable_th),
-            'feature_table':feature_table,'holdout_score_bands':bands,
-            'holdout_trades':test[['symbol','entry_date','pnl','trade_return_pct','winner','score100']].to_dict('records')
-          }
-          with open('momentum-architecture-report.json','w') as f: json.dump(report,f,indent=2,default=str)
-          df.to_csv('momentum-architecture-features.csv',index=False)
-          test[['symbol','entry_date','pnl','trade_return_pct','winner','score100']].to_csv('momentum-architecture-holdout.csv',index=False)
-          print(json.dumps(report,indent=2,default=str))
+                  errors.append({'symbol':sym,'error':str(e)}); print('ERROR',sym,e)
+          pd.DataFrame(rows).to_csv('daily-history.csv',index=False)
+          with open('history-errors.json','w') as f: json.dump(errors,f,indent=2)
+          print('rows',len(rows),'errors',len(errors))
           PY
-          python /tmp/advanced_backtest.py
-      - name: Upload results
+          python /tmp/fetch_history.py
+      - name: Upload historical data
         uses: actions/upload-artifact@v4
         with:
-          name: momentum-architecture-backtest
+          name: momentum-architecture-history
           path: |
-            momentum-architecture-report.json
-            momentum-architecture-features.csv
-            momentum-architecture-holdout.csv
+            daily-history.csv
+            history-errors.json
           retention-days: 1
