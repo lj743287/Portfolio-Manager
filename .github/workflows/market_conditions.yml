@@ -8,6 +8,7 @@ on:
   push:
     paths:
       - ".github/workflows/market_conditions.yml"
+      - "scripts/build_market_conditions.py"
       - "scripts/add_high_momentum_indicator.py"
 
 permissions:
@@ -20,7 +21,7 @@ concurrency:
 jobs:
   update-market-conditions:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 90
 
     steps:
       - name: Check out Portfolio Manager
@@ -36,12 +37,12 @@ jobs:
       - name: Apply dashboard indicator patch
         run: python scripts/add_high_momentum_indicator.py
 
-      - name: Calculate market conditions
+      - name: Calculate market conditions from Alpaca
         env:
-          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
-          TD_CREDITS_PER_MINUTE: "55"
-          # Leave ten credits per minute available for interactive trade charts.
-          TD_BATCH_SIZE: "45"
+          APCA_API_KEY_ID: ${{ secrets.APCA_API_KEY_ID }}
+          APCA_API_SECRET_KEY: ${{ secrets.APCA_API_SECRET_KEY }}
+          ALPACA_BATCH_SIZE: "50"
+          ALPACA_REQUESTS_PER_MIN: "170"
         run: python scripts/build_market_conditions.py
 
       - name: Publish the latest aggregate data
@@ -54,6 +55,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/market-conditions.json scripts/build_market_conditions.py market-conditions.html
-          git commit -m "Update market conditions and high momentum indicator"
+          git commit -m "Update market conditions from Alpaca"
           git pull --rebase origin main
           git push origin main
