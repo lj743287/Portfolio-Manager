@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Build the data file used by market-conditions.html.
+"""Build the data file used by market-conditions.html using Alpaca daily bars.
 
 The calculation follows the published Stockbee Market Monitor concepts:
 significant four-percent daily moves, 10-day cumulative breadth, 25-percent
 quarterly breadth, 34/13 fast breadth, and monthly 25/50-percent extremes.
 
-The script intentionally writes only aggregate counts. Individual price data
-and the Twelve Data API key never reach the public dashboard.
+Only aggregate counts are written to the public dashboard. Alpaca credentials
+and individual price histories remain inside the GitHub Actions run.
 """
 
 from __future__ import annotations
@@ -20,103 +20,25 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-
-API_ROOT = "https://api.twelvedata.com"
-ALLOWED_TYPES = {
-    "Common Stock",
-    "Depositary Receipt",
-    "American Depositary Receipt",
-    "REIT",
-}
-EXCHANGES = ("NASDAQ", "NYSE")
+ALPACA_BARS_URL = "https://data.alpaca.markets/v2/stocks/bars"
+UNIVERSE_URLS = (
+    "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
+    "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
+)
 DEFAULT_OUTPUT = Path("data/market-conditions.json")
+EXCHANGES = ("NASDAQ", "NYSE")
 HISTORY_SESSIONS = 120
 OUTPUTSIZE = 200
 DISPLAY_SESSIONS = 90
 MIN_PRICE = 3.0
 MIN_AVG_DOLLAR_VOLUME = 250_000.0
 MIN_DAILY_VOLUME = 100_000.0
-
-
-@dataclass
-class CreditLimiter:
-    limit: int
-    window_started: float = 0.0
-    used: int = 0
-
-    def __post_init__(self) -> None:
-        self.window_started = time.monotonic()
-
-    def acquire(self, credits: int) -> None:
-        credits = max(1, credits)
-        if credits > self.limit:
-            raise ValueError(f"A request for {credits} credits exceeds the {self.limit}/minute limit")
-
-        now = time.monotonic()
-        elapsed = now - self.window_started
-        if elapsed >= 60:
-            self.window_started = now
-            self.used = 0
-            elapsed = 0
-
-        if self.used + credits > self.limit:
-            wait_for = max(0.0, 60.25 - elapsed)
-            print(f"[pacing] waiting {wait_for:.1f}s for the Twelve Data credit window", flush=True)
-            time.sleep(wait_for)
-            self.window_started = time.monotonic()
-            self.used = 0
-
-        self.used += credits
-
-
-def api_json(path: str, params: dict[str, Any], retries: int = 4) -> dict[str, Any]:
-    query = urllib.parse.urlencode(params)
-    url = f"{API_ROOT}{path}?{query}"
-    last_error: Exception | None = None
-
-    for attempt in range(1, retries + 1):
-        try:
-            request = urllib.request.Request(url, headers={"User-Agent": "portfolio-market-conditions/1.0"})
-            with urllib.request.urlopen(request, timeout=60) as response:
-                return json.loads(response.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            last_error = exc
-            if exc.code == 429 and attempt < retries:
-                time.sleep(15 * attempt)
-                continue
-            if 500 <= exc.code < 600 and attempt < retries:
-                time.sleep(5 * attempt)
-                continue
-            raise
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
-            last_error = exc
-            if attempt < retries:
-                time.sleep(5 * attempt)
-                continue
-            raise
-
-    raise RuntimeError(f"Twelve Data request failed: {type(last_error).__name__}")
-
-
-def build_universe(api_key: str, limiter: CreditLimiter) -> list[str]:
-    symbols: set[str] = set()
-    for exchange in EXCHANGES:
-        limiter.acquire(1)
-        payload = api_json("/stocks", {"exchange": exchange, "format": "JSON", "apikey": api_key})
-        if payload.get("status") != "ok":
-            raise RuntimeError(f"Could not retrieve the {exchange} stock catalogue")
-        for record in payload.get("data", []):
-            symbol = str(record.get("symbol") or "").strip().upper()
-            security_type = str(record.get("type") or "").strip()
-            if symbol and security_type in ALLOWED_TYPES:
-                symbols.add(symbol)
-        print(f"[universe] {exchange} catalogue loaded", flush=True)
-    return sorted(symbols)
+BAD_NAME_WORDS = ("WARRANT", "RIGHT", "UNIT", "PREFERRED", "NOTES", "DEBENTURE")
+BAD_SYMBOL_CHARS = set(".$^~=")
 
 
 def chunks(values: list[str], size: int) -> Iterable[list[str]]:
@@ -132,43 +54,128 @@ def to_number(value: Any) -> float | None:
         return None
 
 
-def normalise_bars(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    if not isinstance(payload, dict) or payload.get("status") == "error":
-        return []
+def http_text(url: str, timeout: int = 60) -> str:
+    request = urllib.request.Request(url, headers={"User-Agent": "portfolio-market-conditions/2.0"})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return response.read().decode("utf-8", errors="replace")
 
-    bars: list[dict[str, Any]] = []
-    for raw in payload.get("values", []):
-        close = to_number(raw.get("close"))
-        volume = to_number(raw.get("volume"))
-        date = str(raw.get("datetime") or "")[:10]
-        if close is None or volume is None or not date:
+
+def build_universe() -> list[str]:
+    """NASDAQ and NYSE common-stock style universe from Nasdaq Trader files."""
+    symbols: set[str] = set()
+    for url in UNIVERSE_URLS:
+        is_nasdaq_file = "nasdaqlisted" in url
+        text = http_text(url)
+        lines = [line for line in text.splitlines() if "|" in line]
+        if not lines:
             continue
-        bars.append({"date": date, "close": close, "volume": volume})
+        header = lines[0].split("|")
+        index = {name: i for i, name in enumerate(header)}
+        symbol_col = "Symbol" if "Symbol" in index else "ACT Symbol"
+        for line in lines[1:]:
+            fields = line.split("|")
+            if len(fields) < len(header) or fields[0].startswith("File Creation"):
+                continue
+            symbol = fields[index[symbol_col]].strip().upper()
+            name = fields[index["Security Name"]].upper() if "Security Name" in index else ""
+            etf = fields[index["ETF"]].strip() if "ETF" in index else "N"
+            test = fields[index["Test Issue"]].strip() if "Test Issue" in index else "N"
+            exchange_code = fields[index["Exchange"]].strip() if "Exchange" in index else "Q"
+            if not symbol or etf == "Y" or test == "Y":
+                continue
+            if any(char in BAD_SYMBOL_CHARS for char in symbol):
+                continue
+            if any(word in name for word in BAD_NAME_WORDS):
+                continue
+            if is_nasdaq_file:
+                symbols.add(symbol)
+            elif exchange_code == "N":
+                symbols.add(symbol)
+        print(f"[universe] loaded {url.rsplit('/', 1)[-1]}", flush=True)
+    return sorted(symbols)
 
-    bars.sort(key=lambda bar: bar["date"])
-    return bars
+
+def alpaca_json(
+    params: dict[str, Any], api_key: str, api_secret: str, requests_per_minute: int, retries: int = 6
+) -> dict[str, Any]:
+    query = urllib.parse.urlencode(params)
+    url = f"{ALPACA_BARS_URL}?{query}"
+    headers = {
+        "User-Agent": "portfolio-market-conditions/2.0",
+        "APCA-API-KEY-ID": api_key,
+        "APCA-API-SECRET-KEY": api_secret,
+    }
+    delay = 1.0
+    for attempt in range(retries):
+        try:
+            request = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(request, timeout=90) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            if requests_per_minute > 0:
+                time.sleep(60.0 / requests_per_minute)
+            return payload
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429 and attempt < retries - 1:
+                retry_after = float(exc.headers.get("Retry-After", "0") or "0")
+                time.sleep(max(retry_after, delay, 60.0 / max(1, requests_per_minute)))
+                delay = min(delay * 2, 30)
+                continue
+            if 500 <= exc.code < 600 and attempt < retries - 1:
+                time.sleep(delay)
+                delay = min(delay * 2, 30)
+                continue
+            raise
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+            if attempt == retries - 1:
+                raise
+            time.sleep(delay)
+            delay = min(delay * 2, 30)
+    raise RuntimeError("Alpaca request failed after retries")
 
 
-def fetch_series(api_key: str, symbols: list[str], limiter: CreditLimiter) -> dict[str, Any]:
-    limiter.acquire(len(symbols))
-    return api_json(
-        "/time_series",
-        {
-            "symbol": ",".join(symbols),
-            "interval": "1day",
-            "outputsize": OUTPUTSIZE,
-            "order": "ASC",
-            "format": "JSON",
-            "apikey": api_key,
-        },
-    )
+def fetch_series_batch(
+    symbols: list[str], api_key: str, api_secret: str, requests_per_minute: int
+) -> dict[str, list[dict[str, Any]]]:
+    """Fetch up to OUTPUTSIZE completed daily bars per symbol from Alpaca."""
+    end = datetime.now(timezone.utc)
+    start = end - timedelta(days=420)
+    collected: dict[str, list[dict[str, Any]]] = {symbol: [] for symbol in symbols}
+    page_token: str | None = None
 
+    while True:
+        params: dict[str, Any] = {
+            "symbols": ",".join(symbols),
+            "timeframe": "1Day",
+            "start": start.strftime("%Y-%m-%dT00:00:00Z"),
+            "end": end.strftime("%Y-%m-%dT23:59:59Z"),
+            "limit": 10000,
+            "adjustment": "split",
+            "feed": "sip",
+            "sort": "asc",
+        }
+        if page_token:
+            params["page_token"] = page_token
+        payload = alpaca_json(params, api_key, api_secret, requests_per_minute)
+        raw_bars = payload.get("bars") or {}
+        for symbol, rows in raw_bars.items():
+            if symbol not in collected or not isinstance(rows, list):
+                continue
+            for raw in rows:
+                close = to_number(raw.get("c"))
+                volume = to_number(raw.get("v"))
+                date = str(raw.get("t") or "")[:10]
+                if close is None or volume is None or not date:
+                    continue
+                collected[symbol].append({"date": date, "close": close, "volume": volume})
+        page_token = payload.get("next_page_token")
+        if not page_token:
+            break
 
-def payload_for_symbol(payload: dict[str, Any], symbol: str, batch_size: int) -> dict[str, Any]:
-    if batch_size == 1 and "values" in payload:
-        return payload
-    value = payload.get(symbol, {}) if isinstance(payload, dict) else {}
-    return value if isinstance(value, dict) else {}
+    for symbol in list(collected):
+        rows = collected[symbol]
+        rows.sort(key=lambda bar: bar["date"])
+        collected[symbol] = rows[-OUTPUTSIZE:]
+    return collected
 
 
 def empty_count(date: str) -> dict[str, Any]:
@@ -193,7 +200,6 @@ def empty_count(date: str) -> dict[str, Any]:
 def aggregate_symbol(bars: list[dict[str, Any]], counts: dict[str, dict[str, Any]]) -> bool:
     if len(bars) < 21:
         return False
-
     dates = [bar["date"] for bar in bars]
     closes = [bar["close"] for bar in bars]
     volumes = [bar["volume"] for bar in bars]
@@ -204,16 +210,13 @@ def aggregate_symbol(bars: list[dict[str, Any]], counts: dict[str, dict[str, Any
         index = date_to_index.get(date)
         if index is None:
             continue
-
         current["coverage"] += 1
         close = closes[index]
         if index < 19 or close < MIN_PRICE:
             continue
-
         dollar_volume = [closes[i] * volumes[i] for i in range(index - 19, index + 1)]
         if sum(dollar_volume) / len(dollar_volume) < MIN_AVG_DOLLAR_VOLUME:
             continue
-
         current["eligible"] += 1
         contributed = True
 
@@ -225,8 +228,7 @@ def aggregate_symbol(bars: list[dict[str, Any]], counts: dict[str, dict[str, Any
                 current["down_4"] += 1
 
         if index >= 10 and closes[index - 10] > 0:
-            ten_session_change = close / closes[index - 10] - 1
-            if ten_session_change > 0.45:
+            if close / closes[index - 10] - 1 > 0.45:
                 current["up_45_10"] += 1
 
         if index >= 64:
@@ -253,7 +255,6 @@ def aggregate_symbol(bars: list[dict[str, Any]], counts: dict[str, dict[str, Any
                 current["up_50_month"] += 1
             if month_change <= -0.50:
                 current["down_50_month"] += 1
-
     return contributed
 
 
@@ -265,13 +266,7 @@ def ratio_record(items: list[dict[str, Any]], index: int) -> dict[str, Any] | No
     down_total = sum(item["down_4"] for item in window)
     infinite = down_total == 0 and up_total > 0
     ratio = None if down_total == 0 else round(up_total / down_total, 3)
-    return {
-        "date": items[index]["date"],
-        "up_total": up_total,
-        "down_total": down_total,
-        "ratio": ratio,
-        "infinite": infinite,
-    }
+    return {"date": items[index]["date"], "up_total": up_total, "down_total": down_total, "ratio": ratio, "infinite": infinite}
 
 
 def moving_average(values: list[float], period: int) -> float | None:
@@ -291,44 +286,29 @@ def final_state(current: dict[str, Any], current_ratio: dict[str, Any], oneq: di
     }
     positives = sum(tests.values())
     score = positives * 25
-
     if positives >= 3:
-        label = "Favourable"
-        colour = "green"
+        label, colour = "Favourable", "green"
         action = "Normal long exposure is permitted, subject to setup quality and your usual risk limits."
     elif positives <= 1:
-        label = "Defensive"
-        colour = "red"
+        label, colour = "Defensive", "red"
         action = "Protect capital. Avoid marginal breakouts and keep new long exposure very small."
     else:
-        label = "Selective"
-        colour = "amber"
+        label, colour = "Selective", "amber"
         action = "Breadth is mixed. Take only the strongest setups and consider reduced total exposure."
-
-    return {
-        "label": label,
-        "colour": colour,
-        "score": score,
-        "positive_signals": positives,
-        "total_signals": 4,
-        "action": action,
-        "tests": tests,
-    }
+    return {"label": label, "colour": colour, "score": score, "positive_signals": positives, "total_signals": 4, "action": action, "tests": tests}
 
 
-def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: int = 0) -> dict[str, Any]:
-    limiter = CreditLimiter(credit_limit)
-
-    print("[oneq] retrieving index-proxy history", flush=True)
-    oneq_payload = fetch_series(api_key, ["ONEQ"], limiter)
-    oneq_bars = normalise_bars(payload_for_symbol(oneq_payload, "ONEQ", 1))
+def build_output(api_key: str, api_secret: str, batch_size: int, requests_per_minute: int, max_symbols: int = 0) -> dict[str, Any]:
+    print("[oneq] retrieving index-proxy history from Alpaca", flush=True)
+    oneq_map = fetch_series_batch(["ONEQ"], api_key, api_secret, requests_per_minute)
+    oneq_bars = oneq_map.get("ONEQ", [])
     if len(oneq_bars) < HISTORY_SESSIONS:
         raise RuntimeError("ONEQ did not return enough daily history")
 
     target_dates = [bar["date"] for bar in oneq_bars[-HISTORY_SESSIONS:]]
     counts = {date: empty_count(date) for date in target_dates}
 
-    universe = build_universe(api_key, limiter)
+    universe = build_universe()
     if max_symbols > 0:
         universe = universe[:max_symbols]
     print(f"[universe] {len(universe)} unique NASDAQ/NYSE securities selected", flush=True)
@@ -340,9 +320,9 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
 
     for batch_number, batch in enumerate(batches, start=1):
         try:
-            payload = fetch_series(api_key, batch, limiter)
+            series = fetch_series_batch(batch, api_key, api_secret, requests_per_minute)
             for symbol in batch:
-                bars = normalise_bars(payload_for_symbol(payload, symbol, len(batch)))
+                bars = series.get(symbol, [])
                 if not bars:
                     failed_symbols += 1
                     continue
@@ -351,20 +331,14 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
                     eligible_symbols.add(symbol)
         except Exception as exc:
             failed_symbols += len(batch)
-            print(f"[warning] batch {batch_number} failed: {type(exc).__name__}", flush=True)
+            print(f"[warning] batch {batch_number} failed: {type(exc).__name__}: {exc}", flush=True)
 
         if batch_number == 1 or batch_number % 10 == 0 or batch_number == len(batches):
-            print(
-                f"[progress] batch {batch_number}/{len(batches)} "
-                f"valid={valid_symbols} failed={failed_symbols}",
-                flush=True,
-            )
+            print(f"[progress] batch {batch_number}/{len(batches)} valid={valid_symbols} failed={failed_symbols}", flush=True)
 
     minimum_valid = max(500, math.ceil(len(universe) * 0.80))
     if valid_symbols < minimum_valid:
-        raise RuntimeError(
-            f"Coverage check failed: only {valid_symbols}/{len(universe)} symbols returned valid history"
-        )
+        raise RuntimeError(f"Coverage check failed: only {valid_symbols}/{len(universe)} symbols returned valid history")
 
     history = [counts[date] for date in target_dates]
     ratio_history = [record for index in range(len(history)) if (record := ratio_record(history, index))]
@@ -387,23 +361,20 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
         if index < 9:
             continue
         window = history[index - 9 : index + 1]
-        ma10 = sum(day["up_45_10"] for day in window) / 10
-        up45_ma_history.append({"date": item["date"], "count": item["up_45_10"], "ma10": round(ma10, 2)})
+        ma = sum(day["up_45_10"] for day in window) / 10
+        up45_ma_history.append({"date": item["date"], "count": item["up_45_10"], "ma10": round(ma, 2)})
 
     current["up_45_10_ma"] = up45_ma_history[-1]["ma10"] if up45_ma_history else None
-
     state = final_state(current, current_ratio, oneq)
-    buying_days = sum(1 for item in history[-10:] if item["up_4"] >= 300)
-    selling_days = sum(1 for item in history[-10:] if item["down_4"] >= 300)
-    current["strong_buying_days_10"] = buying_days
-    current["strong_selling_days_10"] = selling_days
+    current["strong_buying_days_10"] = sum(1 for item in history[-10:] if item["up_4"] >= 300)
+    current["strong_selling_days_10"] = sum(1 for item in history[-10:] if item["down_4"] >= 300)
 
     return {
         "schema_version": 1,
         "status": "ok",
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "as_of_market_date": current["date"],
-        "source": "Twelve Data",
+        "source": "Alpaca",
         "universe": {
             "exchanges": list(EXCHANGES),
             "catalogue_symbols": len(universe),
@@ -421,22 +392,8 @@ def build_output(api_key: str, credit_limit: int, batch_size: int, max_symbols: 
             "daily_breadth": history[-DISPLAY_SESSIONS:],
             "ten_day_ratio": ratio_history[-DISPLAY_SESSIONS:],
             "up_45_10_ma": up45_ma_history[-DISPLAY_SESSIONS:],
-            "primary_breadth": [
-                {
-                    "date": item["date"],
-                    "up": item["up_25_quarter"],
-                    "down": item["down_25_quarter"],
-                }
-                for item in history[-DISPLAY_SESSIONS:]
-            ],
-            "fast_breadth": [
-                {
-                    "date": item["date"],
-                    "bull": item["bull_34_13"],
-                    "bear": item["bear_34_13"],
-                }
-                for item in history[-DISPLAY_SESSIONS:]
-            ],
+            "primary_breadth": [{"date": item["date"], "up": item["up_25_quarter"], "down": item["down_25_quarter"]} for item in history[-DISPLAY_SESSIONS:]],
+            "fast_breadth": [{"date": item["date"], "bull": item["bull_34_13"], "bear": item["bear_34_13"]} for item in history[-DISPLAY_SESSIONS:]],
         },
         "methodology": {
             "daily": "Stocks moving at least 4% on the day, with at least 100,000 shares and volume above the prior session.",
@@ -466,23 +423,20 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    api_key = (os.getenv("TWELVEDATA_API_KEY") or os.getenv("TWELVE_DATA_API_KEY") or "").strip()
-    if not api_key:
-        print("Missing TWELVEDATA_API_KEY", file=sys.stderr)
+    api_key = (os.getenv("APCA_API_KEY_ID") or "").strip()
+    api_secret = (os.getenv("APCA_API_SECRET_KEY") or "").strip()
+    if not api_key or not api_secret:
+        print("Missing APCA_API_KEY_ID or APCA_API_SECRET_KEY", file=sys.stderr)
         return 2
 
-    credit_limit = int(os.getenv("TD_CREDITS_PER_MINUTE", "55"))
-    batch_size = min(int(os.getenv("TD_BATCH_SIZE", "50")), credit_limit)
-    if credit_limit < 1 or batch_size < 1:
-        raise ValueError("Credit limit and batch size must be positive")
+    batch_size = int(os.getenv("ALPACA_BATCH_SIZE", "50"))
+    requests_per_minute = int(os.getenv("ALPACA_REQUESTS_PER_MIN", "170"))
+    if batch_size < 1 or requests_per_minute < 1:
+        raise ValueError("Alpaca batch size and request rate must be positive")
 
-    result = build_output(api_key, credit_limit, batch_size, max_symbols=args.max_symbols)
+    result = build_output(api_key, api_secret, batch_size, requests_per_minute, max_symbols=args.max_symbols)
     write_json(args.output, result)
-    print(
-        f"[done] {result['condition']['label']} score={result['condition']['score']} "
-        f"as_of={result['as_of_market_date']} output={args.output}",
-        flush=True,
-    )
+    print(f"[done] {result['condition']['label']} score={result['condition']['score']} as_of={result['as_of_market_date']} source={result['source']} output={args.output}", flush=True)
     return 0
 
 
