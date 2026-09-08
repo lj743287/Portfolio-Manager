@@ -1,10 +1,10 @@
-name: Market Conditions (09:00 GMT)
+name: Market Conditions (23:00 UTC)
 
 on:
   workflow_dispatch:
   schedule:
-    # 09:00 UTC is 09:00 GMT throughout the year.
-    - cron: "0 9 * * *"
+    # Run after the US market close so the latest completed session is available.
+    - cron: "0 23 * * *"
   push:
     paths:
       - ".github/workflows/market_conditions.yml"
