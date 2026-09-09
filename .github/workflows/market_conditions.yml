@@ -9,7 +9,6 @@ on:
     paths:
       - ".github/workflows/market_conditions.yml"
       - "scripts/build_market_conditions.py"
-      - "scripts/add_high_momentum_indicator.py"
 
 permissions:
   contents: write
@@ -33,9 +32,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Apply dashboard indicator patch
-        run: python scripts/add_high_momentum_indicator.py
 
       - name: Calculate market conditions from Alpaca
         env:
