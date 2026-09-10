@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-09-09T07:11:13.068576+00:00",
-  "as_of_market_date": "2026-09-08",
+  "generated_at_utc": "2026-09-10T00:47:57.978845+00:00",
+  "as_of_market_date": "2026-09-09",
   "source": "Alpaca IEX",
   "universe": {
     "exchanges": [
       "NASDAQ",
       "NYSE"
     ],
-    "catalogue_symbols": 5507,
-    "valid_history_symbols": 5499,
-    "eligible_symbols": 3118,
-    "failed_symbols": 8,
+    "catalogue_symbols": 5508,
+    "valid_history_symbols": 5501,
+    "eligible_symbols": 3117,
+    "failed_symbols": 7,
     "filters": {
       "min_price": 3.0,
       "min_avg_dollar_volume_20d": 250000.0,
@@ -19,68 +19,51 @@
     }
   },
   "current": {
-    "date": "2026-09-08",
-    "coverage": 5473,
-    "eligible": 2797,
-    "up_4": 93,
-    "down_4": 100,
-    "up_45_10": 3,
-    "up_25_quarter": 812,
-    "down_25_quarter": 407,
-    "bull_34_13": 962,
-    "bear_34_13": 798,
-    "up_25_month": 66,
-    "down_25_month": 38,
-    "up_50_month": 11,
+    "date": "2026-09-09",
+    "coverage": 4700,
+    "eligible": 2786,
+    "up_4": 28,
+    "down_4": 94,
+    "up_45_10": 2,
+    "up_25_quarter": 743,
+    "down_25_quarter": 444,
+    "bull_34_13": 851,
+    "bear_34_13": 942,
+    "up_25_month": 50,
+    "down_25_month": 44,
+    "up_50_month": 9,
     "down_50_month": 2,
-    "up_45_10_ma": 8.1
+    "up_45_10_ma": 6.7
   },
   "ten_day_ratio": {
-    "date": "2026-09-08",
-    "up_total": 569,
-    "down_total": 476,
-    "ratio": 1.195,
+    "date": "2026-09-09",
+    "up_total": 520,
+    "down_total": 557,
+    "ratio": 0.934,
     "infinite": false
   },
   "oneq": {
     "symbol": "ONEQ",
-    "close": 104.11,
-    "ma10": 103.776,
-    "ma20": 103.9022,
+    "close": 103.54,
+    "ma10": 103.824,
+    "ma20": 103.877,
     "above": false
   },
   "condition": {
-    "label": "Favourable",
-    "colour": "green",
-    "score": 75,
-    "positive_signals": 3,
+    "label": "Defensive",
+    "colour": "red",
+    "score": 25,
+    "positive_signals": 1,
     "total_signals": 4,
-    "action": "Normal long exposure is permitted, subject to setup quality and your usual risk limits.",
+    "action": "Protect capital. Avoid marginal breakouts and keep new long exposure very small.",
     "tests": {
       "primary_breadth": true,
-      "fast_breadth": true,
-      "ten_day_breadth": true,
+      "fast_breadth": false,
+      "ten_day_breadth": false,
       "oneq_trend": false
     }
   },
   "history": [
-    {
-      "date": "2026-04-30",
-      "coverage": 5325,
-      "eligible": 2640,
-      "up_4": 156,
-      "down_4": 35,
-      "up_45_10": 15,
-      "up_25_quarter": 813,
-      "down_25_quarter": 408,
-      "bull_34_13": 1328,
-      "bear_34_13": 394,
-      "up_25_month": 249,
-      "down_25_month": 7,
-      "up_50_month": 69,
-      "down_50_month": 1,
-      "up_45_10_ma": 31.4
-    },
     {
       "date": "2026-05-01",
       "coverage": 5328,
@@ -1593,16 +1576,26 @@
       "up_50_month": 11,
       "down_50_month": 2,
       "up_45_10_ma": 8.1
+    },
+    {
+      "date": "2026-09-09",
+      "coverage": 4700,
+      "eligible": 2786,
+      "up_4": 28,
+      "down_4": 94,
+      "up_45_10": 2,
+      "up_25_quarter": 743,
+      "down_25_quarter": 444,
+      "bull_34_13": 851,
+      "bear_34_13": 942,
+      "up_25_month": 50,
+      "down_25_month": 44,
+      "up_50_month": 9,
+      "down_50_month": 2,
+      "up_45_10_ma": 6.7
     }
   ],
   "ten_day_ratio_history": [
-    {
-      "date": "2026-04-30",
-      "up_total": 773,
-      "down_total": 674,
-      "ratio": 1.147,
-      "infinite": false
-    },
     {
       "date": "2026-05-01",
       "up_total": 726,
@@ -2224,6 +2217,13 @@
       "up_total": 569,
       "down_total": 476,
       "ratio": 1.195,
+      "infinite": false
+    },
+    {
+      "date": "2026-09-09",
+      "up_total": 520,
+      "down_total": 557,
+      "ratio": 0.934,
       "infinite": false
     }
   ],
