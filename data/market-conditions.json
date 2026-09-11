@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-09-10T00:47:57.978845+00:00",
-  "as_of_market_date": "2026-09-09",
+  "generated_at_utc": "2026-09-11T00:46:06.304306+00:00",
+  "as_of_market_date": "2026-09-10",
   "source": "Alpaca IEX",
   "universe": {
     "exchanges": [
       "NASDAQ",
       "NYSE"
     ],
-    "catalogue_symbols": 5508,
-    "valid_history_symbols": 5501,
-    "eligible_symbols": 3117,
+    "catalogue_symbols": 5510,
+    "valid_history_symbols": 5503,
+    "eligible_symbols": 3118,
     "failed_symbols": 7,
     "filters": {
       "min_price": 3.0,
@@ -19,68 +19,51 @@
     }
   },
   "current": {
-    "date": "2026-09-09",
-    "coverage": 4700,
-    "eligible": 2786,
-    "up_4": 28,
-    "down_4": 94,
-    "up_45_10": 2,
-    "up_25_quarter": 743,
-    "down_25_quarter": 444,
-    "bull_34_13": 851,
-    "bear_34_13": 942,
-    "up_25_month": 50,
-    "down_25_month": 44,
-    "up_50_month": 9,
+    "date": "2026-09-10",
+    "coverage": 4740,
+    "eligible": 2783,
+    "up_4": 21,
+    "down_4": 86,
+    "up_45_10": 3,
+    "up_25_quarter": 687,
+    "down_25_quarter": 500,
+    "bull_34_13": 722,
+    "bear_34_13": 1084,
+    "up_25_month": 39,
+    "down_25_month": 69,
+    "up_50_month": 8,
     "down_50_month": 2,
-    "up_45_10_ma": 6.7
+    "up_45_10_ma": 5.6
   },
   "ten_day_ratio": {
-    "date": "2026-09-09",
-    "up_total": 520,
-    "down_total": 557,
-    "ratio": 0.934,
+    "date": "2026-09-10",
+    "up_total": 514,
+    "down_total": 611,
+    "ratio": 0.841,
     "infinite": false
   },
   "oneq": {
     "symbol": "ONEQ",
-    "close": 103.54,
-    "ma10": 103.824,
-    "ma20": 103.877,
-    "above": false
+    "close": 102.87,
+    "ma10": 103.851,
+    "ma20": 103.7865,
+    "above": true
   },
   "condition": {
-    "label": "Defensive",
-    "colour": "red",
-    "score": 25,
-    "positive_signals": 1,
+    "label": "Selective",
+    "colour": "amber",
+    "score": 50,
+    "positive_signals": 2,
     "total_signals": 4,
-    "action": "Protect capital. Avoid marginal breakouts and keep new long exposure very small.",
+    "action": "Breadth is mixed. Take only the strongest setups and consider reduced total exposure.",
     "tests": {
       "primary_breadth": true,
       "fast_breadth": false,
       "ten_day_breadth": false,
-      "oneq_trend": false
+      "oneq_trend": true
     }
   },
   "history": [
-    {
-      "date": "2026-05-01",
-      "coverage": 5328,
-      "eligible": 2643,
-      "up_4": 92,
-      "down_4": 35,
-      "up_45_10": 12,
-      "up_25_quarter": 834,
-      "down_25_quarter": 376,
-      "bull_34_13": 1352,
-      "bear_34_13": 385,
-      "up_25_month": 248,
-      "down_25_month": 8,
-      "up_50_month": 70,
-      "down_50_month": 0,
-      "up_45_10_ma": 28.5
-    },
     {
       "date": "2026-05-04",
       "coverage": 5329,
@@ -1256,7 +1239,7 @@
     },
     {
       "date": "2026-08-12",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2804,
       "up_4": 89,
       "down_4": 30,
@@ -1273,7 +1256,7 @@
     },
     {
       "date": "2026-08-13",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2805,
       "up_4": 120,
       "down_4": 43,
@@ -1290,7 +1273,7 @@
     },
     {
       "date": "2026-08-14",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2806,
       "up_4": 60,
       "down_4": 25,
@@ -1307,7 +1290,7 @@
     },
     {
       "date": "2026-08-17",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2810,
       "up_4": 41,
       "down_4": 59,
@@ -1324,7 +1307,7 @@
     },
     {
       "date": "2026-08-18",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2802,
       "up_4": 26,
       "down_4": 124,
@@ -1341,7 +1324,7 @@
     },
     {
       "date": "2026-08-19",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2814,
       "up_4": 177,
       "down_4": 56,
@@ -1358,7 +1341,7 @@
     },
     {
       "date": "2026-08-20",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2809,
       "up_4": 37,
       "down_4": 76,
@@ -1375,7 +1358,7 @@
     },
     {
       "date": "2026-08-21",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2816,
       "up_4": 86,
       "down_4": 15,
@@ -1392,7 +1375,7 @@
     },
     {
       "date": "2026-08-24",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2815,
       "up_4": 25,
       "down_4": 57,
@@ -1409,7 +1392,7 @@
     },
     {
       "date": "2026-08-25",
-      "coverage": 5474,
+      "coverage": 5477,
       "eligible": 2812,
       "up_4": 77,
       "down_4": 13,
@@ -1426,7 +1409,7 @@
     },
     {
       "date": "2026-08-26",
-      "coverage": 5473,
+      "coverage": 5476,
       "eligible": 2813,
       "up_4": 27,
       "down_4": 32,
@@ -1443,7 +1426,7 @@
     },
     {
       "date": "2026-08-27",
-      "coverage": 5473,
+      "coverage": 5476,
       "eligible": 2817,
       "up_4": 102,
       "down_4": 25,
@@ -1460,7 +1443,7 @@
     },
     {
       "date": "2026-08-28",
-      "coverage": 5473,
+      "coverage": 5476,
       "eligible": 2817,
       "up_4": 20,
       "down_4": 108,
@@ -1477,7 +1460,7 @@
     },
     {
       "date": "2026-08-31",
-      "coverage": 5473,
+      "coverage": 5476,
       "eligible": 2814,
       "up_4": 26,
       "down_4": 32,
@@ -1494,7 +1477,7 @@
     },
     {
       "date": "2026-09-01",
-      "coverage": 5473,
+      "coverage": 5476,
       "eligible": 2808,
       "up_4": 23,
       "down_4": 96,
@@ -1511,7 +1494,7 @@
     },
     {
       "date": "2026-09-02",
-      "coverage": 5473,
+      "coverage": 5476,
       "eligible": 2809,
       "up_4": 75,
       "down_4": 20,
@@ -1528,7 +1511,7 @@
     },
     {
       "date": "2026-09-03",
-      "coverage": 5473,
+      "coverage": 5476,
       "eligible": 2807,
       "up_4": 80,
       "down_4": 20,
@@ -1545,7 +1528,7 @@
     },
     {
       "date": "2026-09-04",
-      "coverage": 5473,
+      "coverage": 5476,
       "eligible": 2801,
       "up_4": 46,
       "down_4": 30,
@@ -1562,7 +1545,7 @@
     },
     {
       "date": "2026-09-08",
-      "coverage": 5473,
+      "coverage": 5476,
       "eligible": 2797,
       "up_4": 93,
       "down_4": 100,
@@ -1579,30 +1562,40 @@
     },
     {
       "date": "2026-09-09",
-      "coverage": 4700,
-      "eligible": 2786,
+      "coverage": 5477,
+      "eligible": 2787,
       "up_4": 28,
       "down_4": 94,
       "up_45_10": 2,
-      "up_25_quarter": 743,
-      "down_25_quarter": 444,
-      "bull_34_13": 851,
-      "bear_34_13": 942,
+      "up_25_quarter": 744,
+      "down_25_quarter": 445,
+      "bull_34_13": 852,
+      "bear_34_13": 943,
       "up_25_month": 50,
       "down_25_month": 44,
       "up_50_month": 9,
       "down_50_month": 2,
       "up_45_10_ma": 6.7
+    },
+    {
+      "date": "2026-09-10",
+      "coverage": 4740,
+      "eligible": 2783,
+      "up_4": 21,
+      "down_4": 86,
+      "up_45_10": 3,
+      "up_25_quarter": 687,
+      "down_25_quarter": 500,
+      "bull_34_13": 722,
+      "bear_34_13": 1084,
+      "up_25_month": 39,
+      "down_25_month": 69,
+      "up_50_month": 8,
+      "down_50_month": 2,
+      "up_45_10_ma": 5.6
     }
   ],
   "ten_day_ratio_history": [
-    {
-      "date": "2026-05-01",
-      "up_total": 726,
-      "down_total": 644,
-      "ratio": 1.127,
-      "infinite": false
-    },
     {
       "date": "2026-05-04",
       "up_total": 733,
@@ -2224,6 +2217,13 @@
       "up_total": 520,
       "down_total": 557,
       "ratio": 0.934,
+      "infinite": false
+    },
+    {
+      "date": "2026-09-10",
+      "up_total": 514,
+      "down_total": 611,
+      "ratio": 0.841,
       "infinite": false
     }
   ],
