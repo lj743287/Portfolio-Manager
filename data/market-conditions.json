@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-09-11T00:46:06.304306+00:00",
+  "generated_at_utc": "2026-09-11T08:57:59.822053+00:00",
   "as_of_market_date": "2026-09-10",
   "source": "Alpaca IEX",
   "universe": {
@@ -9,9 +9,9 @@
       "NYSE"
     ],
     "catalogue_symbols": 5510,
-    "valid_history_symbols": 5503,
+    "valid_history_symbols": 5504,
     "eligible_symbols": 3118,
-    "failed_symbols": 7,
+    "failed_symbols": 6,
     "filters": {
       "min_price": 3.0,
       "min_avg_dollar_volume_20d": 250000.0,
@@ -20,12 +20,12 @@
   },
   "current": {
     "date": "2026-09-10",
-    "coverage": 4740,
-    "eligible": 2783,
+    "coverage": 5478,
+    "eligible": 2784,
     "up_4": 21,
     "down_4": 86,
     "up_45_10": 3,
-    "up_25_quarter": 687,
+    "up_25_quarter": 688,
     "down_25_quarter": 500,
     "bull_34_13": 722,
     "bear_34_13": 1084,
@@ -66,7 +66,7 @@
   "history": [
     {
       "date": "2026-05-04",
-      "coverage": 5329,
+      "coverage": 5331,
       "eligible": 2654,
       "up_4": 68,
       "down_4": 64,
@@ -83,7 +83,7 @@
     },
     {
       "date": "2026-05-05",
-      "coverage": 5329,
+      "coverage": 5331,
       "eligible": 2658,
       "up_4": 111,
       "down_4": 53,
@@ -100,7 +100,7 @@
     },
     {
       "date": "2026-05-06",
-      "coverage": 5330,
+      "coverage": 5332,
       "eligible": 2671,
       "up_4": 243,
       "down_4": 106,
@@ -117,7 +117,7 @@
     },
     {
       "date": "2026-05-07",
-      "coverage": 5332,
+      "coverage": 5334,
       "eligible": 2678,
       "up_4": 103,
       "down_4": 135,
@@ -134,7 +134,7 @@
     },
     {
       "date": "2026-05-08",
-      "coverage": 5334,
+      "coverage": 5336,
       "eligible": 2690,
       "up_4": 105,
       "down_4": 58,
@@ -151,7 +151,7 @@
     },
     {
       "date": "2026-05-11",
-      "coverage": 5337,
+      "coverage": 5339,
       "eligible": 2698,
       "up_4": 102,
       "down_4": 88,
@@ -168,7 +168,7 @@
     },
     {
       "date": "2026-05-12",
-      "coverage": 5336,
+      "coverage": 5338,
       "eligible": 2709,
       "up_4": 50,
       "down_4": 67,
@@ -185,7 +185,7 @@
     },
     {
       "date": "2026-05-13",
-      "coverage": 5339,
+      "coverage": 5341,
       "eligible": 2715,
       "up_4": 98,
       "down_4": 103,
@@ -202,7 +202,7 @@
     },
     {
       "date": "2026-05-14",
-      "coverage": 5345,
+      "coverage": 5347,
       "eligible": 2720,
       "up_4": 84,
       "down_4": 44,
@@ -219,7 +219,7 @@
     },
     {
       "date": "2026-05-15",
-      "coverage": 5348,
+      "coverage": 5350,
       "eligible": 2726,
       "up_4": 36,
       "down_4": 143,
@@ -236,7 +236,7 @@
     },
     {
       "date": "2026-05-18",
-      "coverage": 5348,
+      "coverage": 5350,
       "eligible": 2726,
       "up_4": 73,
       "down_4": 97,
@@ -253,7 +253,7 @@
     },
     {
       "date": "2026-05-19",
-      "coverage": 5349,
+      "coverage": 5351,
       "eligible": 2721,
       "up_4": 28,
       "down_4": 73,
@@ -270,7 +270,7 @@
     },
     {
       "date": "2026-05-20",
-      "coverage": 5356,
+      "coverage": 5358,
       "eligible": 2734,
       "up_4": 178,
       "down_4": 16,
@@ -287,7 +287,7 @@
     },
     {
       "date": "2026-05-21",
-      "coverage": 5358,
+      "coverage": 5360,
       "eligible": 2746,
       "up_4": 106,
       "down_4": 31,
@@ -304,7 +304,7 @@
     },
     {
       "date": "2026-05-22",
-      "coverage": 5360,
+      "coverage": 5362,
       "eligible": 2751,
       "up_4": 90,
       "down_4": 25,
@@ -321,7 +321,7 @@
     },
     {
       "date": "2026-05-26",
-      "coverage": 5360,
+      "coverage": 5362,
       "eligible": 2750,
       "up_4": 152,
       "down_4": 37,
@@ -338,7 +338,7 @@
     },
     {
       "date": "2026-05-27",
-      "coverage": 5361,
+      "coverage": 5363,
       "eligible": 2760,
       "up_4": 95,
       "down_4": 51,
@@ -355,7 +355,7 @@
     },
     {
       "date": "2026-05-28",
-      "coverage": 5365,
+      "coverage": 5367,
       "eligible": 2760,
       "up_4": 147,
       "down_4": 31,
@@ -372,7 +372,7 @@
     },
     {
       "date": "2026-05-29",
-      "coverage": 5366,
+      "coverage": 5368,
       "eligible": 2763,
       "up_4": 115,
       "down_4": 41,
@@ -389,7 +389,7 @@
     },
     {
       "date": "2026-06-01",
-      "coverage": 5368,
+      "coverage": 5370,
       "eligible": 2764,
       "up_4": 189,
       "down_4": 63,
@@ -406,7 +406,7 @@
     },
     {
       "date": "2026-06-02",
-      "coverage": 5369,
+      "coverage": 5371,
       "eligible": 2763,
       "up_4": 96,
       "down_4": 74,
@@ -423,7 +423,7 @@
     },
     {
       "date": "2026-06-03",
-      "coverage": 5371,
+      "coverage": 5373,
       "eligible": 2769,
       "up_4": 44,
       "down_4": 134,
@@ -440,7 +440,7 @@
     },
     {
       "date": "2026-06-04",
-      "coverage": 5376,
+      "coverage": 5378,
       "eligible": 2775,
       "up_4": 116,
       "down_4": 33,
@@ -457,7 +457,7 @@
     },
     {
       "date": "2026-06-05",
-      "coverage": 5377,
+      "coverage": 5379,
       "eligible": 2763,
       "up_4": 11,
       "down_4": 271,
@@ -474,7 +474,7 @@
     },
     {
       "date": "2026-06-08",
-      "coverage": 5378,
+      "coverage": 5380,
       "eligible": 2765,
       "up_4": 59,
       "down_4": 25,
@@ -491,7 +491,7 @@
     },
     {
       "date": "2026-06-09",
-      "coverage": 5382,
+      "coverage": 5384,
       "eligible": 2758,
       "up_4": 107,
       "down_4": 114,
@@ -508,7 +508,7 @@
     },
     {
       "date": "2026-06-10",
-      "coverage": 5385,
+      "coverage": 5387,
       "eligible": 2751,
       "up_4": 40,
       "down_4": 96,
@@ -525,7 +525,7 @@
     },
     {
       "date": "2026-06-11",
-      "coverage": 5387,
+      "coverage": 5389,
       "eligible": 2758,
       "up_4": 226,
       "down_4": 21,
@@ -542,7 +542,7 @@
     },
     {
       "date": "2026-06-12",
-      "coverage": 5388,
+      "coverage": 5390,
       "eligible": 2756,
       "up_4": 56,
       "down_4": 31,
@@ -559,7 +559,7 @@
     },
     {
       "date": "2026-06-15",
-      "coverage": 5389,
+      "coverage": 5391,
       "eligible": 2759,
       "up_4": 132,
       "down_4": 45,
@@ -576,7 +576,7 @@
     },
     {
       "date": "2026-06-16",
-      "coverage": 5389,
+      "coverage": 5391,
       "eligible": 2759,
       "up_4": 37,
       "down_4": 68,
@@ -593,7 +593,7 @@
     },
     {
       "date": "2026-06-17",
-      "coverage": 5391,
+      "coverage": 5393,
       "eligible": 2770,
       "up_4": 64,
       "down_4": 113,
@@ -610,7 +610,7 @@
     },
     {
       "date": "2026-06-18",
-      "coverage": 5394,
+      "coverage": 5396,
       "eligible": 2778,
       "up_4": 130,
       "down_4": 45,
@@ -627,7 +627,7 @@
     },
     {
       "date": "2026-06-22",
-      "coverage": 5394,
+      "coverage": 5396,
       "eligible": 2785,
       "up_4": 87,
       "down_4": 84,
@@ -644,7 +644,7 @@
     },
     {
       "date": "2026-06-23",
-      "coverage": 5396,
+      "coverage": 5398,
       "eligible": 2789,
       "up_4": 50,
       "down_4": 82,
@@ -661,7 +661,7 @@
     },
     {
       "date": "2026-06-24",
-      "coverage": 5398,
+      "coverage": 5400,
       "eligible": 2791,
       "up_4": 139,
       "down_4": 109,
@@ -678,7 +678,7 @@
     },
     {
       "date": "2026-06-25",
-      "coverage": 5401,
+      "coverage": 5403,
       "eligible": 2791,
       "up_4": 76,
       "down_4": 80,
@@ -695,7 +695,7 @@
     },
     {
       "date": "2026-06-26",
-      "coverage": 5404,
+      "coverage": 5406,
       "eligible": 2799,
       "up_4": 195,
       "down_4": 66,
@@ -712,7 +712,7 @@
     },
     {
       "date": "2026-06-29",
-      "coverage": 5405,
+      "coverage": 5407,
       "eligible": 2808,
       "up_4": 89,
       "down_4": 40,
@@ -729,7 +729,7 @@
     },
     {
       "date": "2026-06-30",
-      "coverage": 5410,
+      "coverage": 5412,
       "eligible": 2820,
       "up_4": 84,
       "down_4": 38,
@@ -746,7 +746,7 @@
     },
     {
       "date": "2026-07-01",
-      "coverage": 5414,
+      "coverage": 5416,
       "eligible": 2821,
       "up_4": 133,
       "down_4": 98,
@@ -763,7 +763,7 @@
     },
     {
       "date": "2026-07-02",
-      "coverage": 5418,
+      "coverage": 5420,
       "eligible": 2819,
       "up_4": 97,
       "down_4": 111,
@@ -780,7 +780,7 @@
     },
     {
       "date": "2026-07-06",
-      "coverage": 5419,
+      "coverage": 5421,
       "eligible": 2823,
       "up_4": 53,
       "down_4": 27,
@@ -797,7 +797,7 @@
     },
     {
       "date": "2026-07-07",
-      "coverage": 5423,
+      "coverage": 5425,
       "eligible": 2827,
       "up_4": 55,
       "down_4": 144,
@@ -814,7 +814,7 @@
     },
     {
       "date": "2026-07-08",
-      "coverage": 5426,
+      "coverage": 5428,
       "eligible": 2829,
       "up_4": 47,
       "down_4": 67,
@@ -831,7 +831,7 @@
     },
     {
       "date": "2026-07-09",
-      "coverage": 5429,
+      "coverage": 5431,
       "eligible": 2835,
       "up_4": 72,
       "down_4": 17,
@@ -848,7 +848,7 @@
     },
     {
       "date": "2026-07-10",
-      "coverage": 5430,
+      "coverage": 5432,
       "eligible": 2831,
       "up_4": 24,
       "down_4": 45,
@@ -865,7 +865,7 @@
     },
     {
       "date": "2026-07-13",
-      "coverage": 5431,
+      "coverage": 5433,
       "eligible": 2833,
       "up_4": 58,
       "down_4": 121,
@@ -882,7 +882,7 @@
     },
     {
       "date": "2026-07-14",
-      "coverage": 5432,
+      "coverage": 5434,
       "eligible": 2830,
       "up_4": 62,
       "down_4": 48,
@@ -899,7 +899,7 @@
     },
     {
       "date": "2026-07-15",
-      "coverage": 5432,
+      "coverage": 5434,
       "eligible": 2828,
       "up_4": 67,
       "down_4": 63,
@@ -916,7 +916,7 @@
     },
     {
       "date": "2026-07-16",
-      "coverage": 5436,
+      "coverage": 5438,
       "eligible": 2824,
       "up_4": 72,
       "down_4": 149,
@@ -933,7 +933,7 @@
     },
     {
       "date": "2026-07-17",
-      "coverage": 5437,
+      "coverage": 5439,
       "eligible": 2822,
       "up_4": 33,
       "down_4": 48,
@@ -950,7 +950,7 @@
     },
     {
       "date": "2026-07-20",
-      "coverage": 5440,
+      "coverage": 5442,
       "eligible": 2819,
       "up_4": 44,
       "down_4": 40,
@@ -967,7 +967,7 @@
     },
     {
       "date": "2026-07-21",
-      "coverage": 5442,
+      "coverage": 5444,
       "eligible": 2811,
       "up_4": 129,
       "down_4": 30,
@@ -984,7 +984,7 @@
     },
     {
       "date": "2026-07-22",
-      "coverage": 5441,
+      "coverage": 5443,
       "eligible": 2810,
       "up_4": 38,
       "down_4": 68,
@@ -1001,7 +1001,7 @@
     },
     {
       "date": "2026-07-23",
-      "coverage": 5441,
+      "coverage": 5443,
       "eligible": 2808,
       "up_4": 45,
       "down_4": 100,
@@ -1018,7 +1018,7 @@
     },
     {
       "date": "2026-07-24",
-      "coverage": 5443,
+      "coverage": 5445,
       "eligible": 2808,
       "up_4": 56,
       "down_4": 103,
@@ -1035,7 +1035,7 @@
     },
     {
       "date": "2026-07-27",
-      "coverage": 5444,
+      "coverage": 5446,
       "eligible": 2798,
       "up_4": 132,
       "down_4": 57,
@@ -1052,7 +1052,7 @@
     },
     {
       "date": "2026-07-28",
-      "coverage": 5446,
+      "coverage": 5448,
       "eligible": 2794,
       "up_4": 126,
       "down_4": 130,
@@ -1069,7 +1069,7 @@
     },
     {
       "date": "2026-07-29",
-      "coverage": 5449,
+      "coverage": 5451,
       "eligible": 2789,
       "up_4": 71,
       "down_4": 187,
@@ -1086,7 +1086,7 @@
     },
     {
       "date": "2026-07-30",
-      "coverage": 5454,
+      "coverage": 5456,
       "eligible": 2782,
       "up_4": 153,
       "down_4": 74,
@@ -1103,7 +1103,7 @@
     },
     {
       "date": "2026-07-31",
-      "coverage": 5457,
+      "coverage": 5459,
       "eligible": 2773,
       "up_4": 46,
       "down_4": 59,
@@ -1120,7 +1120,7 @@
     },
     {
       "date": "2026-08-03",
-      "coverage": 5459,
+      "coverage": 5461,
       "eligible": 2776,
       "up_4": 162,
       "down_4": 14,
@@ -1137,7 +1137,7 @@
     },
     {
       "date": "2026-08-04",
-      "coverage": 5462,
+      "coverage": 5464,
       "eligible": 2780,
       "up_4": 227,
       "down_4": 31,
@@ -1154,7 +1154,7 @@
     },
     {
       "date": "2026-08-05",
-      "coverage": 5466,
+      "coverage": 5468,
       "eligible": 2780,
       "up_4": 78,
       "down_4": 91,
@@ -1171,7 +1171,7 @@
     },
     {
       "date": "2026-08-06",
-      "coverage": 5469,
+      "coverage": 5471,
       "eligible": 2783,
       "up_4": 96,
       "down_4": 108,
@@ -1188,7 +1188,7 @@
     },
     {
       "date": "2026-08-07",
-      "coverage": 5472,
+      "coverage": 5474,
       "eligible": 2792,
       "up_4": 178,
       "down_4": 47,
@@ -1205,7 +1205,7 @@
     },
     {
       "date": "2026-08-10",
-      "coverage": 5474,
+      "coverage": 5476,
       "eligible": 2795,
       "up_4": 78,
       "down_4": 68,
@@ -1222,7 +1222,7 @@
     },
     {
       "date": "2026-08-11",
-      "coverage": 5474,
+      "coverage": 5476,
       "eligible": 2794,
       "up_4": 53,
       "down_4": 51,
@@ -1239,7 +1239,7 @@
     },
     {
       "date": "2026-08-12",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2804,
       "up_4": 89,
       "down_4": 30,
@@ -1256,7 +1256,7 @@
     },
     {
       "date": "2026-08-13",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2805,
       "up_4": 120,
       "down_4": 43,
@@ -1273,7 +1273,7 @@
     },
     {
       "date": "2026-08-14",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2806,
       "up_4": 60,
       "down_4": 25,
@@ -1290,7 +1290,7 @@
     },
     {
       "date": "2026-08-17",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2810,
       "up_4": 41,
       "down_4": 59,
@@ -1307,7 +1307,7 @@
     },
     {
       "date": "2026-08-18",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2802,
       "up_4": 26,
       "down_4": 124,
@@ -1324,7 +1324,7 @@
     },
     {
       "date": "2026-08-19",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2814,
       "up_4": 177,
       "down_4": 56,
@@ -1341,7 +1341,7 @@
     },
     {
       "date": "2026-08-20",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2809,
       "up_4": 37,
       "down_4": 76,
@@ -1358,7 +1358,7 @@
     },
     {
       "date": "2026-08-21",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2816,
       "up_4": 86,
       "down_4": 15,
@@ -1375,7 +1375,7 @@
     },
     {
       "date": "2026-08-24",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2815,
       "up_4": 25,
       "down_4": 57,
@@ -1392,7 +1392,7 @@
     },
     {
       "date": "2026-08-25",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2812,
       "up_4": 77,
       "down_4": 13,
@@ -1409,7 +1409,7 @@
     },
     {
       "date": "2026-08-26",
-      "coverage": 5476,
+      "coverage": 5478,
       "eligible": 2813,
       "up_4": 27,
       "down_4": 32,
@@ -1426,7 +1426,7 @@
     },
     {
       "date": "2026-08-27",
-      "coverage": 5476,
+      "coverage": 5478,
       "eligible": 2817,
       "up_4": 102,
       "down_4": 25,
@@ -1443,7 +1443,7 @@
     },
     {
       "date": "2026-08-28",
-      "coverage": 5476,
+      "coverage": 5478,
       "eligible": 2817,
       "up_4": 20,
       "down_4": 108,
@@ -1460,7 +1460,7 @@
     },
     {
       "date": "2026-08-31",
-      "coverage": 5476,
+      "coverage": 5478,
       "eligible": 2814,
       "up_4": 26,
       "down_4": 32,
@@ -1477,7 +1477,7 @@
     },
     {
       "date": "2026-09-01",
-      "coverage": 5476,
+      "coverage": 5478,
       "eligible": 2808,
       "up_4": 23,
       "down_4": 96,
@@ -1494,7 +1494,7 @@
     },
     {
       "date": "2026-09-02",
-      "coverage": 5476,
+      "coverage": 5478,
       "eligible": 2809,
       "up_4": 75,
       "down_4": 20,
@@ -1511,7 +1511,7 @@
     },
     {
       "date": "2026-09-03",
-      "coverage": 5476,
+      "coverage": 5478,
       "eligible": 2807,
       "up_4": 80,
       "down_4": 20,
@@ -1528,7 +1528,7 @@
     },
     {
       "date": "2026-09-04",
-      "coverage": 5476,
+      "coverage": 5478,
       "eligible": 2801,
       "up_4": 46,
       "down_4": 30,
@@ -1545,7 +1545,7 @@
     },
     {
       "date": "2026-09-08",
-      "coverage": 5476,
+      "coverage": 5478,
       "eligible": 2797,
       "up_4": 93,
       "down_4": 100,
@@ -1562,7 +1562,7 @@
     },
     {
       "date": "2026-09-09",
-      "coverage": 5477,
+      "coverage": 5479,
       "eligible": 2787,
       "up_4": 28,
       "down_4": 94,
@@ -1579,12 +1579,12 @@
     },
     {
       "date": "2026-09-10",
-      "coverage": 4740,
-      "eligible": 2783,
+      "coverage": 5478,
+      "eligible": 2784,
       "up_4": 21,
       "down_4": 86,
       "up_45_10": 3,
-      "up_25_quarter": 687,
+      "up_25_quarter": 688,
       "down_25_quarter": 500,
       "bull_34_13": 722,
       "bear_34_13": 1084,
@@ -2232,5 +2232,6 @@
     "feed": "IEX",
     "high_momentum": "Close more than 45% above its close 10 sessions earlier.",
     "note": "IEX is a single-exchange feed and may materially undercount volume-based breadth versus consolidated SIP data."
-  }
+  },
+  "status": "ok"
 }
