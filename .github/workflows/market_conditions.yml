@@ -41,6 +41,18 @@ jobs:
           ALPACA_REQUESTS_PER_MIN: "170"
         run: python scripts/build_market_conditions.py
 
+      - name: Mark market conditions data ready for dashboard
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/market-conditions.json")
+          data = json.loads(path.read_text())
+          data["status"] = "ok"
+          path.write_text(json.dumps(data, indent=2) + "\n")
+          PY
+
       - name: Publish the latest aggregate data
         run: |
           set -e
