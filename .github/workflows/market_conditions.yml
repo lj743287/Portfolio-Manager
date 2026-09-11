@@ -41,7 +41,7 @@ jobs:
           ALPACA_REQUESTS_PER_MIN: "170"
         run: python scripts/build_market_conditions.py
 
-      - name: Mark market conditions data ready for dashboard
+      - name: Adapt Alpaca output for dashboard
         run: |
           python - <<'PY'
           import json
@@ -49,6 +49,59 @@ jobs:
 
           path = Path("data/market-conditions.json")
           data = json.loads(path.read_text())
+          flat = data.get("history", [])
+
+          # The Alpaca builder stores one flat row per market day. The existing
+          # dashboard expects separate chart series, so expose both formats.
+          if isinstance(flat, list):
+              ratio_history = []
+              for i, row in enumerate(flat):
+                  window = flat[max(0, i - 9):i + 1]
+                  up_total = sum(int(x.get("up_4", 0) or 0) for x in window)
+                  down_total = sum(int(x.get("down_4", 0) or 0) for x in window)
+                  ratio_history.append({
+                      "date": row.get("date"),
+                      "up_total": up_total,
+                      "down_total": down_total,
+                      "ratio": None if down_total == 0 else round(up_total / down_total, 3),
+                      "infinite": down_total == 0 and up_total > 0,
+                  })
+
+              data["history"] = {
+                  "daily_breadth": [
+                      {"date": r.get("date"), "up_4": r.get("up_4", 0), "down_4": r.get("down_4", 0)}
+                      for r in flat
+                  ],
+                  "ten_day_ratio": ratio_history,
+                  "up_45_10_ma": [
+                      {"date": r.get("date"), "count": r.get("up_45_10", 0), "ma10": r.get("up_45_10_ma", 0)}
+                      for r in flat
+                  ],
+                  "primary_breadth": [
+                      {"date": r.get("date"), "up": r.get("up_25_quarter", 0), "down": r.get("down_25_quarter", 0)}
+                      for r in flat
+                  ],
+                  "fast_breadth": [
+                      {"date": r.get("date"), "bull": r.get("bull_34_13", 0), "bear": r.get("bear_34_13", 0)}
+                      for r in flat
+                  ],
+              }
+
+              last10 = flat[-10:]
+              current = data.setdefault("current", {})
+              current["strong_buying_days_10"] = sum(
+                  1 for r in last10 if (r.get("up_4", 0) or 0) >= 2 * max(1, (r.get("down_4", 0) or 0))
+              )
+              current["strong_selling_days_10"] = sum(
+                  1 for r in last10 if (r.get("down_4", 0) or 0) >= 2 * max(1, (r.get("up_4", 0) or 0))
+              )
+
+          universe = data.setdefault("universe", {})
+          filters = universe.get("filters", {})
+          universe.setdefault("valid_symbols", universe.get("valid_history_symbols", 0))
+          universe.setdefault("minimum_price", filters.get("min_price", 0))
+          universe.setdefault("minimum_average_dollar_volume", filters.get("min_avg_dollar_volume_20d", 0))
+
           data["status"] = "ok"
           path.write_text(json.dumps(data, indent=2) + "\n")
           PY
