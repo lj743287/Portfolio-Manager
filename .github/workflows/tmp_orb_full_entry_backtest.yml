@@ -1,0 +1,98 @@
+name: Temporary ORB full entry backtest
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp_orb_full_entry_backtest.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temporary-orb-full-entry-backtest
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: '1'
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Check out the ORB backtest code
+        uses: actions/checkout@v4
+        with:
+          repository: lj743287/orb-screener
+          ref: dbd7f306143b638a5b6613e27757504e8967fc75
+          path: orb-screener
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        working-directory: orb-screener
+        run: |
+          pip install -r requirements.txt
+          pip install --disable-pip-version-check yfinance
+
+      - name: Build full Alpaca IEX daily cache
+        working-directory: orb-screener
+        env:
+          APCA_API_KEY_ID: ${{ secrets.APCA_API_KEY_ID }}
+          APCA_API_SECRET_KEY: ${{ secrets.APCA_API_SECRET_KEY }}
+          ALPACA_FEED: 'iex'
+          CACHE_FILE: cache/full_backtest_bars.json.gz
+          BARS: '300'
+          BATCH_SIZE: '50'
+          REQUESTS_PER_MIN: '170'
+          LOOKBACK_DAYS: '520'
+        run: python fetch_bars_alpaca.py
+
+      - name: Validate cache coverage
+        working-directory: orb-screener
+        run: |
+          python - <<'PY'
+          import gzip
+          import json
+          from pathlib import Path
+
+          path = Path('cache/full_backtest_bars.json.gz')
+          with gzip.open(path, 'rt', encoding='utf-8') as fh:
+              data = json.load(fh)
+          count = int(data.get('count', 0))
+          universe = int(data.get('universe', 0))
+          feed = data.get('feed')
+          if feed != 'iex':
+              raise SystemExit(f'Expected IEX cache, got {feed!r}')
+          if universe <= 0 or count < 0.90 * universe:
+              raise SystemExit(f'Invalid cache coverage: {count}/{universe}')
+          print(f'Validated IEX cache: {count}/{universe} symbols')
+          PY
+
+      - name: Preserve cache
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-backtest-daily-cache
+          path: orb-screener/cache/full_backtest_bars.json.gz
+          if-no-files-found: warn
+          retention-days: 3
+
+      - name: Run full historical backtest
+        working-directory: orb-screener
+        env:
+          CACHE_FILE: cache/full_backtest_bars.json.gz
+          PYTHONPATH: ${{ github.workspace }}/orb-screener
+        run: python tmp/full_entry_backtest.py
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-entry-backtest
+          path: orb-screener/tmp/full_backtest_out/
+          if-no-files-found: warn
+          retention-days: 3
