@@ -1,57 +1,57 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-09-11T09:24:00.337510+00:00",
-  "as_of_market_date": "2026-09-10",
+  "generated_at_utc": "2026-09-12T00:51:44.220349+00:00",
+  "as_of_market_date": "2026-09-11",
   "source": "Alpaca IEX",
   "universe": {
     "exchanges": [
       "NASDAQ",
       "NYSE"
     ],
-    "catalogue_symbols": 5510,
-    "valid_history_symbols": 5504,
-    "eligible_symbols": 3118,
-    "failed_symbols": 6,
+    "catalogue_symbols": 5511,
+    "valid_history_symbols": 5506,
+    "eligible_symbols": 3120,
+    "failed_symbols": 5,
     "filters": {
       "min_price": 3.0,
       "min_avg_dollar_volume_20d": 250000.0,
       "min_daily_volume_for_4pct": 100000.0
     },
-    "valid_symbols": 5504,
+    "valid_symbols": 5506,
     "minimum_price": 3.0,
     "minimum_average_dollar_volume": 250000.0
   },
   "current": {
-    "date": "2026-09-10",
-    "coverage": 5478,
-    "eligible": 2784,
-    "up_4": 21,
-    "down_4": 86,
-    "up_45_10": 3,
-    "up_25_quarter": 688,
-    "down_25_quarter": 500,
-    "bull_34_13": 722,
-    "bear_34_13": 1084,
+    "date": "2026-09-11",
+    "coverage": 4703,
+    "eligible": 2778,
+    "up_4": 56,
+    "down_4": 19,
+    "up_45_10": 4,
+    "up_25_quarter": 706,
+    "down_25_quarter": 474,
+    "bull_34_13": 737,
+    "bear_34_13": 999,
     "up_25_month": 39,
-    "down_25_month": 69,
-    "up_50_month": 8,
+    "down_25_month": 56,
+    "up_50_month": 6,
     "down_50_month": 2,
-    "up_45_10_ma": 5.6,
+    "up_45_10_ma": 4.9,
     "strong_buying_days_10": 3,
     "strong_selling_days_10": 4
   },
   "ten_day_ratio": {
-    "date": "2026-09-10",
-    "up_total": 514,
-    "down_total": 611,
-    "ratio": 0.841,
+    "date": "2026-09-11",
+    "up_total": 468,
+    "down_total": 605,
+    "ratio": 0.774,
     "infinite": false
   },
   "oneq": {
     "symbol": "ONEQ",
-    "close": 102.87,
-    "ma10": 103.851,
-    "ma20": 103.7865,
+    "close": 103.85,
+    "ma10": 103.7775,
+    "ma20": 103.6992,
     "above": true
   },
   "condition": {
@@ -70,11 +70,6 @@
   },
   "history": {
     "daily_breadth": [
-      {
-        "date": "2026-05-04",
-        "up_4": 68,
-        "down_4": 64
-      },
       {
         "date": "2026-05-05",
         "up_4": 111,
@@ -519,77 +514,75 @@
         "date": "2026-09-10",
         "up_4": 21,
         "down_4": 86
+      },
+      {
+        "date": "2026-09-11",
+        "up_4": 56,
+        "down_4": 19
       }
     ],
     "ten_day_ratio": [
       {
-        "date": "2026-05-04",
-        "up_total": 68,
-        "down_total": 64,
-        "ratio": 1.062,
-        "infinite": false
-      },
-      {
         "date": "2026-05-05",
-        "up_total": 179,
-        "down_total": 117,
-        "ratio": 1.53,
+        "up_total": 111,
+        "down_total": 53,
+        "ratio": 2.094,
         "infinite": false
       },
       {
         "date": "2026-05-06",
-        "up_total": 422,
-        "down_total": 223,
-        "ratio": 1.892,
+        "up_total": 354,
+        "down_total": 159,
+        "ratio": 2.226,
         "infinite": false
       },
       {
         "date": "2026-05-07",
-        "up_total": 525,
-        "down_total": 358,
-        "ratio": 1.466,
+        "up_total": 457,
+        "down_total": 294,
+        "ratio": 1.554,
         "infinite": false
       },
       {
         "date": "2026-05-08",
-        "up_total": 630,
-        "down_total": 416,
-        "ratio": 1.514,
+        "up_total": 562,
+        "down_total": 352,
+        "ratio": 1.597,
         "infinite": false
       },
       {
         "date": "2026-05-11",
-        "up_total": 732,
-        "down_total": 504,
-        "ratio": 1.452,
+        "up_total": 664,
+        "down_total": 440,
+        "ratio": 1.509,
         "infinite": false
       },
       {
         "date": "2026-05-12",
-        "up_total": 782,
-        "down_total": 571,
-        "ratio": 1.37,
+        "up_total": 714,
+        "down_total": 507,
+        "ratio": 1.408,
         "infinite": false
       },
       {
         "date": "2026-05-13",
-        "up_total": 880,
-        "down_total": 674,
-        "ratio": 1.306,
+        "up_total": 812,
+        "down_total": 610,
+        "ratio": 1.331,
         "infinite": false
       },
       {
         "date": "2026-05-14",
-        "up_total": 964,
-        "down_total": 718,
-        "ratio": 1.343,
+        "up_total": 896,
+        "down_total": 654,
+        "ratio": 1.37,
         "infinite": false
       },
       {
         "date": "2026-05-15",
-        "up_total": 1000,
-        "down_total": 861,
-        "ratio": 1.161,
+        "up_total": 932,
+        "down_total": 797,
+        "ratio": 1.169,
         "infinite": false
       },
       {
@@ -1151,14 +1144,16 @@
         "down_total": 611,
         "ratio": 0.841,
         "infinite": false
+      },
+      {
+        "date": "2026-09-11",
+        "up_total": 468,
+        "down_total": 605,
+        "ratio": 0.774,
+        "infinite": false
       }
     ],
     "up_45_10_ma": [
-      {
-        "date": "2026-05-04",
-        "count": 15,
-        "ma10": 25.2
-      },
       {
         "date": "2026-05-05",
         "count": 23,
@@ -1603,14 +1598,14 @@
         "date": "2026-09-10",
         "count": 3,
         "ma10": 5.6
+      },
+      {
+        "date": "2026-09-11",
+        "count": 4,
+        "ma10": 4.9
       }
     ],
     "primary_breadth": [
-      {
-        "date": "2026-05-04",
-        "up": 821,
-        "down": 402
-      },
       {
         "date": "2026-05-05",
         "up": 867,
@@ -2055,14 +2050,14 @@
         "date": "2026-09-10",
         "up": 688,
         "down": 500
+      },
+      {
+        "date": "2026-09-11",
+        "up": 706,
+        "down": 474
       }
     ],
     "fast_breadth": [
-      {
-        "date": "2026-05-04",
-        "bull": 1253,
-        "bear": 444
-      },
       {
         "date": "2026-05-05",
         "bull": 1354,
@@ -2507,17 +2502,15 @@
         "date": "2026-09-10",
         "bull": 722,
         "bear": 1084
+      },
+      {
+        "date": "2026-09-11",
+        "bull": 737,
+        "bear": 999
       }
     ]
   },
   "ten_day_ratio_history": [
-    {
-      "date": "2026-05-04",
-      "up_total": 733,
-      "down_total": 691,
-      "ratio": 1.061,
-      "infinite": false
-    },
     {
       "date": "2026-05-05",
       "up_total": 792,
@@ -3139,6 +3132,13 @@
       "up_total": 514,
       "down_total": 611,
       "ratio": 0.841,
+      "infinite": false
+    },
+    {
+      "date": "2026-09-11",
+      "up_total": 468,
+      "down_total": 605,
+      "ratio": 0.774,
       "infinite": false
     }
   ],
