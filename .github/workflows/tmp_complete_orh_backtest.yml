@@ -1,0 +1,119 @@
+name: Temporary complete ORH backtest
+
+on:
+  push: {}
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temporary-complete-orh-backtest
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: '1'
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Check out the isolated ORH test code
+        uses: actions/checkout@v4
+        with:
+          repository: lj743287/orb-screener
+          ref: tmp-complete-orh-backtest-20260912
+          path: orb-screener
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        working-directory: orb-screener
+        run: |
+          pip install -r requirements.txt
+          pip install --disable-pip-version-check yfinance
+
+      - name: Build full Alpaca IEX daily cache
+        working-directory: orb-screener
+        env:
+          APCA_API_KEY_ID: ${{ secrets.APCA_API_KEY_ID }}
+          APCA_API_SECRET_KEY: ${{ secrets.APCA_API_SECRET_KEY }}
+          ALPACA_FEED: 'iex'
+          CACHE_FILE: cache/full_orh_bars.json.gz
+          BARS: '650'
+          BATCH_SIZE: '50'
+          REQUESTS_PER_MIN: '170'
+          LOOKBACK_DAYS: '950'
+        run: python fetch_bars_alpaca.py
+
+      - name: Validate cache coverage and depth
+        working-directory: orb-screener
+        run: |
+          python - <<'PY'
+          import gzip
+          import json
+          from pathlib import Path
+
+          path = Path('cache/full_orh_bars.json.gz')
+          with gzip.open(path, 'rt', encoding='utf-8') as fh:
+              data = json.load(fh)
+          count = int(data.get('count', 0))
+          universe = int(data.get('universe', 0))
+          feed = data.get('feed')
+          requested = int(data.get('bars_requested', 0))
+          if feed != 'iex':
+              raise SystemExit(f'Expected IEX cache, got {feed!r}')
+          if requested < 600:
+              raise SystemExit(f'Insufficient cache depth requested: {requested}')
+          if universe <= 0 or count < 0.90 * universe:
+              raise SystemExit(f'Invalid cache coverage: {count}/{universe}')
+          print(f'Validated IEX cache: {count}/{universe} symbols, {requested} bars requested')
+          PY
+
+      - name: Preserve daily cache
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-orh-daily-cache
+          path: orb-screener/cache/full_orh_bars.json.gz
+          if-no-files-found: warn
+          retention-days: 3
+
+      - name: Verify execution-rule tests
+        working-directory: orb-screener
+        run: python tmp/full_orh_backtest.py --self-test
+
+      - name: Run one-year complete ORH backtest
+        working-directory: orb-screener
+        env:
+          APCA_API_KEY_ID: ${{ secrets.APCA_API_KEY_ID }}
+          APCA_API_SECRET_KEY: ${{ secrets.APCA_API_SECRET_KEY }}
+          ALPACA_FEED: 'iex'
+          CACHE_FILE: cache/full_orh_bars.json.gz
+          PYTHONPATH: ${{ github.workspace }}/orb-screener
+          SIGNAL_START: '2025-07-01'
+          SIGNAL_END: '2026-06-30'
+          DATA_END: '2026-09-11'
+          REQUESTS_PER_MIN: '170'
+          EARN_WORKERS: '6'
+          INTRA_BATCH: '18'
+          TARGET_PCT: '45'
+          BE_TRIGGER_PCT: '2.5'
+          PARTIAL_TRIGGER_PCT: '15'
+          PARTIAL_FRACTION: '25'
+          MAX_STOP_PCT: '8'
+          POSITION_VALUE: '15000'
+          STARTING_CAPITAL: '200000'
+        run: python tmp/full_orh_backtest.py
+
+      - name: Upload complete ORH results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-orh-backtest
+          path: orb-screener/tmp/full_orh_backtest_out/
+          if-no-files-found: warn
+          retention-days: 7
