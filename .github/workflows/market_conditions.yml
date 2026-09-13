@@ -33,6 +33,220 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Apply S&P 500 participation indicator patch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          script_path = Path("scripts/build_market_conditions.py")
+          script = script_path.read_text()
+
+          if "SP500_URL" not in script:
+              script = script.replace(
+                  "import urllib.request\nfrom datetime",
+                  "import urllib.request\nimport re\nimport html as html_lib\nfrom datetime",
+                  1,
+              )
+              script = script.replace(
+                  ")\nDEFAULT_OUTPUT = Path(\"data/market-conditions.json\")",
+                  ")\nSP500_URL = \"https://en.wikipedia.org/wiki/List_of_S%26P_500_companies\"\nDEFAULT_OUTPUT = Path(\"data/market-conditions.json\")",
+                  1,
+              )
+
+          if "def symbol_key(symbol" not in script:
+              marker = "\ndef alpaca_json(params, api_key, api_secret, requests_per_minute, retries=6):"
+              insert = r'''
+
+def symbol_key(symbol: str) -> str:
+    return "".join(ch for ch in str(symbol or "").upper() if ch.isalnum())
+
+
+def build_sp500_members() -> set[str]:
+    try:
+        text = http_text(SP500_URL)
+    except Exception as exc:
+        print(f"[warning] S&P 500 constituent list unavailable: {type(exc).__name__}: {exc}", flush=True)
+        return set()
+
+    table = text.split('id="constituents"', 1)[-1]
+    table = table.split("</table>", 1)[0]
+    members: set[str] = set()
+    for row in table.split("<tr"):
+        match = re.search(r"<td[^>]*>\s*(?:<a[^>]*>)?([^<\n]+)", row, re.I)
+        if not match:
+            continue
+        raw = html_lib.unescape(match.group(1)).strip().upper()
+        raw = re.sub(r"[^A-Z0-9.\-]", "", raw)
+        key = symbol_key(raw)
+        if key and key != "SYMBOL":
+            members.add(key)
+
+    print(f"[sp500] loaded {len(members)} S&P 500 symbols", flush=True)
+    return members
+'''
+              if marker not in script:
+                  raise SystemExit("Could not find alpaca_json marker")
+              script = script.replace(marker, insert + marker, 1)
+
+          if '"sp500_covered":0' not in script:
+              script = script.replace(
+                  '"up_45_10":0,"up_25_quarter":0',
+                  '"up_45_10":0,"sp500_covered":0,"sp500_above_50ma":0,"sp500_pct_above_50ma":None,"up_25_quarter":0',
+                  1,
+              )
+
+          if "def aggregate_symbol(bars,counts,is_sp500=False):" not in script:
+              script = script.replace("def aggregate_symbol(bars,counts):", "def aggregate_symbol(bars,counts,is_sp500=False):", 1)
+
+          if 'current["sp500_above_50ma"]+=1' not in script:
+              script = script.replace(
+                  'current["coverage"]+=1; close=closes[index]',
+                  'current["coverage"]+=1; close=closes[index]\n        if is_sp500 and index>=49:\n            current["sp500_covered"]+=1\n            ma50=sum(closes[index-49:index+1])/50\n            if close>ma50:current["sp500_above_50ma"]+=1',
+                  1,
+              )
+
+          if "sp500_members=build_sp500_members()" not in script:
+              script = script.replace(
+                  'universe=build_universe(); universe=universe[:max_symbols] if max_symbols>0 else universe\n    print(f"[universe] {len(universe)} unique NASDAQ/NYSE securities selected",flush=True)',
+                  'universe=build_universe(); universe=universe[:max_symbols] if max_symbols>0 else universe\n    sp500_members=build_sp500_members()\n    print(f"[universe] {len(universe)} unique NASDAQ/NYSE securities selected",flush=True)\n    print(f"[sp500] matching against {len(sp500_members)} constituent symbols",flush=True)',
+                  1,
+              )
+
+          if "symbol_key(symbol) in sp500_members" not in script:
+              script = script.replace(
+                  'if aggregate_symbol(bars,counts):eligible_symbols.add(symbol)',
+                  'if aggregate_symbol(bars,counts,symbol_key(symbol) in sp500_members):eligible_symbols.add(symbol)',
+                  1,
+              )
+
+          if 'item["sp500_pct_above_50ma"]=' not in script:
+              script = script.replace(
+                  'for i,item in enumerate(history):\n        window=history[max(0,i-9):i+1]; item["up_45_10_ma"]=round(sum(x["up_45_10"] for x in window)/len(window),2)',
+                  'for item in history:\n        covered=item.get("sp500_covered",0) or 0\n        item["sp500_pct_above_50ma"]=round((item.get("sp500_above_50ma",0)/covered)*100,2) if covered else None\n    for i,item in enumerate(history):\n        window=history[max(0,i-9):i+1]; item["up_45_10_ma"]=round(sum(x["up_45_10"] for x in window)/len(window),2)',
+                  1,
+              )
+
+          new_final_state = r'''def final_state(current,current_ratio,oneq):
+    rv=current_ratio.get("ratio") if current_ratio else None
+    rp=bool(current_ratio.get("infinite")) or (rv is not None and rv>=1) if current_ratio else False
+    sp500_pct=current.get("sp500_pct_above_50ma")
+    tests={
+        "primary_breadth":current["up_25_quarter"]>current["down_25_quarter"],
+        "fast_breadth":current["bull_34_13"]>current["bear_34_13"],
+        "ten_day_breadth":rp,
+        "oneq_trend":bool(oneq.get("ma10") is not None and oneq.get("ma20") is not None and oneq["ma10"]>oneq["ma20"]),
+        "sp500_50ma_health":bool(sp500_pct is not None and sp500_pct>=40),
+    }
+    positives=sum(1 for value in tests.values() if value); total=len(tests); score=round(positives*100/total)
+    if positives>=4: label,colour,action="Favourable","green","Normal long exposure is permitted, subject to setup quality, broad participation and your usual risk limits."
+    elif positives<=2: label,colour,action="Defensive","red","Protect capital. Avoid marginal breakouts and keep new long exposure very small."
+    else: label,colour,action="Selective","amber","Breadth is mixed. Take only the strongest setups and consider reduced total exposure."
+    return {"label":label,"colour":colour,"score":score,"positive_signals":positives,"total_signals":total,"action":action,"tests":tests}'''
+          script, count = re.subn(r"def final_state\(current,current_ratio,oneq\):.*?\n\n\ndef build_output", new_final_state + "\n\n\ndef build_output", script, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit(f"Could not replace final_state; replacements={count}")
+
+          if '"sp500_50ma"' not in script:
+              script = script.replace(
+                  '"high_momentum":"Close more than 45% above its close 10 sessions earlier.","note"',
+                  '"high_momentum":"Close more than 45% above its close 10 sessions earlier.","sp500_50ma":"Percent of S&P 500 constituents closing above their own 50-session moving average.","note"',
+                  1,
+              )
+
+          for term in ["SP500_URL", "def build_sp500_members", '"sp500_covered":0', "sp500_pct_above_50ma", "sp500_50ma_health"]:
+              if term not in script:
+                  raise SystemExit(f"Missing script term after patch: {term}")
+          script_path.write_text(script)
+
+          html_path = Path("market-conditions.html")
+          html = html_path.read_text()
+
+          if '<h2>S&P 500 above 50-day MA</h2>' not in html:
+              old = '''        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>45% in 10 sessions</h2><div class="panel-sub">10-session moving average of stocks up more than 45% over the prior 10 sessions</div></div></div>
+          <div class="legend"><span><i class="swatch green"></i>10-session MA</span><span><i class="swatch"></i>Daily count</span></div>
+          <div id="highMomentumChart" class="chart"></div>
+        </article>'''
+              new = '''        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>S&P 500 above 50-day MA</h2><div class="panel-sub">Percentage of S&P 500 stocks closing above their own 50-day average</div></div></div>
+          <div class="legend"><span><i class="swatch"></i>% above 50MA</span><span><i class="swatch green"></i>Healthy above 60%</span><span><i class="swatch red"></i>Risk below 40%</span></div>
+          <div id="sp500Chart" class="chart"></div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>45% in 10 sessions</h2><div class="panel-sub">10-session moving average of stocks up more than 45% over the prior 10 sessions</div></div></div>
+          <div class="legend"><span><i class="swatch green"></i>10-session MA</span><span><i class="swatch"></i>Daily count</span></div>
+          <div id="highMomentumChart" class="chart"></div>
+        </article>'''
+              if old not in html:
+                  raise SystemExit("Could not find 45% chart insertion marker")
+              html = html.replace(old, new, 1)
+
+          if "function sp500ParticipationChart(items)" not in html:
+              marker = "      function highMomentumChart(items) {"
+              func = r'''      function sp500ParticipationChart(items) {
+        const width = 720, height = 285, pad = { left: 47, right: 14, top: 14, bottom: 29 };
+        const rows = (items || []).filter(item => item && item.pct != null);
+        const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+        const x = index => pad.left + (rows.length === 1 ? 0 : index * plotW / (rows.length - 1));
+        const y = value => pad.top + plotH - Math.max(0, Math.min(100, Number(value || 0))) / 100 * plotH;
+        const grid = [0, 30, 40, 60, 100].map(value => {
+          const cls = value === 30 || value === 40 || value === 60 ? 'threshold' : 'grid-line';
+          return `<line class="${cls}" x1="${pad.left}" x2="${width-pad.right}" y1="${y(value)}" y2="${y(value)}" /><text x="${pad.left-7}" y="${y(value)+4}" text-anchor="end">${value}%</text>`;
+        }).join('');
+        const points = rows.map((item, index) => ({ x:x(index), y:y(item.pct) }));
+        const path = points.length ? linePath(points) : '';
+        const dots = points.map((point, index) => `<circle class="point" cx="${point.x}" cy="${point.y}" r="3"><title>${rows[index].date}: ${Number(rows[index].pct || 0).toFixed(1)}% above 50MA (${number(rows[index].above)} of ${number(rows[index].covered)})</title></circle>`).join('');
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="S&P 500 stocks above 50 day moving average chart">${grid}<path class="ratio-line" d="${path}"/>${dots}${axisLabels(rows,width,height,pad)}</svg>`;
+      }
+
+'''
+              if marker not in html:
+                  raise SystemExit("Could not find highMomentumChart marker")
+              html = html.replace(marker, func + marker, 1)
+
+          if "const sp500Pct = current.sp500_pct_above_50ma" not in html:
+              html = html.replace(
+                  "byId('signalCount').textContent = `${condition.positive_signals} of ${condition.total_signals} positive`;\n\n        byId('signalGrid').innerHTML",
+                  "byId('signalCount').textContent = `${condition.positive_signals} of ${condition.total_signals} positive`;\n        const sp500Pct = current.sp500_pct_above_50ma;\n\n        byId('signalGrid').innerHTML",
+                  1,
+              )
+
+          if "signalCard('S&P 500 health'" not in html:
+              html = html.replace(
+                  "          signalCard('10-day breadth', tests.ten_day_breadth, ratioLabel(ratio), tests.ten_day_breadth ? 'Buying breadth dominates' : 'Selling breadth dominates'),\n          signalCard('ONEQ trend'",
+                  "          signalCard('10-day breadth', tests.ten_day_breadth, ratioLabel(ratio), tests.ten_day_breadth ? 'Buying breadth dominates' : 'Selling breadth dominates'),\n          signalCard('S&P 500 health', tests.sp500_50ma_health, sp500Pct == null ? 'n/a' : Number(sp500Pct).toFixed(1) + '% > 50MA', sp500Pct == null ? 'No constituent breadth data' : `${number(current.sp500_above_50ma)} of ${number(current.sp500_covered)} above 50-day MA`),\n          signalCard('ONEQ trend'",
+                  1,
+              )
+
+          if "metric('S&P > 50MA'" not in html:
+              html = html.replace(
+                  "          metric('Primary ratio', primaryRatio == null ? '∞' : primaryRatio.toFixed(2), '65-session breadth', tests.primary_breadth ? 'up' : 'down'),\n          metric('45% / 10d MA'",
+                  "          metric('Primary ratio', primaryRatio == null ? '∞' : primaryRatio.toFixed(2), '65-session breadth', tests.primary_breadth ? 'up' : 'down'),\n          metric('S&P > 50MA', sp500Pct == null ? 'n/a' : Number(sp500Pct).toFixed(1) + '%', sp500Pct == null ? 'Waiting for S&P 500 breadth data' : `${number(current.sp500_above_50ma)} of ${number(current.sp500_covered)} stocks above 50-day MA`, sp500Pct >= 60 ? 'up' : sp500Pct < 40 ? 'down' : 'neutral'),\n          metric('45% / 10d MA'",
+                  1,
+              )
+
+          if "byId('sp500Chart').innerHTML" not in html:
+              html = html.replace(
+                  "        byId('ratioChart').innerHTML = ratioChart(data.history.ten_day_ratio);\n        byId('highMomentumChart').innerHTML",
+                  "        byId('ratioChart').innerHTML = ratioChart(data.history.ten_day_ratio);\n        byId('sp500Chart').innerHTML = sp500ParticipationChart(data.history.sp500_above_50ma || []);\n        byId('highMomentumChart').innerHTML",
+                  1,
+              )
+
+          if "row('S&P 500 coverage'" not in html:
+              html = html.replace(
+                  "          row('Failed or unavailable symbols', number(data.universe.failed_symbols), data.universe.failed_symbols ? 'neutral' : ''),\n          row('Minimum price'",
+                  "          row('Failed or unavailable symbols', number(data.universe.failed_symbols), data.universe.failed_symbols ? 'neutral' : ''),\n          row('S&P 500 coverage', current.sp500_covered == null ? 'n/a' : `${number(current.sp500_covered)} constituents`),\n          row('Minimum price'",
+                  1,
+              )
+
+          for term in ['<h2>S&P 500 above 50-day MA</h2>', 'function sp500ParticipationChart(items)', "signalCard('S&P 500 health'", "metric('S&P > 50MA'", "byId('sp500Chart').innerHTML"]:
+              if term not in html:
+                  raise SystemExit(f"Missing HTML term after patch: {term}")
+          html_path.write_text(html)
+          PY
+
       - name: Calculate market conditions from Alpaca
         env:
           APCA_API_KEY_ID: ${{ secrets.APCA_API_KEY_ID }}
@@ -73,6 +287,16 @@ jobs:
                       for r in flat
                   ],
                   "ten_day_ratio": ratio_history,
+                  "sp500_above_50ma": [
+                      {
+                          "date": r.get("date"),
+                          "pct": r.get("sp500_pct_above_50ma"),
+                          "above": r.get("sp500_above_50ma", 0),
+                          "covered": r.get("sp500_covered", 0),
+                      }
+                      for r in flat
+                      if r.get("sp500_pct_above_50ma") is not None
+                  ],
                   "up_45_10_ma": [
                       {"date": r.get("date"), "count": r.get("up_45_10", 0), "ma10": r.get("up_45_10_ma", 0)}
                       for r in flat
