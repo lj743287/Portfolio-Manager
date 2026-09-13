@@ -38,6 +38,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import re
+          import textwrap
 
           script_path = Path("scripts/build_market_conditions.py")
           script = script_path.read_text()
@@ -56,35 +57,35 @@ jobs:
 
           if "def symbol_key(symbol" not in script:
               marker = "\ndef alpaca_json(params, api_key, api_secret, requests_per_minute, retries=6):"
-              insert = r'''
+              insert = textwrap.dedent("""
 
-def symbol_key(symbol: str) -> str:
-    return "".join(ch for ch in str(symbol or "").upper() if ch.isalnum())
+              def symbol_key(symbol: str) -> str:
+                  return "".join(ch for ch in str(symbol or "").upper() if ch.isalnum())
 
 
-def build_sp500_members() -> set[str]:
-    try:
-        text = http_text(SP500_URL)
-    except Exception as exc:
-        print(f"[warning] S&P 500 constituent list unavailable: {type(exc).__name__}: {exc}", flush=True)
-        return set()
+              def build_sp500_members() -> set[str]:
+                  try:
+                      text = http_text(SP500_URL)
+                  except Exception as exc:
+                      print(f"[warning] S&P 500 constituent list unavailable: {type(exc).__name__}: {exc}", flush=True)
+                      return set()
 
-    table = text.split('id="constituents"', 1)[-1]
-    table = table.split("</table>", 1)[0]
-    members: set[str] = set()
-    for row in table.split("<tr"):
-        match = re.search(r"<td[^>]*>\s*(?:<a[^>]*>)?([^<\n]+)", row, re.I)
-        if not match:
-            continue
-        raw = html_lib.unescape(match.group(1)).strip().upper()
-        raw = re.sub(r"[^A-Z0-9.\-]", "", raw)
-        key = symbol_key(raw)
-        if key and key != "SYMBOL":
-            members.add(key)
+                  table = text.split('id="constituents"', 1)[-1]
+                  table = table.split("</table>", 1)[0]
+                  members: set[str] = set()
+                  for row in table.split("<tr"):
+                      match = re.search(r"<td[^>]*>\\s*(?:<a[^>]*>)?([^<\\n]+)", row, re.I)
+                      if not match:
+                          continue
+                      raw = html_lib.unescape(match.group(1)).strip().upper()
+                      raw = re.sub(r"[^A-Z0-9.\\-]", "", raw)
+                      key = symbol_key(raw)
+                      if key and key != "SYMBOL":
+                          members.add(key)
 
-    print(f"[sp500] loaded {len(members)} S&P 500 symbols", flush=True)
-    return members
-'''
+                  print(f"[sp500] loaded {len(members)} S&P 500 symbols", flush=True)
+                  return members
+              """)
               if marker not in script:
                   raise SystemExit("Could not find alpaca_json marker")
               script = script.replace(marker, insert + marker, 1)
@@ -127,22 +128,24 @@ def build_sp500_members() -> set[str]:
                   1,
               )
 
-          new_final_state = r'''def final_state(current,current_ratio,oneq):
-    rv=current_ratio.get("ratio") if current_ratio else None
-    rp=bool(current_ratio.get("infinite")) or (rv is not None and rv>=1) if current_ratio else False
-    sp500_pct=current.get("sp500_pct_above_50ma")
-    tests={
-        "primary_breadth":current["up_25_quarter"]>current["down_25_quarter"],
-        "fast_breadth":current["bull_34_13"]>current["bear_34_13"],
-        "ten_day_breadth":rp,
-        "oneq_trend":bool(oneq.get("ma10") is not None and oneq.get("ma20") is not None and oneq["ma10"]>oneq["ma20"]),
-        "sp500_50ma_health":bool(sp500_pct is not None and sp500_pct>=40),
-    }
-    positives=sum(1 for value in tests.values() if value); total=len(tests); score=round(positives*100/total)
-    if positives>=4: label,colour,action="Favourable","green","Normal long exposure is permitted, subject to setup quality, broad participation and your usual risk limits."
-    elif positives<=2: label,colour,action="Defensive","red","Protect capital. Avoid marginal breakouts and keep new long exposure very small."
-    else: label,colour,action="Selective","amber","Breadth is mixed. Take only the strongest setups and consider reduced total exposure."
-    return {"label":label,"colour":colour,"score":score,"positive_signals":positives,"total_signals":total,"action":action,"tests":tests}'''
+          new_final_state = textwrap.dedent("""
+          def final_state(current,current_ratio,oneq):
+              rv=current_ratio.get("ratio") if current_ratio else None
+              rp=bool(current_ratio.get("infinite")) or (rv is not None and rv>=1) if current_ratio else False
+              sp500_pct=current.get("sp500_pct_above_50ma")
+              tests={
+                  "primary_breadth":current["up_25_quarter"]>current["down_25_quarter"],
+                  "fast_breadth":current["bull_34_13"]>current["bear_34_13"],
+                  "ten_day_breadth":rp,
+                  "oneq_trend":bool(oneq.get("ma10") is not None and oneq.get("ma20") is not None and oneq["ma10"]>oneq["ma20"]),
+                  "sp500_50ma_health":bool(sp500_pct is not None and sp500_pct>=40),
+              }
+              positives=sum(1 for value in tests.values() if value); total=len(tests); score=round(positives*100/total)
+              if positives>=4: label,colour,action="Favourable","green","Normal long exposure is permitted, subject to setup quality, broad participation and your usual risk limits."
+              elif positives<=2: label,colour,action="Defensive","red","Protect capital. Avoid marginal breakouts and keep new long exposure very small."
+              else: label,colour,action="Selective","amber","Breadth is mixed. Take only the strongest setups and consider reduced total exposure."
+              return {"label":label,"colour":colour,"score":score,"positive_signals":positives,"total_signals":total,"action":action,"tests":tests}
+          """).strip()
           script, count = re.subn(r"def final_state\(current,current_ratio,oneq\):.*?\n\n\ndef build_output", new_final_state + "\n\n\ndef build_output", script, count=1, flags=re.S)
           if count != 1:
               raise SystemExit(f"Could not replace final_state; replacements={count}")
@@ -163,12 +166,12 @@ def build_sp500_members() -> set[str]:
           html = html_path.read_text()
 
           if '<h2>S&P 500 above 50-day MA</h2>' not in html:
-              old = '''        <article class="panel chart-panel">
+              old = """        <article class="panel chart-panel">
           <div class="panel-heading"><div><h2>45% in 10 sessions</h2><div class="panel-sub">10-session moving average of stocks up more than 45% over the prior 10 sessions</div></div></div>
           <div class="legend"><span><i class="swatch green"></i>10-session MA</span><span><i class="swatch"></i>Daily count</span></div>
           <div id="highMomentumChart" class="chart"></div>
-        </article>'''
-              new = '''        <article class="panel chart-panel">
+        </article>"""
+              new = """        <article class="panel chart-panel">
           <div class="panel-heading"><div><h2>S&P 500 above 50-day MA</h2><div class="panel-sub">Percentage of S&P 500 stocks closing above their own 50-day average</div></div></div>
           <div class="legend"><span><i class="swatch"></i>% above 50MA</span><span><i class="swatch green"></i>Healthy above 60%</span><span><i class="swatch red"></i>Risk below 40%</span></div>
           <div id="sp500Chart" class="chart"></div>
@@ -178,30 +181,31 @@ def build_sp500_members() -> set[str]:
           <div class="panel-heading"><div><h2>45% in 10 sessions</h2><div class="panel-sub">10-session moving average of stocks up more than 45% over the prior 10 sessions</div></div></div>
           <div class="legend"><span><i class="swatch green"></i>10-session MA</span><span><i class="swatch"></i>Daily count</span></div>
           <div id="highMomentumChart" class="chart"></div>
-        </article>'''
+        </article>"""
               if old not in html:
                   raise SystemExit("Could not find 45% chart insertion marker")
               html = html.replace(old, new, 1)
 
           if "function sp500ParticipationChart(items)" not in html:
               marker = "      function highMomentumChart(items) {"
-              func = r'''      function sp500ParticipationChart(items) {
-        const width = 720, height = 285, pad = { left: 47, right: 14, top: 14, bottom: 29 };
-        const rows = (items || []).filter(item => item && item.pct != null);
-        const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
-        const x = index => pad.left + (rows.length === 1 ? 0 : index * plotW / (rows.length - 1));
-        const y = value => pad.top + plotH - Math.max(0, Math.min(100, Number(value || 0))) / 100 * plotH;
-        const grid = [0, 30, 40, 60, 100].map(value => {
-          const cls = value === 30 || value === 40 || value === 60 ? 'threshold' : 'grid-line';
-          return `<line class="${cls}" x1="${pad.left}" x2="${width-pad.right}" y1="${y(value)}" y2="${y(value)}" /><text x="${pad.left-7}" y="${y(value)+4}" text-anchor="end">${value}%</text>`;
-        }).join('');
-        const points = rows.map((item, index) => ({ x:x(index), y:y(item.pct) }));
-        const path = points.length ? linePath(points) : '';
-        const dots = points.map((point, index) => `<circle class="point" cx="${point.x}" cy="${point.y}" r="3"><title>${rows[index].date}: ${Number(rows[index].pct || 0).toFixed(1)}% above 50MA (${number(rows[index].above)} of ${number(rows[index].covered)})</title></circle>`).join('');
-        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="S&P 500 stocks above 50 day moving average chart">${grid}<path class="ratio-line" d="${path}"/>${dots}${axisLabels(rows,width,height,pad)}</svg>`;
-      }
+              func = textwrap.dedent(r'''
+              function sp500ParticipationChart(items) {
+                const width = 720, height = 285, pad = { left: 47, right: 14, top: 14, bottom: 29 };
+                const rows = (items || []).filter(item => item && item.pct != null);
+                const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+                const x = index => pad.left + (rows.length === 1 ? 0 : index * plotW / (rows.length - 1));
+                const y = value => pad.top + plotH - Math.max(0, Math.min(100, Number(value || 0))) / 100 * plotH;
+                const grid = [0, 30, 40, 60, 100].map(value => {
+                  const cls = value === 30 || value === 40 || value === 60 ? 'threshold' : 'grid-line';
+                  return `<line class="${cls}" x1="${pad.left}" x2="${width-pad.right}" y1="${y(value)}" y2="${y(value)}" /><text x="${pad.left-7}" y="${y(value)+4}" text-anchor="end">${value}%</text>`;
+                }).join('');
+                const points = rows.map((item, index) => ({ x:x(index), y:y(item.pct) }));
+                const path = points.length ? linePath(points) : '';
+                const dots = points.map((point, index) => `<circle class="point" cx="${point.x}" cy="${point.y}" r="3"><title>${rows[index].date}: ${Number(rows[index].pct || 0).toFixed(1)}% above 50MA (${number(rows[index].above)} of ${number(rows[index].covered)})</title></circle>`).join('');
+                return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="S&P 500 stocks above 50 day moving average chart">${grid}<path class="ratio-line" d="${path}"/>${dots}${axisLabels(rows,width,height,pad)}</svg>`;
+              }
 
-'''
+              ''')
               if marker not in html:
                   raise SystemExit("Could not find highMomentumChart marker")
               html = html.replace(marker, func + marker, 1)
