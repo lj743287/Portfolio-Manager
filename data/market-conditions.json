@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-09-12T00:51:44.220349+00:00",
+  "generated_at_utc": "2026-09-13T00:32:08.625135+00:00",
   "as_of_market_date": "2026-09-11",
   "source": "Alpaca IEX",
   "universe": {
@@ -23,15 +23,15 @@
   },
   "current": {
     "date": "2026-09-11",
-    "coverage": 4703,
-    "eligible": 2778,
+    "coverage": 5477,
+    "eligible": 2780,
     "up_4": 56,
     "down_4": 19,
     "up_45_10": 4,
-    "up_25_quarter": 706,
+    "up_25_quarter": 707,
     "down_25_quarter": 474,
     "bull_34_13": 737,
-    "bear_34_13": 999,
+    "bear_34_13": 1000,
     "up_25_month": 39,
     "down_25_month": 56,
     "up_50_month": 6,
@@ -2053,7 +2053,7 @@
       },
       {
         "date": "2026-09-11",
-        "up": 706,
+        "up": 707,
         "down": 474
       }
     ],
@@ -2506,7 +2506,7 @@
       {
         "date": "2026-09-11",
         "bull": 737,
-        "bear": 999
+        "bear": 1000
       }
     ]
   },
