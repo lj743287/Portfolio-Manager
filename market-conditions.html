@@ -268,6 +268,12 @@
         </article>
 
         <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>S&P 500 above 50-day MA</h2><div class="panel-sub">Percentage of S&P 500 stocks closing above their own 50-day average</div></div></div>
+          <div class="legend"><span><i class="swatch"></i>% above 50MA</span><span><i class="swatch green"></i>Healthy above 60%</span><span><i class="swatch red"></i>Risk below 40%</span></div>
+          <div id="sp500Chart" class="chart"></div>
+        </article>
+
+        <article class="panel chart-panel">
           <div class="panel-heading"><div><h2>45% in 10 sessions</h2><div class="panel-sub">10-session moving average of stocks up more than 45% over the prior 10 sessions</div></div></div>
           <div class="legend"><span><i class="swatch green"></i>10-session MA</span><span><i class="swatch"></i>Daily count</span></div>
           <div id="highMomentumChart" class="chart"></div>
@@ -407,6 +413,23 @@ function breadthBars(items, upKey, downKey) {
         return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Ten-day breadth ratio line chart">${grid}<path class="ratio-area" d="${area}"/><path class="ratio-line" d="${linePath(points)}"/>${dots}${axisLabels(items,width,height,pad)}</svg>`;
       }
 
+
+function sp500ParticipationChart(items) {
+  const width = 720, height = 285, pad = { left: 47, right: 14, top: 14, bottom: 29 };
+  const rows = (items || []).filter(item => item && item.pct != null);
+  const plotW = width - pad.left - pad.right, plotH = height - pad.top - pad.bottom;
+  const x = index => pad.left + (rows.length === 1 ? 0 : index * plotW / (rows.length - 1));
+  const y = value => pad.top + plotH - Math.max(0, Math.min(100, Number(value || 0))) / 100 * plotH;
+  const grid = [0, 30, 40, 60, 100].map(value => {
+    const cls = value === 30 || value === 40 || value === 60 ? 'threshold' : 'grid-line';
+    return `<line class="${cls}" x1="${pad.left}" x2="${width-pad.right}" y1="${y(value)}" y2="${y(value)}" /><text x="${pad.left-7}" y="${y(value)+4}" text-anchor="end">${value}%</text>`;
+  }).join('');
+  const points = rows.map((item, index) => ({ x:x(index), y:y(item.pct) }));
+  const path = points.length ? linePath(points) : '';
+  const dots = points.map((point, index) => `<circle class="point" cx="${point.x}" cy="${point.y}" r="3"><title>${rows[index].date}: ${Number(rows[index].pct || 0).toFixed(1)}% above 50MA (${number(rows[index].above)} of ${number(rows[index].covered)})</title></circle>`).join('');
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="S&P 500 stocks above 50 day moving average chart">${grid}<path class="ratio-line" d="${path}"/>${dots}${axisLabels(rows,width,height,pad)}</svg>`;
+}
+
       function highMomentumChart(items) {
         const width = 720, height = 285, pad = { left: 47, right: 14, top: 14, bottom: 29 };
         const rows = items || [];
@@ -452,11 +475,13 @@ function breadthBars(items, upKey, downKey) {
         byId('stateAction').textContent = condition.action;
         byId('asOf').textContent = `Market data to ${fullDate(data.as_of_market_date)} · calculated ${updatedTime(data.generated_at_utc)}`;
         byId('signalCount').textContent = `${condition.positive_signals} of ${condition.total_signals} positive`;
+        const sp500Pct = current.sp500_pct_above_50ma;
 
         byId('signalGrid').innerHTML = [
           signalCard('Primary breadth', tests.primary_breadth, tests.primary_breadth ? 'Bullish' : 'Bearish', `${number(current.up_25_quarter)} up vs ${number(current.down_25_quarter)} down`),
           signalCard('Fast breadth', tests.fast_breadth, tests.fast_breadth ? 'Bullish' : 'Bearish', `${number(current.bull_34_13)} bull vs ${number(current.bear_34_13)} bear`),
           signalCard('10-day breadth', tests.ten_day_breadth, ratioLabel(ratio), tests.ten_day_breadth ? 'Buying breadth dominates' : 'Selling breadth dominates'),
+          signalCard('S&P 500 health', tests.sp500_50ma_health, sp500Pct == null ? 'n/a' : Number(sp500Pct).toFixed(1) + '% > 50MA', sp500Pct == null ? 'No constituent breadth data' : `${number(current.sp500_above_50ma)} of ${number(current.sp500_covered)} above 50-day MA`),
           signalCard('ONEQ trend', tests.oneq_trend, tests.oneq_trend ? '10 MA > 20 MA' : '10 MA < 20 MA', `${Number(oneq.ma10).toFixed(2)} vs ${Number(oneq.ma20).toFixed(2)}`)
         ].join('');
 
@@ -468,12 +493,14 @@ function breadthBars(items, upKey, downKey) {
           metric('Daily breadth net', `${dailyNet > 0 ? '+' : ''}${number(dailyNet)}`, 'Up count less down count', dailyNet > 0 ? 'up' : dailyNet < 0 ? 'down' : 'neutral'),
           metric('10-day ratio', ratioLabel(ratio), ratio.infinite || ratio.ratio >= 2 ? 'Bullish breadth thrust' : ratio.ratio != null && ratio.ratio < .5 ? 'Bearish breadth thrust' : 'No extreme thrust', tests.ten_day_breadth ? 'up' : 'down'),
           metric('Primary ratio', primaryRatio == null ? '∞' : primaryRatio.toFixed(2), '65-session breadth', tests.primary_breadth ? 'up' : 'down'),
+          metric('S&P > 50MA', sp500Pct == null ? 'n/a' : Number(sp500Pct).toFixed(1) + '%', sp500Pct == null ? 'Waiting for S&P 500 breadth data' : `${number(current.sp500_above_50ma)} of ${number(current.sp500_covered)} stocks above 50-day MA`, sp500Pct >= 60 ? 'up' : sp500Pct < 40 ? 'down' : 'neutral'),
           metric('45% / 10d MA', current.up_45_10_ma == null ? 'n/a' : Number(current.up_45_10_ma).toFixed(1), `${number(current.up_45_10)} stocks currently up 45%+ over 10 sessions`, current.up_45_10_ma >= 20 ? 'up' : current.up_45_10_ma >= 5 ? 'neutral' : ''),
           metric('ONEQ trend', tests.oneq_trend ? 'Positive' : 'Negative', `10 MA ${Number(oneq.ma10).toFixed(2)} · 20 MA ${Number(oneq.ma20).toFixed(2)}`, tests.oneq_trend ? 'up' : 'down')
         ].join('');
 
         byId('dailyChart').innerHTML = breadthBars(data.history.daily_breadth, 'up_4', 'down_4');
         byId('ratioChart').innerHTML = ratioChart(data.history.ten_day_ratio);
+        byId('sp500Chart').innerHTML = sp500ParticipationChart(data.history.sp500_above_50ma || []);
         byId('highMomentumChart').innerHTML = highMomentumChart(data.history.up_45_10_ma || []);
         byId('primaryChart').innerHTML = twoLineChart(data.history.primary_breadth, 'up', 'down', 'primary-up', 'primary-down');
         byId('fastChart').innerHTML = twoLineChart(data.history.fast_breadth, 'bull', 'bear', 'primary-up', 'primary-down');
@@ -494,6 +521,7 @@ function breadthBars(items, upKey, downKey) {
           row('Valid price histories', number(data.universe.valid_symbols)),
           row('NASDAQ/NYSE catalogue', number(data.universe.catalogue_symbols)),
           row('Failed or unavailable symbols', number(data.universe.failed_symbols), data.universe.failed_symbols ? 'neutral' : ''),
+          row('S&P 500 coverage', current.sp500_covered == null ? 'n/a' : `${number(current.sp500_covered)} constituents`),
           row('Minimum price', money(data.universe.minimum_price)),
           row('Minimum 20-day dollar volume', money(data.universe.minimum_average_dollar_volume))
         ].join('');

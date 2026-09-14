@@ -20,6 +20,8 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import re
+import html as html_lib
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -29,6 +31,7 @@ UNIVERSE_URLS = (
     "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
     "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
 )
+SP500_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
 DEFAULT_OUTPUT = Path("data/market-conditions.json")
 EXCHANGES = ("NASDAQ", "NYSE")
 HISTORY_SESSIONS = 120
@@ -89,6 +92,34 @@ def build_universe() -> list[str]:
     return sorted(symbols)
 
 
+
+def symbol_key(symbol: str) -> str:
+    return "".join(ch for ch in str(symbol or "").upper() if ch.isalnum())
+
+
+def build_sp500_members() -> set[str]:
+    try:
+        text = http_text(SP500_URL)
+    except Exception as exc:
+        print(f"[warning] S&P 500 constituent list unavailable: {type(exc).__name__}: {exc}", flush=True)
+        return set()
+
+    table = text.split('id="constituents"', 1)[-1]
+    table = table.split("</table>", 1)[0]
+    members: set[str] = set()
+    for row in table.split("<tr"):
+        match = re.search(r"<td[^>]*>\s*(?:<a[^>]*>)?([^<\n]+)", row, re.I)
+        if not match:
+            continue
+        raw = html_lib.unescape(match.group(1)).strip().upper()
+        raw = re.sub(r"[^A-Z0-9.\-]", "", raw)
+        key = symbol_key(raw)
+        if key and key != "SYMBOL":
+            members.add(key)
+
+    print(f"[sp500] loaded {len(members)} S&P 500 symbols", flush=True)
+    return members
+
 def alpaca_json(params, api_key, api_secret, requests_per_minute, retries=6):
     query = urllib.parse.urlencode(params)
     url = f"{ALPACA_BARS_URL}?{query}"
@@ -134,16 +165,20 @@ def fetch_series_batch(symbols, api_key, api_secret, requests_per_minute):
 
 
 def empty_count(date):
-    return {"date":date,"coverage":0,"eligible":0,"up_4":0,"down_4":0,"up_45_10":0,"up_25_quarter":0,"down_25_quarter":0,"bull_34_13":0,"bear_34_13":0,"up_25_month":0,"down_25_month":0,"up_50_month":0,"down_50_month":0}
+    return {"date":date,"coverage":0,"eligible":0,"up_4":0,"down_4":0,"up_45_10":0,"sp500_covered":0,"sp500_above_50ma":0,"sp500_pct_above_50ma":None,"up_25_quarter":0,"down_25_quarter":0,"bull_34_13":0,"bear_34_13":0,"up_25_month":0,"down_25_month":0,"up_50_month":0,"down_50_month":0}
 
 
-def aggregate_symbol(bars,counts):
+def aggregate_symbol(bars,counts,is_sp500=False):
     if len(bars)<21:return False
     dates=[b["date"] for b in bars]; closes=[b["close"] for b in bars]; volumes=[b["volume"] for b in bars]; date_to_index={d:i for i,d in enumerate(dates)}; contributed=False
     for date,current in counts.items():
         index=date_to_index.get(date)
         if index is None:continue
         current["coverage"]+=1; close=closes[index]
+        if is_sp500 and index>=49:
+            current["sp500_covered"]+=1
+            ma50=sum(closes[index-49:index+1])/50
+            if close>ma50:current["sp500_above_50ma"]+=1
         if index<19 or close<MIN_PRICE:continue
         dollar_volume=[closes[i]*volumes[i] for i in range(index-19,index+1)]
         if sum(dollar_volume)/len(dollar_volume)<MIN_AVG_DOLLAR_VOLUME:continue
@@ -178,13 +213,21 @@ def ratio_record(items,index):
 def moving_average(values,period):return None if len(values)<period else sum(values[-period:])/period
 
 def final_state(current,current_ratio,oneq):
-    rv=current_ratio.get("ratio"); rp=bool(current_ratio.get("infinite")) or (rv is not None and rv>=1)
-    tests={"primary_breadth":current["up_25_quarter"]>current["down_25_quarter"],"fast_breadth":current["bull_34_13"]>current["bear_34_13"],"ten_day_breadth":rp,"oneq_trend":bool(oneq.get("ma10") is not None and oneq.get("ma20") is not None and oneq["ma10"]>oneq["ma20"])}
-    positives=sum(tests.values()); score=positives*25
-    if positives>=3: label,colour,action="Favourable","green","Normal long exposure is permitted, subject to setup quality and your usual risk limits."
-    elif positives<=1: label,colour,action="Defensive","red","Protect capital. Avoid marginal breakouts and keep new long exposure very small."
+    rv=current_ratio.get("ratio") if current_ratio else None
+    rp=bool(current_ratio.get("infinite")) or (rv is not None and rv>=1) if current_ratio else False
+    sp500_pct=current.get("sp500_pct_above_50ma")
+    tests={
+        "primary_breadth":current["up_25_quarter"]>current["down_25_quarter"],
+        "fast_breadth":current["bull_34_13"]>current["bear_34_13"],
+        "ten_day_breadth":rp,
+        "oneq_trend":bool(oneq.get("ma10") is not None and oneq.get("ma20") is not None and oneq["ma10"]>oneq["ma20"]),
+        "sp500_50ma_health":bool(sp500_pct is not None and sp500_pct>=40),
+    }
+    positives=sum(1 for value in tests.values() if value); total=len(tests); score=round(positives*100/total)
+    if positives>=4: label,colour,action="Favourable","green","Normal long exposure is permitted, subject to setup quality, broad participation and your usual risk limits."
+    elif positives<=2: label,colour,action="Defensive","red","Protect capital. Avoid marginal breakouts and keep new long exposure very small."
     else: label,colour,action="Selective","amber","Breadth is mixed. Take only the strongest setups and consider reduced total exposure."
-    return {"label":label,"colour":colour,"score":score,"positive_signals":positives,"total_signals":4,"action":action,"tests":tests}
+    return {"label":label,"colour":colour,"score":score,"positive_signals":positives,"total_signals":total,"action":action,"tests":tests}
 
 
 def build_output(api_key,api_secret,batch_size,requests_per_minute,max_symbols=0):
@@ -193,7 +236,9 @@ def build_output(api_key,api_secret,batch_size,requests_per_minute,max_symbols=0
     if len(oneq_bars)<HISTORY_SESSIONS:raise RuntimeError("ONEQ did not return enough daily history")
     target_dates=[b["date"] for b in oneq_bars[-HISTORY_SESSIONS:]]; counts={d:empty_count(d) for d in target_dates}
     universe=build_universe(); universe=universe[:max_symbols] if max_symbols>0 else universe
+    sp500_members=build_sp500_members()
     print(f"[universe] {len(universe)} unique NASDAQ/NYSE securities selected",flush=True)
+    print(f"[sp500] matching against {len(sp500_members)} constituent symbols",flush=True)
     valid_symbols=0; eligible_symbols=set(); failed_symbols=0; batches=list(chunks(universe,batch_size))
     for batch_number,batch in enumerate(batches,1):
         try:
@@ -202,7 +247,7 @@ def build_output(api_key,api_secret,batch_size,requests_per_minute,max_symbols=0
                 bars=series.get(symbol,[])
                 if not bars:failed_symbols+=1;continue
                 valid_symbols+=1
-                if aggregate_symbol(bars,counts):eligible_symbols.add(symbol)
+                if aggregate_symbol(bars,counts,symbol_key(symbol) in sp500_members):eligible_symbols.add(symbol)
         except Exception as exc:
             failed_symbols+=len(batch);print(f"[warning] batch {batch_number} failed: {type(exc).__name__}: {exc}",flush=True)
         if batch_number==1 or batch_number%10==0 or batch_number==len(batches):print(f"[progress] batch {batch_number}/{len(batches)} valid={valid_symbols} failed={failed_symbols}",flush=True)
@@ -211,10 +256,13 @@ def build_output(api_key,api_secret,batch_size,requests_per_minute,max_symbols=0
     history=[counts[d] for d in target_dates]; ratio_history=[r for i in range(len(history)) if (r:=ratio_record(history,i))]; current=history[-1]; current_ratio=ratio_history[-1]
     oneq_closes=[b["close"] for b in oneq_bars]; ma10=moving_average(oneq_closes,10); ma20=moving_average(oneq_closes,20)
     oneq={"symbol":"ONEQ","close":round(oneq_closes[-1],4),"ma10":round(ma10,4) if ma10 is not None else None,"ma20":round(ma20,4) if ma20 is not None else None,"above":bool(ma10 is not None and ma20 is not None and ma10>ma20)}
+    for item in history:
+        covered=item.get("sp500_covered",0) or 0
+        item["sp500_pct_above_50ma"]=round((item.get("sp500_above_50ma",0)/covered)*100,2) if covered else None
     for i,item in enumerate(history):
         window=history[max(0,i-9):i+1]; item["up_45_10_ma"]=round(sum(x["up_45_10"] for x in window)/len(window),2)
     state=final_state(current,current_ratio,oneq)
-    return {"schema_version":1,"generated_at_utc":datetime.now(timezone.utc).isoformat(),"as_of_market_date":current["date"],"source":"Alpaca IEX","universe":{"exchanges":list(EXCHANGES),"catalogue_symbols":len(universe),"valid_history_symbols":valid_symbols,"eligible_symbols":len(eligible_symbols),"failed_symbols":failed_symbols,"filters":{"min_price":MIN_PRICE,"min_avg_dollar_volume_20d":MIN_AVG_DOLLAR_VOLUME,"min_daily_volume_for_4pct":MIN_DAILY_VOLUME}},"current":current,"ten_day_ratio":current_ratio,"oneq":oneq,"condition":state,"history":history[-DISPLAY_SESSIONS:],"ten_day_ratio_history":ratio_history[-DISPLAY_SESSIONS:],"methodology":{"provider":"Alpaca","feed":"IEX","high_momentum":"Close more than 45% above its close 10 sessions earlier.","note":"IEX is a single-exchange feed and may materially undercount volume-based breadth versus consolidated SIP data."}}
+    return {"schema_version":1,"generated_at_utc":datetime.now(timezone.utc).isoformat(),"as_of_market_date":current["date"],"source":"Alpaca IEX","universe":{"exchanges":list(EXCHANGES),"catalogue_symbols":len(universe),"valid_history_symbols":valid_symbols,"eligible_symbols":len(eligible_symbols),"failed_symbols":failed_symbols,"filters":{"min_price":MIN_PRICE,"min_avg_dollar_volume_20d":MIN_AVG_DOLLAR_VOLUME,"min_daily_volume_for_4pct":MIN_DAILY_VOLUME}},"current":current,"ten_day_ratio":current_ratio,"oneq":oneq,"condition":state,"history":history[-DISPLAY_SESSIONS:],"ten_day_ratio_history":ratio_history[-DISPLAY_SESSIONS:],"methodology":{"provider":"Alpaca","feed":"IEX","high_momentum":"Close more than 45% above its close 10 sessions earlier.","sp500_50ma":"Percent of S&P 500 constituents closing above their own 50-session moving average.","note":"IEX is a single-exchange feed and may materially undercount volume-based breadth versus consolidated SIP data."}}
 
 
 def main():
