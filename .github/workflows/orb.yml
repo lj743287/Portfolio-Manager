@@ -1,0 +1,82 @@
+name: ORB screener (Alpaca)
+
+on:
+  schedule:
+    - cron: "15 22 * * 1-5"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/orb.yml"
+      - "scripts/orb/**"
+
+permissions:
+  contents: write
+
+# Serialise with market conditions to share the Alpaca request allowance.
+concurrency:
+  group: market-conditions
+  cancel-in-progress: false
+
+jobs:
+  orb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r scripts/orb/requirements.txt
+      - name: Test ORB migration
+        run: python -m unittest discover -s scripts/orb -p 'test_*.py'
+      - name: Fetch completed daily bars from Alpaca
+        working-directory: scripts/orb
+        env:
+          APCA_API_KEY_ID: ${{ secrets.APCA_API_KEY_ID }}
+          APCA_API_SECRET_KEY: ${{ secrets.APCA_API_SECRET_KEY }}
+          ALPACA_FEED: iex
+          CACHE_FILE: cache/bars.json.gz
+          BARS: "250"
+          BATCH_SIZE: "50"
+          REQUESTS_PER_MIN: "170"
+          LOOKBACK_DAYS: "450"
+          MAX_SYMBOLS: "0"
+          PYTHONUNBUFFERED: "1"
+        run: python fetch_bars_alpaca.py
+      - name: Run unchanged ORB screening rules
+        working-directory: scripts/orb
+        env:
+          ORB_DATA_PROVIDER: alpaca
+          CACHE_FILE: cache/bars.json.gz
+          MAX_SYMBOLS: "0"
+          PYTHONUNBUFFERED: "1"
+        run: python screener.py
+      - name: Stage standalone ORB report
+        run: |
+          mkdir -p orb
+          cp scripts/orb/docs/index.html orb/index.html
+          cp scripts/orb/docs/watchlist.txt orb/watchlist.txt
+          cp scripts/orb/output/candidates.csv orb/candidates.csv
+          cp scripts/orb/data/orb.json orb/scan.json
+      - name: Save report without changing portfolio pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add orb/index.html orb/watchlist.txt orb/candidates.csv orb/scan.json
+          if git diff --cached --quiet; then
+            echo "ORB report unchanged"
+          else
+            git commit -m "Update ORB watchlist from Alpaca"
+            git pull --rebase origin main
+            git push origin main
+          fi
+      - name: Preserve downloadable results
+        uses: actions/upload-artifact@v4
+        with:
+          name: orb-watchlist
+          path: orb/
+          retention-days: 30
