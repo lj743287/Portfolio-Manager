@@ -797,6 +797,7 @@
         const closeIndex = nearestIndex(candles, trade.exitDate, 'before');
         const openX = openIndex >= 0 ? x(openIndex) : pad.left;
         const closeX = closeIndex >= 0 ? x(closeIndex) : width - pad.right;
+        const plotRight = width - pad.right;
         const entryPrice = num(trade.avgEntry);
         const exitPrice = num(trade.avgExit);
 
@@ -854,7 +855,6 @@
 
         const labelIndexes = [...new Set([0, openIndex, closeIndex, candles.length-1, ...Array.from({length:5},(_,i)=>Math.round(i*(candles.length-1)/4))])].filter(index => index >= 0 && index < candles.length).sort((a,b)=>a-b);
         const dateLabels = labelIndexes.map(index => `<text x="${x(index)}" y="${height-12}" text-anchor="middle">${escapeHtml(shortDate(candles[index].date))}</text>`).join('');
-        const plotRight = width - pad.right;
         const badgeX = plotRight + 8;
         const badgeWidth = 94;
         const badgeHeight = 18;
