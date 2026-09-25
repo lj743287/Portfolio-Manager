@@ -448,7 +448,7 @@
         loadTradeChart(trade);
       }
 
-      function trimAfterExit(candles, exitDate) {      function trimAfterExit(candles, exitDate) {
+      function trimAfterExit(candles, exitDate) {
         let after = 0;
         const result = [];
         for (const candle of candles) {
@@ -470,14 +470,14 @@
         const startDate = addMonths(trade.entryDate, -18);
         const endDate = addDays(trade.exitDate, 35);
         const symbol = String(trade.symbol || '').trim().toUpperCase();
-        const cacheKey = \`\${symbol}|\${startDate}|\${endDate}\`;
+        const cacheKey = `${symbol}|${startDate}|${endDate}`;
 
         if (state.candleCache.has(cacheKey)) {
           return state.candleCache.get(cacheKey);
         }
 
         return new Promise((resolve, reject) => {
-          const callbackName = \`tradeCandlesCallback_\${Date.now()}_\${Math.floor(Math.random() * 100000)}\`;
+          const callbackName = `tradeCandlesCallback_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
           const script = document.createElement('script');
           let settled = false;
 
@@ -555,7 +555,7 @@
             _: String(Date.now())
           });
 
-          script.src = \`\${normaliseUrl(settings.webUrl)}?\${params.toString()}\`;
+          script.src = `${normaliseUrl(settings.webUrl)}?${params.toString()}`;
           document.body.appendChild(script);
         });
       }
@@ -895,7 +895,7 @@
         const controller = new AbortController();
         state.chartAbort = controller;
         const start = addMonths(trade.entryDate, -2);
-        el('chartSubtitle').textContent = \`\${displayDate(start)} through ten trading sessions after exit\`;
+        el('chartSubtitle').textContent = `${displayDate(start)} through ten trading sessions after exit`;
         el('chart').innerHTML = '<div class="chart-loading">Loading Alpaca daily candles…</div>';
 
         try {
@@ -911,14 +911,14 @@
           const postExit = candles.filter(candle => candle.date > isoDate(trade.exitDate)).length;
           const screenText =
             entryScreen && Number.isFinite(entryScreen.score)
-              ? \` · Entry \${entryScreen.decision} \${entryScreen.score.toFixed(1)}\`
+              ? ` · Entry ${entryScreen.decision} ${entryScreen.score.toFixed(1)}`
               : ' · Entry screen unavailable';
 
           el('chartSubtitle').textContent =
-            \`\${candles.length} Alpaca daily candles · two months before entry · \${postExit} available after exit\${screenText}\`;
+            `${candles.length} Alpaca daily candles · two months before entry · ${postExit} available after exit${screenText}`;
         } catch (error) {
           if (error?.name === 'AbortError' || requestId !== state.chartRequest) return;
-          el('chart').innerHTML = \`<div class="chart-error">\${escapeHtml(error.message || 'The Alpaca candles could not be loaded.')}</div>\`;
+          el('chart').innerHTML = `<div class="chart-error">${escapeHtml(error.message || 'The Alpaca candles could not be loaded.')}</div>`;
         } finally {
           if (state.chartAbort === controller) state.chartAbort = null;
         }
