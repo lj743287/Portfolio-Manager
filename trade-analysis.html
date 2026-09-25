@@ -222,7 +222,7 @@
         <h1>Closed Trade Review</h1>
       </div>
       <div class="head-actions">
-        <button id="apiSettingsBtn" class="button" type="button">Candle settings</button>
+        <span class="button" style="cursor:default" aria-label="Daily candle source">Alpaca candles</span>
         <a class="back" href="index.html">← <span>Portfolio Manager</span></a>
       </div>
     </div>
@@ -263,26 +263,9 @@
     </div>
   </main>
 
-  <div id="apiModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="apiTitle">
-      <div class="modal-head">
-        <div><h2 id="apiTitle">Connect daily candle data</h2><p>Enter your Twelve Data API key once. It is saved only in this browser and is never added to the Portfolio Manager repository.</p></div>
-        <button id="closeModalBtn" class="close-modal" type="button" aria-label="Close">×</button>
-      </div>
-      <label for="apiKey">Twelve Data API key</label>
-      <input id="apiKey" class="key-input" type="password" autocomplete="off" placeholder="Paste your API key" />
-      <div class="modal-actions">
-        <button id="saveApiBtn" class="button primary" type="button">Save and load chart</button>
-        <button id="forgetApiBtn" class="button danger" type="button">Forget saved key</button>
-      </div>
-      <div id="modalError" class="modal-error hidden"></div>
-    </div>
-  </div>
-
   <script>
     (() => {
       const FEED_STORAGE_KEY = 'tradeDashboard.feedSettings.v1';
-      const API_STORAGE_KEY = 'tradeAnalysis.twelveDataKey.v1';
       const state = {
         trades: [],
         filter: 'all',
@@ -340,10 +323,6 @@
       function getFeedSettings() {
         try { return JSON.parse(localStorage.getItem(FEED_STORAGE_KEY) || '{}'); }
         catch (error) { return {}; }
-      }
-
-      function apiKey() {
-        return String(localStorage.getItem(API_STORAGE_KEY) || '').trim();
       }
 
       function addMonths(dateText, delta) {
@@ -469,35 +448,7 @@
         loadTradeChart(trade);
       }
 
-      function openApiModal(message = '') {
-        el('apiKey').value = apiKey();
-        el('modalError').textContent = message;
-        el('modalError').classList.toggle('hidden', !message);
-        el('apiModal').classList.remove('hidden');
-        el('apiModal').setAttribute('aria-hidden', 'false');
-        setTimeout(() => el('apiKey').focus(), 0);
-      }
-
-      function closeApiModal() {
-        el('apiModal').classList.add('hidden');
-        el('apiModal').setAttribute('aria-hidden', 'true');
-      }
-
-      function normaliseCandles(payload) {
-        if (!payload || payload.status === 'error') throw new Error(payload?.message || 'Twelve Data did not return price data.');
-        const candles = (payload.values || []).map(row => ({
-          date: isoDate(row.datetime),
-          open: num(row.open),
-          high: num(row.high),
-          low: num(row.low),
-          close: num(row.close),
-          volume: num(row.volume)
-        })).filter(row => row.date && [row.open,row.high,row.low,row.close].every(value => value != null));
-        candles.sort((a,b) => a.date.localeCompare(b.date));
-        return candles;
-      }
-
-      function trimAfterExit(candles, exitDate) {
+      function trimAfterExit(candles, exitDate) {      function trimAfterExit(candles, exitDate) {
         let after = 0;
         const result = [];
         for (const candle of candles) {
@@ -510,71 +461,103 @@
         return result;
       }
 
-      function abortableDelay(milliseconds, signal) {
+      async function fetchCandles(trade, signal) {
+        const settings = getFeedSettings();
+        if (!settings.webUrl || !settings.webSecret) {
+          throw new Error('Portfolio connection is missing. Open Portfolio Manager Settings and reconnect the Google Sheet.');
+        }
+
+        const startDate = addMonths(trade.entryDate, -18);
+        const endDate = addDays(trade.exitDate, 35);
+        const symbol = String(trade.symbol || '').trim().toUpperCase();
+        const cacheKey = \`\${symbol}|\${startDate}|\${endDate}\`;
+
+        if (state.candleCache.has(cacheKey)) {
+          return state.candleCache.get(cacheKey);
+        }
+
         return new Promise((resolve, reject) => {
-          let timer;
-          const aborted = () => {
+          const callbackName = \`tradeCandlesCallback_\${Date.now()}_\${Math.floor(Math.random() * 100000)}\`;
+          const script = document.createElement('script');
+          let settled = false;
+
+          const cleanup = () => {
+            if (settled) return;
+            settled = true;
             clearTimeout(timer);
-            signal?.removeEventListener('abort', aborted);
+            signal?.removeEventListener('abort', onAbort);
+            try { delete window[callbackName]; } catch (error) { window[callbackName] = undefined; }
+            if (script.parentNode) script.parentNode.removeChild(script);
+          };
+
+          const fail = message => {
+            cleanup();
+            reject(new Error(message));
+          };
+
+          const onAbort = () => {
+            cleanup();
             const error = new Error('Request cancelled.');
             error.name = 'AbortError';
             reject(error);
           };
-          if (signal?.aborted) return aborted();
-          timer = setTimeout(() => {
-            signal?.removeEventListener('abort', aborted);
-            resolve();
-          }, milliseconds);
-          signal?.addEventListener('abort', aborted, { once: true });
-        });
-      }
 
-      async function waitForCreditReset(milliseconds, signal, onTick) {
-        const finishAt = Date.now() + milliseconds;
-        while (Date.now() < finishAt) {
-          const seconds = Math.max(1, Math.ceil((finishAt - Date.now()) / 1000));
-          onTick?.(seconds);
-          await abortableDelay(Math.min(1000, finishAt - Date.now()), signal);
-        }
-      }
+          const timer = setTimeout(() => {
+            fail('Alpaca candle data did not respond. Try the chart again.');
+          }, 25000);
 
-      function rateLimitWait(response) {
-        const retryAfter = Number(response.headers.get('retry-after'));
-        if (Number.isFinite(retryAfter) && retryAfter > 0) return Math.max(3000, retryAfter * 1000);
-        const now = new Date();
-        return Math.max(3000, (62 - now.getUTCSeconds()) * 1000 - now.getUTCMilliseconds());
-      }
-
-      async function fetchCandles(trade, signal, onRetry) {
-        const startDate = addMonths(trade.entryDate, -18);
-        const endDate = addDays(trade.exitDate, 35);
-        const cacheKey = `${trade.symbol}|${startDate}|${endDate}`;
-        if (state.candleCache.has(cacheKey)) return state.candleCache.get(cacheKey);
-
-        const params = new URLSearchParams({
-          symbol: String(trade.symbol || '').trim().toUpperCase(),
-          interval: '1day',
-          start_date: startDate,
-          end_date: endDate,
-          order: 'ASC',
-          format: 'JSON',
-          apikey: apiKey()
-        });
-        for (let attempt = 1; attempt <= 4; attempt += 1) {
-          const response = await fetch(`https://api.twelvedata.com/time_series?${params.toString()}`, { cache: 'no-store', signal });
-          if (response.status === 429) {
-            await response.text();
-            if (attempt === 4) throw new Error('Twelve Data is still busy. The market-conditions scan may be using the allowance; try this chart again in a minute.');
-            await waitForCreditReset(rateLimitWait(response), signal, seconds => onRetry?.(seconds, attempt));
-            continue;
+          if (signal?.aborted) {
+            onAbort();
+            return;
           }
-          if (!response.ok) throw new Error(`Twelve Data request failed (${response.status}).`);
-          const candles = trimAfterExit(normaliseCandles(await response.json()), trade.exitDate);
-          if (!candles.length) throw new Error('No daily candles were returned for this trade.');
-          state.candleCache.set(cacheKey, candles);
-          return candles;
-        }
-        throw new Error('The daily candles could not be loaded.');
+          signal?.addEventListener('abort', onAbort, { once: true });
+
+          window[callbackName] = data => {
+            if (!data || !data.ok) {
+              fail(data?.error || 'Alpaca did not return candle data.');
+              return;
+            }
+
+            const candles = trimAfterExit(
+              (data.bars || []).map(row => ({
+                date: isoDate(row.date),
+                open: num(row.open),
+                high: num(row.high),
+                low: num(row.low),
+                close: num(row.close),
+                volume: num(row.volume) || 0
+              })).filter(row =>
+                row.date &&
+                [row.open, row.high, row.low, row.close].every(value => value != null)
+              ).sort((a, b) => a.date.localeCompare(b.date)),
+              trade.exitDate
+            );
+
+            if (!candles.length) {
+              fail('No Alpaca daily candles were returned for this trade.');
+              return;
+            }
+
+            state.candleCache.set(cacheKey, candles);
+            cleanup();
+            resolve(candles);
+          };
+
+          script.onerror = () => fail('The Alpaca candle feed could not be reached.');
+
+          const params = new URLSearchParams({
+            key: settings.webSecret,
+            action: 'candles',
+            symbol,
+            start: startDate,
+            end: endDate,
+            callback: callbackName,
+            _: String(Date.now())
+          });
+
+          script.src = \`\${normaliseUrl(settings.webUrl)}?\${params.toString()}\`;
+          document.body.appendChild(script);
+        });
       }
 
       function nearestIndex(candles, date, mode) {
@@ -912,18 +895,11 @@
         const controller = new AbortController();
         state.chartAbort = controller;
         const start = addMonths(trade.entryDate, -2);
-        el('chartSubtitle').textContent = `${displayDate(start)} through ten trading sessions after exit`;
-        if (!apiKey()) {
-          el('chart').innerHTML = '<div class="initial"><div><strong>Candle connection required</strong>Add your Twelve Data key to load this chart.</div></div>';
-          openApiModal();
-          return;
-        }
-        el('chart').innerHTML = '<div class="chart-loading">Loading daily candles…</div>';
+        el('chartSubtitle').textContent = \`\${displayDate(start)} through ten trading sessions after exit\`;
+        el('chart').innerHTML = '<div class="chart-loading">Loading Alpaca daily candles…</div>';
+
         try {
-          const history = await fetchCandles(trade, controller.signal, (seconds, attempt) => {
-            if (requestId !== state.chartRequest) return;
-            el('chart').innerHTML = `<div class="chart-loading">Twelve Data limit reached while the market scan is running.<br>Retrying automatically in ${seconds} second${seconds === 1 ? '' : 's'}… <span class="muted">Attempt ${attempt + 1} of 4</span></div>`;
-          });
+          const history = await fetchCandles(trade, controller.signal);
           if (requestId !== state.chartRequest) return;
 
           const entryScreen = entryScreenAssessment(history, trade.entryDate);
@@ -935,15 +911,14 @@
           const postExit = candles.filter(candle => candle.date > isoDate(trade.exitDate)).length;
           const screenText =
             entryScreen && Number.isFinite(entryScreen.score)
-              ? ` · Entry ${entryScreen.decision} ${entryScreen.score.toFixed(1)}`
+              ? \` · Entry \${entryScreen.decision} \${entryScreen.score.toFixed(1)}\`
               : ' · Entry screen unavailable';
 
           el('chartSubtitle').textContent =
-            `${candles.length} daily candles · two months before entry · ${postExit} available after exit${screenText}`;
+            \`\${candles.length} Alpaca daily candles · two months before entry · \${postExit} available after exit\${screenText}\`;
         } catch (error) {
           if (error?.name === 'AbortError' || requestId !== state.chartRequest) return;
-          el('chart').innerHTML = `<div class="chart-error">${escapeHtml(error.message || 'The candles could not be loaded.')}</div>`;
-          if (/invalid.*key|api.?key|unauthor|\b401\b|\b403\b/i.test(String(error.message || ''))) openApiModal(error.message);
+          el('chart').innerHTML = \`<div class="chart-error">\${escapeHtml(error.message || 'The Alpaca candles could not be loaded.')}</div>\`;
         } finally {
           if (state.chartAbort === controller) state.chartAbort = null;
         }
@@ -1024,31 +999,6 @@
         renderTradeList();
         renderSelectedTrade();
       });
-      el('apiSettingsBtn').addEventListener('click', () => openApiModal());
-      el('closeModalBtn').addEventListener('click', closeApiModal);
-      el('apiModal').addEventListener('click', event => { if (event.target === el('apiModal')) closeApiModal(); });
-      document.addEventListener('keydown', event => { if (event.key === 'Escape') closeApiModal(); });
-      el('saveApiBtn').addEventListener('click', () => {
-        const key = el('apiKey').value.trim();
-        if (!key) {
-          el('modalError').textContent = 'Paste your Twelve Data API key.';
-          el('modalError').classList.remove('hidden');
-          return;
-        }
-        localStorage.setItem(API_STORAGE_KEY, key);
-        state.candleCache.clear();
-        closeApiModal();
-        const trade = selectedTrade();
-        if (trade) loadTradeChart(trade);
-      });
-      el('forgetApiBtn').addEventListener('click', () => {
-        localStorage.removeItem(API_STORAGE_KEY);
-        el('apiKey').value = '';
-        state.candleCache.clear();
-        el('modalError').textContent = 'The saved key has been removed from this browser.';
-        el('modalError').classList.remove('hidden');
-      });
-
       loadFeed();
     })();
   </script>
