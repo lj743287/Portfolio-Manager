@@ -222,7 +222,7 @@
         <h1>Closed Trade Review</h1>
       </div>
       <div class="head-actions">
-        <span class="button" style="cursor:default" aria-label="Daily candle source">Alpaca candles</span>
+        <span class="button" style="cursor:default" aria-label="Daily candle source">Alpaca SIP history</span>
         <a class="back" href="index.html">← <span>Portfolio Manager</span></a>
       </div>
     </div>
@@ -766,12 +766,11 @@
       }
 
       function entryScreenAssessment(candles, entryDate) {
-        // Match the Pine script exactly: score the setup using the last
-        // COMPLETED daily bar before the entry day. This prevents the
-        // entry day's later price/volume action leaking into the score.
+        // Match the supplied Pine script exactly: calculate the Momentum
+        // Architecture score on the entry day's daily bar itself.
         const entryIndex = nearestIndex(candles, entryDate, 'after');
-        if (entryIndex <= 0) return null;
-        return momentumArchitectureAtIndex(candles, entryIndex - 1);
+        if (entryIndex < 0) return null;
+        return momentumArchitectureAtIndex(candles, entryIndex);
       }
 
       function candleChart(candles, trade, entryScreen) {
@@ -820,7 +819,7 @@
                 : 'entry-screen-na';
 
           const title = entryScreen
-            ? `Entry screen using completed bar ${entryScreen.sourceDate}: ${decision}, Momentum Architecture score ${score}. Route: ${entryScreen.route}. 15D momentum ${entryScreen.momentum15.toFixed(1)}%, EMA20 distance ${entryScreen.ema20DistanceATR.toFixed(2)} ATR, 50D stretch ${entryScreen.stretch50ATR.toFixed(2)} ATR.`
+            ? `Entry day ${entryScreen.sourceDate}: ${decision}, Momentum Architecture score ${score}. Route: ${entryScreen.route}. 15D momentum ${entryScreen.momentum15.toFixed(1)}%, EMA20 distance ${entryScreen.ema20DistanceATR.toFixed(2)} ATR, 50D stretch ${entryScreen.stretch50ATR.toFixed(2)} ATR.`
             : 'Not enough daily history to calculate the entry GO/NOGO score.';
 
           return `<g>
