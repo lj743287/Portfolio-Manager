@@ -766,9 +766,12 @@
       }
 
       function entryScreenAssessment(candles, entryDate) {
-        const index = candles.findIndex(candle => candle.date === isoDate(entryDate));
-        if (index < 0) return null;
-        return momentumArchitectureAtIndex(candles, index);
+        // Match the Pine script exactly: score the setup using the last
+        // COMPLETED daily bar before the entry day. This prevents the
+        // entry day's later price/volume action leaking into the score.
+        const entryIndex = nearestIndex(candles, entryDate, 'after');
+        if (entryIndex <= 0) return null;
+        return momentumArchitectureAtIndex(candles, entryIndex - 1);
       }
 
       function candleChart(candles, trade, entryScreen) {
@@ -817,7 +820,7 @@
                 : 'entry-screen-na';
 
           const title = entryScreen
-            ? `Entry day ${entryScreen.sourceDate}: ${decision}, Momentum Architecture score ${score}. Route: ${entryScreen.route}. 15D momentum ${entryScreen.momentum15.toFixed(1)}%, EMA20 distance ${entryScreen.ema20DistanceATR.toFixed(2)} ATR, 50D stretch ${entryScreen.stretch50ATR.toFixed(2)} ATR.`
+            ? `Entry screen using completed bar ${entryScreen.sourceDate}: ${decision}, Momentum Architecture score ${score}. Route: ${entryScreen.route}. 15D momentum ${entryScreen.momentum15.toFixed(1)}%, EMA20 distance ${entryScreen.ema20DistanceATR.toFixed(2)} ATR, 50D stretch ${entryScreen.stretch50ATR.toFixed(2)} ATR.`
             : 'Not enough daily history to calculate the entry GO/NOGO score.';
 
           return `<g>
