@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Review closed trades with sortable results and daily candlestick charts" />
+  <title>Closed Trade Review | Portfolio Manager</title>
+  <style>
+    :root {
+      --bg: #09111f;
+      --panel: #111827;
+      --panel-2: #172033;
+      --panel-3: #0c1525;
+      --line: #2e3b51;
+      --text: #e7eef8;
+      --muted: #94a3b8;
+      --green: #22c55e;
+      --green-soft: rgba(34,197,94,.13);
+      --red: #ef4444;
+      --red-soft: rgba(239,68,68,.13);
+      --amber: #f59e0b;
+      --blue: #60a5fa;
+      --white: #fff;
+    }
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 13% -5%, rgba(37,99,235,.2), transparent 32%),
+        radial-gradient(circle at 95% 5%, rgba(34,197,94,.07), transparent 24%),
+        var(--bg);
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(46,59,81,.82);
+      background: rgba(9,17,31,.88);
+      backdrop-filter: blur(16px);
+    }
+    .topbar {
+      width: min(1600px, 100%);
+      min-height: 72px;
+      margin: auto;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .eyebrow { color: var(--blue); font-size: 10px; font-weight: 850; text-transform: uppercase; letter-spacing: .13em; }
+    h1 { margin: 3px 0 0; font-size: clamp(21px, 3vw, 27px); letter-spacing: -.025em; }
+    .head-actions { display: flex; align-items: center; gap: 9px; }
+    .button, .back {
+      min-height: 39px;
+      padding: 9px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel-2);
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .button:hover, .back:hover { border-color: var(--blue); }
+    .button.primary { background: #2563eb; border-color: #3b82f6; }
+    .button.danger { color: #fecaca; border-color: rgba(239,68,68,.4); background: rgba(127,29,29,.34); }
+    main { width: min(1600px, 100%); margin: auto; padding: 18px 22px 42px; }
+    .shell { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 15px; align-items: start; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: linear-gradient(145deg, rgba(23,32,51,.96), rgba(12,21,37,.96));
+      box-shadow: 0 24px 70px rgba(0,0,0,.17);
+    }
+    .trade-panel { position: sticky; top: 89px; overflow: hidden; }
+    .filters { padding: 14px; border-bottom: 1px solid var(--line); }
+    .filter-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .filter-title { font-size: 14px; font-weight: 850; }
+    .count { color: var(--muted); font-size: 11px; }
+    .segments { margin-top: 12px; padding: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-radius: 11px; background: var(--panel-3); }
+    .segment { padding: 8px 6px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 850; }
+    .segment.active { background: #2563eb; color: var(--white); box-shadow: 0 4px 16px rgba(37,99,235,.26); }
+    .search { margin-top: 10px; width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 10px; background: #07101e; color: var(--text); outline: none; font-size: 12px; }
+    .search:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(96,165,250,.12); }
+    .trade-list { max-height: calc(100vh - 258px); overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th, td { padding: 10px 9px; border-bottom: 1px solid rgba(46,59,81,.76); white-space: nowrap; text-align: left; }
+    th { position: sticky; top: 0; z-index: 2; padding-top: 9px; padding-bottom: 9px; background: #0b1423; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
+    .sort { width: 100%; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; text-align: left; text-transform: inherit; letter-spacing: inherit; font-size: inherit; font-weight: 850; }
+    .sort::after { content: ''; margin-left: 4px; }
+    .sort.active.asc::after { content: '↑'; color: var(--blue); }
+    .sort.active.desc::after { content: '↓'; color: var(--blue); }
+    tbody tr { cursor: pointer; transition: background .1s ease; }
+    tbody tr:hover td { background: rgba(96,165,250,.065); }
+    tbody tr.selected td { background: rgba(37,99,235,.15); border-bottom-color: rgba(96,165,250,.34); }
+    .symbol { font-size: 12px; font-weight: 900; }
+    .pos { color: #86efac; }
+    .neg { color: #fca5a5; }
+    .empty { padding: 30px 18px; color: var(--muted); text-align: center; line-height: 1.5; font-size: 12px; }
+    .workspace { min-width: 0; display: grid; gap: 15px; }
+    .trade-head { padding: 17px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .ticker-line { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .ticker { font-size: 30px; line-height: 1; font-weight: 950; letter-spacing: -.035em; }
+    .result-chip { padding: 5px 8px; border-radius: 999px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
+    .result-chip.win { color: #86efac; border: 1px solid rgba(34,197,94,.3); background: var(--green-soft); }
+    .result-chip.loss { color: #fca5a5; border: 1px solid rgba(239,68,68,.3); background: var(--red-soft); }
+    .result-chip.flat { color: #fde68a; border: 1px solid rgba(245,158,11,.3); background: rgba(245,158,11,.12); }
+    .trade-dates { margin-top: 7px; color: var(--muted); font-size: 12px; }
+    .metric-strip { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+    .metric { min-width: 112px; padding: 9px 11px; border: 1px solid rgba(46,59,81,.82); border-radius: 11px; background: rgba(7,16,30,.52); }
+    .metric-label { color: var(--muted); font-size: 8px; font-weight: 850; text-transform: uppercase; letter-spacing: .08em; }
+    .metric-value { margin-top: 4px; font-size: 16px; font-weight: 900; }
+    .chart-panel { overflow: hidden; }
+    .chart-toolbar { min-height: 52px; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+    .chart-title { font-size: 14px; font-weight: 850; }
+    .chart-subtitle { margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .legend { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 10px; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend i { width: 12px; height: 8px; display: inline-block; border-radius: 2px; }
+    .legend .up-candle { background: var(--green); }
+    .legend .down-candle { background: var(--red); }
+    .legend .open-mark { width: 13px; height: 2px; background: var(--green); }
+    .legend .close-mark { width: 13px; height: 2px; background: var(--red); }
+    .legend .volume-mark { background: rgba(96,165,250,.55); }
+    .chart-wrap { min-height: 620px; padding: 8px 10px 3px; position: relative; }
+    .chart-wrap svg { width: 100%; height: auto; min-height: 580px; display: block; overflow: visible; }
+    .chart-wrap text { fill: var(--muted); font: 10px Inter, system-ui, sans-serif; }
+    .grid-line { stroke: rgba(148,163,184,.15); stroke-width: 1; }
+    .axis-line { stroke: rgba(148,163,184,.38); stroke-width: 1; }
+    .wick-up, .wick-down { stroke-width: 1.3; }
+    .wick-up { stroke: var(--green); }
+    .wick-down { stroke: var(--red); }
+    .body-up { fill: var(--green); }
+    .body-down { fill: var(--red); }
+    .volume-up { fill: rgba(34,197,94,.48); }
+    .volume-down { fill: rgba(239,68,68,.48); }
+    .volume-separator { stroke: rgba(148,163,184,.28); stroke-width: 1; }
+    .volume-label { fill: #718198 !important; font-size: 9px !important; font-weight: 800 !important; letter-spacing: .08em; }
+    .trade-window { fill: rgba(96,165,250,.045); }
+    .open-line { stroke: var(--green); stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .close-line { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .open-badge { fill: #166534; }
+    .close-badge { fill: #991b1b; }
+    .badge-text { fill: #fff !important; font-size: 9px !important; font-weight: 900 !important; letter-spacing: .04em; }
+    .entry-screen-line { stroke: rgba(245,158,11,.78); stroke-width: 1.15; stroke-dasharray: 3 4; }
+    .entry-screen-go { fill: #15803d; stroke: rgba(134,239,172,.65); stroke-width: 1; }
+    .entry-screen-nogo { fill: #b91c1c; stroke: rgba(252,165,165,.65); stroke-width: 1; }
+    .entry-screen-na { fill: #475569; stroke: rgba(203,213,225,.45); stroke-width: 1; }
+    .entry-screen-title { fill: #fff !important; font-size: 9px !important; font-weight: 950 !important; letter-spacing: .045em; }
+    .entry-screen-score { fill: #fff !important; font-size: 9px !important; font-weight: 800 !important; }
+    .chart-loading { min-height: 520px; display: grid; place-items: center; color: var(--muted); text-align: center; line-height: 1.5; padding: 20px; }
+    .chart-error { margin: 20px; padding: 15px; border: 1px solid rgba(239,68,68,.35); border-radius: 12px; background: rgba(127,29,29,.2); color: #fecaca; font-size: 12px; line-height: 1.5; }
+    .info-panel { padding: 16px; }
+    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .info-card { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(7,16,30,.46); }
+    .info-label { color: var(--muted); font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .07em; }
+    .info-value { margin-top: 6px; font-size: 15px; font-weight: 850; }
+    .initial { min-height: 520px; display: grid; place-items: center; padding: 30px; text-align: center; color: var(--muted); }
+    .initial strong { display: block; margin-bottom: 7px; color: var(--text); font-size: 17px; }
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      padding: 18px;
+      display: grid;
+      place-items: center;
+      background: rgba(2,6,23,.82);
+      backdrop-filter: blur(8px);
+    }
+    .modal.hidden, .hidden { display: none !important; }
+    .modal-card { width: min(520px, 100%); padding: 20px; border: 1px solid var(--line); border-radius: 17px; background: #101a2b; box-shadow: 0 30px 100px rgba(0,0,0,.5); }
+    .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+    .modal h2 { margin: 0; font-size: 18px; }
+    .modal p { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .close-modal { width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-2); cursor: pointer; }
+    label { display: block; margin-top: 16px; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .key-input { width: 100%; margin-top: 6px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: #07101e; color: var(--text); outline: none; }
+    .key-input:focus { border-color: var(--blue); }
+    .modal-actions { margin-top: 16px; display: flex; gap: 9px; flex-wrap: wrap; }
+    .modal-error { margin-top: 12px; color: #fca5a5; font-size: 11px; }
+    @media (max-width: 1100px) {
+      .shell { grid-template-columns: 330px minmax(0,1fr); }
+      .trade-head { flex-direction: column; }
+      .metric-strip { justify-content: flex-start; }
+      .info-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 780px) {
+      .topbar, main { padding-left: 13px; padding-right: 13px; }
+      .shell { grid-template-columns: 1fr; }
+      .trade-panel { position: static; }
+      .trade-list { max-height: 390px; }
+      .chart-wrap { min-height: 390px; overflow-x: auto; }
+      .chart-wrap svg { min-width: 820px; min-height: 390px; }
+      .head-actions .back span { display: none; }
+    }
+    @media (max-width: 520px) {
+      .head-actions { gap: 5px; }
+      .button, .back { padding-left: 9px; padding-right: 9px; }
+      .metric-strip { display: grid; width: 100%; grid-template-columns: 1fr 1fr; }
+      .metric { min-width: 0; }
+      .info-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Portfolio Manager</div>
+        <h1>Closed Trade Review</h1>
+      </div>
+      <div class="head-actions">
+        <span class="button" style="cursor:default" aria-label="Daily candle source">Alpaca candles</span>
+        <a class="back" href="index.html">← <span>Portfolio Manager</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="shell">
+      <aside class="panel trade-panel">
+        <div class="filters">
+          <div class="filter-top"><div class="filter-title">Closed trades</div><div id="tradeCount" class="count">Loading…</div></div>
+          <div class="segments" role="group" aria-label="Trade outcome filter">
+            <button class="segment active" type="button" data-filter="all">All</button>
+            <button class="segment" type="button" data-filter="winner">Winners</button>
+            <button class="segment" type="button" data-filter="loser">Losers</button>
+          </div>
+          <input id="search" class="search" type="search" placeholder="Search symbol…" aria-label="Search closed trades by symbol" />
+        </div>
+        <div id="tradeList" class="trade-list"><div class="empty">Loading closed trades from your portfolio…</div></div>
+      </aside>
+
+      <section class="workspace">
+        <article id="tradeHead" class="panel trade-head hidden"></article>
+        <article class="panel chart-panel">
+          <div class="chart-toolbar">
+            <div><div class="chart-title">Daily price action</div><div id="chartSubtitle" class="chart-subtitle">Select a closed trade to begin</div></div>
+            <div class="legend">
+              <span><i class="up-candle"></i>Up candle</span>
+              <span><i class="down-candle"></i>Down candle</span>
+              <span><i class="open-mark"></i>Open</span>
+              <span><i class="close-mark"></i>Closed</span>
+              <span><i class="volume-mark"></i>Volume</span>
+            </div>
+          </div>
+          <div id="chart" class="chart-wrap"><div class="initial"><div><strong>No trade selected</strong>Choose a trade from the list to load its chart.</div></div></div>
+        </article>
+        <article id="infoPanel" class="panel info-panel hidden"><div id="infoGrid" class="info-grid"></div></article>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const FEED_STORAGE_KEY = 'tradeDashboard.feedSettings.v1';
+      const state = {
+        trades: [],
+        filter: 'all',
+        search: '',
+        sortKey: 'exitDate',
+        sortDirection: 'desc',
+        selectedId: '',
+        chartRequest: 0,
+        chartAbort: null,
+        candleCache: new Map()
+      };
+
+      const el = id => document.getElementById(id);
+      const num = value => {
+        if (value === null || value === undefined || value === '') return null;
+        const parsed = Number(String(value).replace(/[$,\s]/g, ''));
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+      const money = value => {
+        const parsed = num(value);
+        return parsed == null ? '–' : '$' + parsed.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      };
+      const signedMoney = value => {
+        const parsed = num(value);
+        if (parsed == null) return '–';
+        return (parsed > 0 ? '+' : '') + money(parsed);
+      };
+      const pct = value => {
+        const parsed = num(value);
+        if (parsed == null) return '–';
+        return (parsed > 0 ? '+' : '') + parsed.toFixed(2) + '%';
+      };
+      const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character]));
+      const isoDate = value => String(value || '').slice(0, 10);
+      const dateValue = value => {
+        const stamp = Date.parse(isoDate(value) + 'T12:00:00Z');
+        return Number.isFinite(stamp) ? stamp : 0;
+      };
+      const displayDate = value => {
+        const date = new Date(isoDate(value) + 'T12:00:00Z');
+        return Number.isNaN(date.getTime()) ? isoDate(value) || '–' : date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      };
+      const shortDate = value => {
+        const date = new Date(isoDate(value) + 'T12:00:00Z');
+        return Number.isNaN(date.getTime()) ? isoDate(value) || '' : date.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+      };
+      const daysBetween = (start, end) => Math.max(0, Math.round((dateValue(end) - dateValue(start)) / 86400000));
+      const outcome = trade => {
+        const value = num(trade.realizedUsd) || 0;
+        return value > 0 ? 'winner' : value < 0 ? 'loser' : 'flat';
+      };
+      const tradeId = trade => String(trade.id || `${trade.symbol}|${isoDate(trade.entryDate)}|${isoDate(trade.exitDate)}`);
+      const normaliseUrl = url => String(url || '').trim().replace(/\?.*$/, '');
+
+      function getFeedSettings() {
+        try { return JSON.parse(localStorage.getItem(FEED_STORAGE_KEY) || '{}'); }
+        catch (error) { return {}; }
+      }
+
+      function addMonths(dateText, delta) {
+        const date = new Date(isoDate(dateText) + 'T12:00:00Z');
+        date.setUTCMonth(date.getUTCMonth() + delta);
+        return date.toISOString().slice(0, 10);
+      }
+
+      function addDays(dateText, days) {
+        const date = new Date(isoDate(dateText) + 'T12:00:00Z');
+        date.setUTCDate(date.getUTCDate() + days);
+        return date.toISOString().slice(0, 10);
+      }
+
+      function filteredTrades() {
+        const query = state.search.toUpperCase();
+        const filtered = state.trades.filter(trade => {
+          if (state.filter !== 'all' && outcome(trade) !== state.filter) return false;
+          return !query || String(trade.symbol || '').toUpperCase().includes(query);
+        });
+
+        const direction = state.sortDirection === 'asc' ? 1 : -1;
+        const key = state.sortKey;
+        return filtered.sort((left, right) => {
+          let a, b;
+          if (key === 'symbol') {
+            a = String(left.symbol || '').toUpperCase();
+            b = String(right.symbol || '').toUpperCase();
+            return a.localeCompare(b) * direction;
+          }
+          if (key === 'pnl') {
+            a = num(left.realizedUsd) || 0;
+            b = num(right.realizedUsd) || 0;
+          } else {
+            a = dateValue(left[key]);
+            b = dateValue(right[key]);
+          }
+          if (a === b) return String(left.symbol || '').localeCompare(String(right.symbol || ''));
+          return (a - b) * direction;
+        });
+      }
+
+      function renderTradeList() {
+        const trades = filteredTrades();
+        el('tradeCount').textContent = `${trades.length} of ${state.trades.length}`;
+        if (!trades.length) {
+          el('tradeList').innerHTML = '<div class="empty">No closed trades match this filter.</div>';
+          return;
+        }
+
+        const sortButton = (label, key) => {
+          const active = state.sortKey === key;
+          return `<button class="sort ${active ? `active ${state.sortDirection}` : ''}" type="button" data-sort="${key}">${label}</button>`;
+        };
+        const rows = trades.map(trade => {
+          const id = tradeId(trade);
+          const pnl = num(trade.realizedUsd) || 0;
+          return `<tr data-trade-id="${escapeHtml(id)}" class="${state.selectedId === id ? 'selected' : ''}" tabindex="0" aria-label="Select ${escapeHtml(trade.symbol)} trade closed ${escapeHtml(displayDate(trade.exitDate))}">
+            <td><span class="symbol">${escapeHtml(trade.symbol)}</span></td>
+            <td>${escapeHtml(shortDate(trade.entryDate))}</td>
+            <td>${escapeHtml(shortDate(trade.exitDate))}</td>
+            <td class="${pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : ''}">${escapeHtml(signedMoney(pnl))}</td>
+          </tr>`;
+        }).join('');
+        el('tradeList').innerHTML = `<table><thead><tr><th>${sortButton('Symbol','symbol')}</th><th>${sortButton('Opened','entryDate')}</th><th>${sortButton('Closed','exitDate')}</th><th>${sortButton('P&L','pnl')}</th></tr></thead><tbody>${rows}</tbody></table>`;
+      }
+
+      function selectFirstAvailable() {
+        const trades = filteredTrades();
+        if (!trades.length) {
+          state.selectedId = '';
+          renderEmptyWorkspace('No matching trade', 'Change the winner, loser or search filter to select a trade.');
+          return;
+        }
+        if (!trades.some(trade => tradeId(trade) === state.selectedId)) state.selectedId = tradeId(trades[0]);
+        renderTradeList();
+        renderSelectedTrade();
+      }
+
+      function selectedTrade() {
+        return state.trades.find(trade => tradeId(trade) === state.selectedId) || null;
+      }
+
+      function renderEmptyWorkspace(title, message) {
+        el('tradeHead').classList.add('hidden');
+        el('infoPanel').classList.add('hidden');
+        el('chartSubtitle').textContent = 'No trade selected';
+        el('chart').innerHTML = `<div class="initial"><div><strong>${escapeHtml(title)}</strong>${escapeHtml(message)}</div></div>`;
+      }
+
+      function returnPct(trade) {
+        const entry = num(trade.avgEntry);
+        const exit = num(trade.avgExit);
+        return entry && exit ? (exit / entry - 1) * 100 : null;
+      }
+
+      function renderSelectedTrade() {
+        const trade = selectedTrade();
+        if (!trade) return renderEmptyWorkspace('No trade selected', 'Choose a closed trade from the list.');
+        const pnl = num(trade.realizedUsd) || 0;
+        const result = outcome(trade);
+        const holdDays = daysBetween(trade.entryDate, trade.exitDate);
+        const estimatedReturn = returnPct(trade);
+
+        el('tradeHead').innerHTML = `<div>
+          <div class="ticker-line"><div class="ticker">${escapeHtml(trade.symbol)}</div><span class="result-chip ${result === 'winner' ? 'win' : result === 'loser' ? 'loss' : 'flat'}">${escapeHtml(result)}</span></div>
+          <div class="trade-dates">Opened ${escapeHtml(displayDate(trade.entryDate))} · Closed ${escapeHtml(displayDate(trade.exitDate))}</div>
+        </div>
+        <div class="metric-strip">
+          <div class="metric"><div class="metric-label">Realised P&L</div><div class="metric-value ${pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : ''}">${escapeHtml(signedMoney(pnl))}</div></div>
+          <div class="metric"><div class="metric-label">Price change</div><div class="metric-value ${estimatedReturn > 0 ? 'pos' : estimatedReturn < 0 ? 'neg' : ''}">${escapeHtml(pct(estimatedReturn))}</div></div>
+          <div class="metric"><div class="metric-label">Days held</div><div class="metric-value">${holdDays}</div></div>
+        </div>`;
+        el('tradeHead').classList.remove('hidden');
+
+        el('infoGrid').innerHTML = [
+          ['Average entry', money(trade.avgEntry)],
+          ['Average exit', money(trade.avgExit)],
+          ['Shares', Number(num(trade.shares) || 0).toLocaleString('en-GB')],
+          ['Partial exits', Number(num(trade.partials) || 0).toLocaleString('en-GB')]
+        ].map(([label,value]) => `<div class="info-card"><div class="info-label">${escapeHtml(label)}</div><div class="info-value">${escapeHtml(value)}</div></div>`).join('');
+        el('infoPanel').classList.remove('hidden');
+        loadTradeChart(trade);
+      }
+
+      function trimAfterExit(candles, exitDate) {      function trimAfterExit(candles, exitDate) {
+        let after = 0;
+        const result = [];
+        for (const candle of candles) {
+          if (candle.date > isoDate(exitDate)) {
+            after += 1;
+            if (after > 10) break;
+          }
+          result.push(candle);
+        }
+        return result;
+      }
+
+      async function fetchCandles(trade, signal) {
+        const settings = getFeedSettings();
+        if (!settings.webUrl || !settings.webSecret) {
+          throw new Error('Portfolio connection is missing. Open Portfolio Manager Settings and reconnect the Google Sheet.');
+        }
+
+        const startDate = addMonths(trade.entryDate, -18);
+        const endDate = addDays(trade.exitDate, 35);
+        const symbol = String(trade.symbol || '').trim().toUpperCase();
+        const cacheKey = \`\${symbol}|\${startDate}|\${endDate}\`;
+
+        if (state.candleCache.has(cacheKey)) {
+          return state.candleCache.get(cacheKey);
+        }
+
+        return new Promise((resolve, reject) => {
+          const callbackName = \`tradeCandlesCallback_\${Date.now()}_\${Math.floor(Math.random() * 100000)}\`;
+          const script = document.createElement('script');
+          let settled = false;
+
+          const cleanup = () => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            signal?.removeEventListener('abort', onAbort);
+            try { delete window[callbackName]; } catch (error) { window[callbackName] = undefined; }
+            if (script.parentNode) script.parentNode.removeChild(script);
+          };
+
+          const fail = message => {
+            cleanup();
+            reject(new Error(message));
+          };
+
+          const onAbort = () => {
+            cleanup();
+            const error = new Error('Request cancelled.');
+            error.name = 'AbortError';
+            reject(error);
+          };
+
+          const timer = setTimeout(() => {
+            fail('Alpaca candle data did not respond. Try the chart again.');
+          }, 25000);
+
+          if (signal?.aborted) {
+            onAbort();
+            return;
+          }
+          signal?.addEventListener('abort', onAbort, { once: true });
+
+          window[callbackName] = data => {
+            if (!data || !data.ok) {
+              fail(data?.error || 'Alpaca did not return candle data.');
+              return;
+            }
+
+            const candles = trimAfterExit(
+              (data.bars || []).map(row => ({
+                date: isoDate(row.date),
+                open: num(row.open),
+                high: num(row.high),
+                low: num(row.low),
+                close: num(row.close),
+                volume: num(row.volume) || 0
+              })).filter(row =>
+                row.date &&
+                [row.open, row.high, row.low, row.close].every(value => value != null)
+              ).sort((a, b) => a.date.localeCompare(b.date)),
+              trade.exitDate
+            );
+
+            if (!candles.length) {
+              fail('No Alpaca daily candles were returned for this trade.');
+              return;
+            }
+
+            state.candleCache.set(cacheKey, candles);
+            cleanup();
+            resolve(candles);
+          };
+
+          script.onerror = () => fail('The Alpaca candle feed could not be reached.');
+
+          const params = new URLSearchParams({
+            key: settings.webSecret,
+            action: 'candles',
+            symbol,
+            start: startDate,
+            end: endDate,
+            callback: callbackName,
+            _: String(Date.now())
+          });
+
+          script.src = \`\${normaliseUrl(settings.webUrl)}?\${params.toString()}\`;
+          document.body.appendChild(script);
+        });
+      }
+
+      function nearestIndex(candles, date, mode) {
+        const target = isoDate(date);
+        let exact = candles.findIndex(candle => candle.date === target);
+        if (exact >= 0) return exact;
+        if (mode === 'before') {
+          for (let index = candles.length - 1; index >= 0; index -= 1) if (candles[index].date < target) return index;
+        } else {
+          for (let index = 0; index < candles.length; index += 1) if (candles[index].date > target) return index;
+        }
+        return -1;
+      }
+
+
+      // Momentum Architecture GO / NO GO model translated from the supplied Pine script.
+      function emaSeries(values, length) {
+        const out = Array(values.length).fill(null);
+        if (!values.length) return out;
+        const alpha = 2 / (length + 1);
+        let previous = null;
+        for (let i = 0; i < values.length; i += 1) {
+          const value = values[i];
+          if (!Number.isFinite(value)) continue;
+          previous = previous == null ? value : alpha * value + (1 - alpha) * previous;
+          out[i] = previous;
+        }
+        return out;
+      }
+
+      function rmaSeries(values, length) {
+        const out = Array(values.length).fill(null);
+        if (values.length < length) return out;
+        let seed = 0;
+        for (let i = 0; i < length; i += 1) {
+          if (!Number.isFinite(values[i])) return out;
+          seed += values[i];
+        }
+        let previous = seed / length;
+        out[length - 1] = previous;
+        for (let i = length; i < values.length; i += 1) {
+          if (!Number.isFinite(values[i])) continue;
+          previous = (previous * (length - 1) + values[i]) / length;
+          out[i] = previous;
+        }
+        return out;
+      }
+
+      function smaAt(values, index, length) {
+        if (index < length - 1) return null;
+        let total = 0;
+        for (let i = index - length + 1; i <= index; i += 1) {
+          if (!Number.isFinite(values[i])) return null;
+          total += values[i];
+        }
+        return total / length;
+      }
+
+      function windowMin(values, index, length, excludeCurrent = false) {
+        const end = excludeCurrent ? index - 1 : index;
+        const start = end - length + 1;
+        if (start < 0 || end < 0) return null;
+        let result = Infinity;
+        for (let i = start; i <= end; i += 1) {
+          if (!Number.isFinite(values[i])) return null;
+          result = Math.min(result, values[i]);
+        }
+        return Number.isFinite(result) ? result : null;
+      }
+
+      function windowMax(values, index, length, excludeCurrent = false) {
+        const end = excludeCurrent ? index - 1 : index;
+        const start = end - length + 1;
+        if (start < 0 || end < 0) return null;
+        let result = -Infinity;
+        for (let i = start; i <= end; i += 1) {
+          if (!Number.isFinite(values[i])) return null;
+          result = Math.max(result, values[i]);
+        }
+        return Number.isFinite(result) ? result : null;
+      }
+
+      function momentumArchitectureAtIndex(candles, index) {
+        if (index < 49 || index >= candles.length) return null;
+
+        const closes = candles.map(row => row.close);
+        const highs = candles.map(row => row.high);
+        const lows = candles.map(row => row.low);
+        const volumes = candles.map(row => row.volume || 0);
+
+        const ema10 = emaSeries(closes, 10);
+        const ema20 = emaSeries(closes, 20);
+
+        const trueRanges = candles.map((row, i) => {
+          if (i === 0) return row.high - row.low;
+          const previousClose = closes[i - 1];
+          return Math.max(
+            row.high - row.low,
+            Math.abs(row.high - previousClose),
+            Math.abs(row.low - previousClose)
+          );
+        });
+
+        const atr20Series = rmaSeries(trueRanges, 20);
+        const atr20 = atr20Series[index];
+        if (!Number.isFinite(atr20) || atr20 <= 0) return null;
+
+        const high3 = windowMax(highs, index, 3);
+        const low3 = windowMin(lows, index, 3);
+        const vol5 = smaAt(volumes, index, 5);
+        const vol20 = smaAt(volumes, index, 20);
+        const high20 = windowMax(highs, index, 20);
+        const low20 = windowMin(lows, index, 20);
+        const priorHigh20 = windowMax(highs, index, 20, true);
+        const low50 = windowMin(lows, index, 50);
+
+        if ([high3, low3, vol5, vol20, high20, low20, priorHigh20, low50, ema20[index]]
+          .some(value => !Number.isFinite(value))) return null;
+
+        const maRange3ATR = (high3 - low3) / atr20;
+        const maVolumeRatio = vol20 > 0 ? vol5 / vol20 : null;
+
+        let barsSinceBelow10 = null;
+        for (let i = index; i >= 0; i -= 1) {
+          if (Number.isFinite(ema10[i]) && closes[i] <= ema10[i]) {
+            barsSinceBelow10 = index - i;
+            break;
+          }
+        }
+        const maResetAge = Math.min(barsSinceBelow10 == null ? 21 : barsSinceBelow10, 21);
+
+        let maHighAge = 0;
+        let highest = -Infinity;
+        for (let offset = 0; offset < 20; offset += 1) {
+          const value = highs[index - offset];
+          if (value > highest) {
+            highest = value;
+            maHighAge = offset;
+          }
+        }
+
+        const range20 = high20 - low20;
+        const maClosePosition20 = range20 > 0 ? (closes[index] - low20) / range20 : 0.5;
+        const maDistanceHighATR = (priorHigh20 - closes[index]) / atr20;
+
+        const maMomentum15 =
+          index >= 15 && closes[index - 15] !== 0
+            ? ((closes[index] / closes[index - 15]) - 1.0) * 100.0
+            : null;
+
+        const maEMA20DistanceATR = (closes[index] - ema20[index]) / atr20;
+        const maStretch50ATR = (closes[index] - low50) / atr20;
+
+        if (![maVolumeRatio, maMomentum15, maEMA20DistanceATR, maStretch50ATR]
+          .every(Number.isFinite)) return null;
+
+        const zRange3 = (maRange3ATR - 1.6053478743377458) / 0.4884305133688643;
+        const zVolume = (maVolumeRatio - 0.8587446273550717) / 0.2336522673244613;
+        const zResetAge = (maResetAge - 5.228070175438597) / 6.918111353312391;
+        const zHighAge = (maHighAge - 8.271929824561404) / 5.140627799258959;
+        const zPosition = (maClosePosition20 - 0.7042055314591412) / 0.19733635029076077;
+        const zDistance = (maDistanceHighATR - 1.5652731406790044) / 1.105743621784014;
+
+        const maLogit =
+          -0.0746060880381915 +
+          0.35814256501291186 * zRange3 +
+          0.15962122502434276 * zVolume +
+          -0.30038853716369424 * zResetAge +
+          0.005477613398225789 * zHighAge +
+          0.08267834158482865 * zPosition +
+          -0.03172365295762897 * zDistance;
+
+        const maProbability = 1.0 / (1.0 + Math.exp(-maLogit));
+        const maScore = maProbability * 100.0;
+
+        const weakMomentumFilter =
+          maMomentum15 <= 4.6 &&
+          maEMA20DistanceATR <= 0.72;
+
+        const longRunExhaustion =
+          maStretch50ATR > 11.5;
+
+        const normalMAGo =
+          maScore >= 41.0 &&
+          !weakMomentumFilter &&
+          !longRunExhaustion;
+
+        const exceptionalMAGo =
+          maScore >= 35.0 &&
+          maScore < 41.0 &&
+          maMomentum15 >= 20.0 &&
+          maEMA20DistanceATR >= 1.40 &&
+          !longRunExhaustion;
+
+        const maGo = normalMAGo || exceptionalMAGo;
+
+        return {
+          decision: maGo ? 'GO' : 'NO GO',
+          score: maScore,
+          route: normalMAGo ? 'Normal GO' : exceptionalMAGo ? 'Exceptional GO' : 'NO GO',
+          sourceDate: candles[index].date,
+          momentum15: maMomentum15,
+          ema20DistanceATR: maEMA20DistanceATR,
+          stretch50ATR: maStretch50ATR
+        };
+      }
+
+      function entryScreenAssessment(candles, entryDate) {
+        const index = candles.findIndex(candle => candle.date === isoDate(entryDate));
+        if (index < 0) return null;
+        return momentumArchitectureAtIndex(candles, index);
+      }
+
+      function candleChart(candles, trade, entryScreen) {
+        const width = 1200, height = 600;
+        const pad = { left: 20, right: 150, top: 28, bottom: 38 };
+        const plotW = width - pad.left - pad.right;
+        const volumeHeight = 92;
+        const volumeGap = 24;
+        const volumeBottom = height - pad.bottom;
+        const volumeTop = volumeBottom - volumeHeight;
+        const priceBottom = volumeTop - volumeGap;
+        const plotH = priceBottom - pad.top;
+        const lows = candles.map(candle => candle.low);
+        const highs = candles.map(candle => candle.high);
+        const rawMin = Math.min(...lows, num(trade.avgEntry) ?? Infinity, num(trade.avgExit) ?? Infinity);
+        const rawMax = Math.max(...highs, num(trade.avgEntry) ?? -Infinity, num(trade.avgExit) ?? -Infinity);
+        const pricePad = Math.max(.01, (rawMax - rawMin) * .07);
+        const minPrice = Math.max(0, rawMin - pricePad);
+        const maxPrice = rawMax + pricePad;
+        const priceRange = Math.max(.01, maxPrice - minPrice);
+        const slot = plotW / Math.max(1, candles.length);
+        const bodyW = Math.max(2.5, Math.min(11, slot * .62));
+        const x = index => pad.left + slot * index + slot / 2;
+        const y = price => pad.top + (maxPrice - price) / priceRange * plotH;
+        const openIndex = nearestIndex(candles, trade.entryDate, 'after');
+        const closeIndex = nearestIndex(candles, trade.exitDate, 'before');
+        const openX = openIndex >= 0 ? x(openIndex) : pad.left;
+        const closeX = closeIndex >= 0 ? x(closeIndex) : width - pad.right;
+        const entryPrice = num(trade.avgEntry);
+        const exitPrice = num(trade.avgExit);
+
+        const entryScreenSvg = (() => {
+          if (openIndex < 0) return '';
+          const badgeWidth = 118;
+          const badgeHeight = 35;
+          const badgeX = Math.max(pad.left + 2, Math.min(plotRight - badgeWidth - 2, openX - badgeWidth / 2));
+          const badgeY = pad.top + 5;
+          const decision = entryScreen?.decision || 'NO DATA';
+          const score = Number.isFinite(entryScreen?.score) ? entryScreen.score.toFixed(1) : '–';
+          const badgeClass =
+            decision === 'GO'
+              ? 'entry-screen-go'
+              : decision === 'NO GO'
+                ? 'entry-screen-nogo'
+                : 'entry-screen-na';
+
+          const title = entryScreen
+            ? `Entry day ${entryScreen.sourceDate}: ${decision}, Momentum Architecture score ${score}. Route: ${entryScreen.route}. 15D momentum ${entryScreen.momentum15.toFixed(1)}%, EMA20 distance ${entryScreen.ema20DistanceATR.toFixed(2)} ATR, 50D stretch ${entryScreen.stretch50ATR.toFixed(2)} ATR.`
+            : 'Not enough daily history to calculate the entry GO/NOGO score.';
+
+          return `<g>
+            <title>${escapeHtml(title)}</title>
+            <line class="entry-screen-line" x1="${openX}" x2="${openX}" y1="${badgeY + badgeHeight}" y2="${priceBottom}"/>
+            <rect class="${badgeClass}" x="${badgeX}" y="${badgeY}" width="${badgeWidth}" height="${badgeHeight}" rx="7"/>
+            <text class="entry-screen-title" x="${badgeX + badgeWidth / 2}" y="${badgeY + 14}" text-anchor="middle">ENTRY ${escapeHtml(decision)}</text>
+            <text class="entry-screen-score" x="${badgeX + badgeWidth / 2}" y="${badgeY + 27}" text-anchor="middle">SCORE ${escapeHtml(score)}</text>
+          </g>`;
+        })();
+
+        const horizontalGrid = Array.from({ length: 6 }, (_, index) => {
+          const fraction = index / 5;
+          const price = maxPrice - fraction * priceRange;
+          const gy = pad.top + fraction * plotH;
+          return `<line class="grid-line" x1="${pad.left}" x2="${width-pad.right}" y1="${gy}" y2="${gy}"/><text x="${width-4}" y="${gy+4}" text-anchor="end">$${price.toFixed(price < 10 ? 2 : 1)}</text>`;
+        }).join('');
+
+        const candleSvg = candles.map((candle, index) => {
+          const cx = x(index);
+          const up = candle.close >= candle.open;
+          const top = y(Math.max(candle.open, candle.close));
+          const bottom = y(Math.min(candle.open, candle.close));
+          const bodyHeight = Math.max(1.5, bottom - top);
+          return `<g><line class="${up ? 'wick-up' : 'wick-down'}" x1="${cx}" x2="${cx}" y1="${y(candle.high)}" y2="${y(candle.low)}"/>
+            <rect class="${up ? 'body-up' : 'body-down'}" x="${cx-bodyW/2}" y="${top}" width="${bodyW}" height="${bodyHeight}" rx=".8"><title>${escapeHtml(candle.date)} · O ${candle.open.toFixed(2)} · H ${candle.high.toFixed(2)} · L ${candle.low.toFixed(2)} · C ${candle.close.toFixed(2)}</title></rect></g>`;
+        }).join('');
+
+        const maxVolume = Math.max(1, ...candles.map(candle => candle.volume || 0));
+        const volumeSvg = candles.map((candle,index) => {
+          const barHeight = Math.max(1, (candle.volume || 0) / maxVolume * volumeHeight);
+          const up = candle.close >= candle.open;
+          return `<rect class="${up ? 'volume-up' : 'volume-down'}" x="${x(index)-bodyW/2}" y="${volumeBottom-barHeight}" width="${bodyW}" height="${barHeight}" rx=".7"><title>${escapeHtml(candle.date)} · Volume ${Number(candle.volume || 0).toLocaleString('en-GB')}</title></rect>`;
+        }).join('');
+
+        const labelIndexes = [...new Set([0, openIndex, closeIndex, candles.length-1, ...Array.from({length:5},(_,i)=>Math.round(i*(candles.length-1)/4))])].filter(index => index >= 0 && index < candles.length).sort((a,b)=>a-b);
+        const dateLabels = labelIndexes.map(index => `<text x="${x(index)}" y="${height-12}" text-anchor="middle">${escapeHtml(shortDate(candles[index].date))}</text>`).join('');
+        const plotRight = width - pad.right;
+        const badgeX = plotRight + 8;
+        const badgeWidth = 94;
+        const badgeHeight = 18;
+        const labelTop = pad.top;
+        const labelBottom = priceBottom - badgeHeight;
+        const labelItems = [
+          entryPrice == null ? null : { key: 'open', desired: Math.max(labelTop, Math.min(labelBottom, y(entryPrice) - badgeHeight / 2)) },
+          exitPrice == null ? null : { key: 'closed', desired: Math.max(labelTop, Math.min(labelBottom, y(exitPrice) - badgeHeight / 2)) }
+        ].filter(Boolean).sort((a,b) => a.desired - b.desired);
+        labelItems.forEach((item,index) => {
+          item.top = index ? Math.max(item.desired, labelItems[index-1].top + badgeHeight + 4) : item.desired;
+        });
+        if (labelItems.length && labelItems[labelItems.length-1].top > labelBottom) {
+          const shift = labelItems[labelItems.length-1].top - labelBottom;
+          labelItems.forEach(item => { item.top -= shift; });
+        }
+        const labelY = Object.fromEntries(labelItems.map(item => [item.key, item.top]));
+        const entryPriceSvg = entryPrice == null ? '' : `<line class="open-line" x1="${openX}" x2="${plotRight}" y1="${y(entryPrice)}" y2="${y(entryPrice)}"/><rect class="open-badge" x="${badgeX}" y="${labelY.open}" width="${badgeWidth}" height="${badgeHeight}" rx="5"/><text class="badge-text" x="${badgeX+badgeWidth/2}" y="${labelY.open+12.5}" text-anchor="middle">OPEN ${entryPrice.toFixed(2)}</text>`;
+        const exitPriceSvg = exitPrice == null ? '' : `<line class="close-line" x1="${closeX}" x2="${plotRight}" y1="${y(exitPrice)}" y2="${y(exitPrice)}"/><rect class="close-badge" x="${badgeX}" y="${labelY.closed}" width="${badgeWidth}" height="${badgeHeight}" rx="5"/><text class="badge-text" x="${badgeX+badgeWidth/2}" y="${labelY.closed+12.5}" text-anchor="middle">CLOSED ${exitPrice.toFixed(2)}</text>`;
+
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(trade.symbol)} daily candlestick chart with trade open and close markers">
+          <rect class="trade-window" x="${Math.min(openX,closeX)}" y="${pad.top}" width="${Math.max(1,Math.abs(closeX-openX))}" height="${volumeBottom-pad.top}"/>
+          ${horizontalGrid}
+          ${entryScreenSvg}
+          <line class="axis-line" x1="${pad.left}" x2="${width-pad.right}" y1="${priceBottom}" y2="${priceBottom}"/>
+          ${candleSvg}
+          <line class="volume-separator" x1="${pad.left}" x2="${plotRight}" y1="${volumeTop}" y2="${volumeTop}"/>
+          <text class="volume-label" x="${pad.left}" y="${volumeTop-7}">VOLUME</text>
+          ${volumeSvg}
+          <line class="axis-line" x1="${pad.left}" x2="${plotRight}" y1="${volumeBottom}" y2="${volumeBottom}"/>
+          ${entryPriceSvg}${exitPriceSvg}${dateLabels}
+        </svg>`;
+      }
+
+      async function loadTradeChart(trade) {
+        const requestId = ++state.chartRequest;
+        state.chartAbort?.abort();
+        const controller = new AbortController();
+        state.chartAbort = controller;
+        const start = addMonths(trade.entryDate, -2);
+        el('chartSubtitle').textContent = \`\${displayDate(start)} through ten trading sessions after exit\`;
+        el('chart').innerHTML = '<div class="chart-loading">Loading Alpaca daily candles…</div>';
+
+        try {
+          const history = await fetchCandles(trade, controller.signal);
+          if (requestId !== state.chartRequest) return;
+
+          const entryScreen = entryScreenAssessment(history, trade.entryDate);
+          const visibleStart = addMonths(trade.entryDate, -2);
+          const candles = history.filter(candle => candle.date >= visibleStart);
+
+          el('chart').innerHTML = candleChart(candles, trade, entryScreen);
+
+          const postExit = candles.filter(candle => candle.date > isoDate(trade.exitDate)).length;
+          const screenText =
+            entryScreen && Number.isFinite(entryScreen.score)
+              ? \` · Entry \${entryScreen.decision} \${entryScreen.score.toFixed(1)}\`
+              : ' · Entry screen unavailable';
+
+          el('chartSubtitle').textContent =
+            \`\${candles.length} Alpaca daily candles · two months before entry · \${postExit} available after exit\${screenText}\`;
+        } catch (error) {
+          if (error?.name === 'AbortError' || requestId !== state.chartRequest) return;
+          el('chart').innerHTML = \`<div class="chart-error">\${escapeHtml(error.message || 'The Alpaca candles could not be loaded.')}</div>\`;
+        } finally {
+          if (state.chartAbort === controller) state.chartAbort = null;
+        }
+      }
+
+      function loadFeed() {
+        const settings = getFeedSettings();
+        if (!settings.webUrl || !settings.webSecret) {
+          el('tradeCount').textContent = 'Not connected';
+          el('tradeList').innerHTML = '<div class="empty">Open Portfolio Manager, choose Settings and connect the Google Sheet first. This page will then reuse that saved connection.</div>';
+          return renderEmptyWorkspace('Portfolio connection required', 'Connect the Google Sheet from the Portfolio Manager home page first.');
+        }
+
+        const callbackName = `tradeReviewCallback_${Date.now()}_${Math.floor(Math.random()*100000)}`;
+        const script = document.createElement('script');
+        const callbackUrl = `${normaliseUrl(settings.webUrl)}?key=${encodeURIComponent(settings.webSecret)}&callback=${encodeURIComponent(callbackName)}&_=${Date.now()}`;
+        let timer = setTimeout(() => {
+          cleanup();
+          el('tradeCount').textContent = 'Load failed';
+          el('tradeList').innerHTML = '<div class="empty">The Google Sheet feed did not respond. Check Portfolio Manager Settings.</div>';
+        }, 20000);
+
+        function cleanup() {
+          clearTimeout(timer);
+          try { delete window[callbackName]; } catch (error) { window[callbackName] = undefined; }
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[callbackName] = data => {
+          cleanup();
+          if (!data || !data.ok) {
+            el('tradeCount').textContent = 'Feed error';
+            el('tradeList').innerHTML = `<div class="empty">${escapeHtml(data?.error || 'The portfolio feed returned an error.')}</div>`;
+            return;
+          }
+          state.trades = (data.positions || []).filter(position => String(position.status || '').toUpperCase() === 'CLOSED' && position.entryDate && position.exitDate);
+          selectFirstAvailable();
+        };
+        script.onerror = () => {
+          cleanup();
+          el('tradeCount').textContent = 'Load failed';
+          el('tradeList').innerHTML = '<div class="empty">The Google Sheet feed could not be reached.</div>';
+        };
+        script.src = callbackUrl;
+        document.body.appendChild(script);
+      }
+
+      document.querySelectorAll('.segment').forEach(button => button.addEventListener('click', () => {
+        state.filter = button.dataset.filter;
+        document.querySelectorAll('.segment').forEach(item => item.classList.toggle('active', item === button));
+        selectFirstAvailable();
+      }));
+      el('search').addEventListener('input', event => {
+        state.search = event.target.value.trim();
+        selectFirstAvailable();
+      });
+      el('tradeList').addEventListener('click', event => {
+        const sort = event.target.closest('[data-sort]');
+        if (sort) {
+          const key = sort.dataset.sort;
+          if (state.sortKey === key) state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+          else { state.sortKey = key; state.sortDirection = key === 'symbol' ? 'asc' : 'desc'; }
+          renderTradeList();
+          return;
+        }
+        const row = event.target.closest('[data-trade-id]');
+        if (!row) return;
+        state.selectedId = row.dataset.tradeId;
+        renderTradeList();
+        renderSelectedTrade();
+      });
+      el('tradeList').addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const row = event.target.closest('[data-trade-id]');
+        if (!row) return;
+        event.preventDefault();
+        state.selectedId = row.dataset.tradeId;
+        renderTradeList();
+        renderSelectedTrade();
+      });
+      loadFeed();
+    })();
+  </script>
+</body>
+</html>
