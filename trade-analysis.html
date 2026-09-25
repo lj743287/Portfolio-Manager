@@ -154,6 +154,12 @@
     .open-badge { fill: #166534; }
     .close-badge { fill: #991b1b; }
     .badge-text { fill: #fff !important; font-size: 9px !important; font-weight: 900 !important; letter-spacing: .04em; }
+    .entry-screen-line { stroke: rgba(245,158,11,.78); stroke-width: 1.15; stroke-dasharray: 3 4; }
+    .entry-screen-go { fill: #15803d; stroke: rgba(134,239,172,.65); stroke-width: 1; }
+    .entry-screen-nogo { fill: #b91c1c; stroke: rgba(252,165,165,.65); stroke-width: 1; }
+    .entry-screen-na { fill: #475569; stroke: rgba(203,213,225,.45); stroke-width: 1; }
+    .entry-screen-title { fill: #fff !important; font-size: 9px !important; font-weight: 950 !important; letter-spacing: .045em; }
+    .entry-screen-score { fill: #fff !important; font-size: 9px !important; font-weight: 800 !important; }
     .chart-loading { min-height: 520px; display: grid; place-items: center; color: var(--muted); text-align: center; line-height: 1.5; padding: 20px; }
     .chart-error { margin: 20px; padding: 15px; border: 1px solid rgba(239,68,68,.35); border-radius: 12px; background: rgba(127,29,29,.2); color: #fecaca; font-size: 12px; line-height: 1.5; }
     .info-panel { padding: 16px; }
@@ -540,7 +546,7 @@
       }
 
       async function fetchCandles(trade, signal, onRetry) {
-        const startDate = addMonths(trade.entryDate, -2);
+        const startDate = addMonths(trade.entryDate, -18);
         const endDate = addDays(trade.exitDate, 35);
         const cacheKey = `${trade.symbol}|${startDate}|${endDate}`;
         if (state.candleCache.has(cacheKey)) return state.candleCache.get(cacheKey);
@@ -583,7 +589,206 @@
         return -1;
       }
 
-      function candleChart(candles, trade) {
+
+      // Momentum Architecture GO / NO GO model translated from the supplied Pine script.
+      function emaSeries(values, length) {
+        const out = Array(values.length).fill(null);
+        if (!values.length) return out;
+        const alpha = 2 / (length + 1);
+        let previous = null;
+        for (let i = 0; i < values.length; i += 1) {
+          const value = values[i];
+          if (!Number.isFinite(value)) continue;
+          previous = previous == null ? value : alpha * value + (1 - alpha) * previous;
+          out[i] = previous;
+        }
+        return out;
+      }
+
+      function rmaSeries(values, length) {
+        const out = Array(values.length).fill(null);
+        if (values.length < length) return out;
+        let seed = 0;
+        for (let i = 0; i < length; i += 1) {
+          if (!Number.isFinite(values[i])) return out;
+          seed += values[i];
+        }
+        let previous = seed / length;
+        out[length - 1] = previous;
+        for (let i = length; i < values.length; i += 1) {
+          if (!Number.isFinite(values[i])) continue;
+          previous = (previous * (length - 1) + values[i]) / length;
+          out[i] = previous;
+        }
+        return out;
+      }
+
+      function smaAt(values, index, length) {
+        if (index < length - 1) return null;
+        let total = 0;
+        for (let i = index - length + 1; i <= index; i += 1) {
+          if (!Number.isFinite(values[i])) return null;
+          total += values[i];
+        }
+        return total / length;
+      }
+
+      function windowMin(values, index, length, excludeCurrent = false) {
+        const end = excludeCurrent ? index - 1 : index;
+        const start = end - length + 1;
+        if (start < 0 || end < 0) return null;
+        let result = Infinity;
+        for (let i = start; i <= end; i += 1) {
+          if (!Number.isFinite(values[i])) return null;
+          result = Math.min(result, values[i]);
+        }
+        return Number.isFinite(result) ? result : null;
+      }
+
+      function windowMax(values, index, length, excludeCurrent = false) {
+        const end = excludeCurrent ? index - 1 : index;
+        const start = end - length + 1;
+        if (start < 0 || end < 0) return null;
+        let result = -Infinity;
+        for (let i = start; i <= end; i += 1) {
+          if (!Number.isFinite(values[i])) return null;
+          result = Math.max(result, values[i]);
+        }
+        return Number.isFinite(result) ? result : null;
+      }
+
+      function momentumArchitectureAtIndex(candles, index) {
+        if (index < 49 || index >= candles.length) return null;
+
+        const closes = candles.map(row => row.close);
+        const highs = candles.map(row => row.high);
+        const lows = candles.map(row => row.low);
+        const volumes = candles.map(row => row.volume || 0);
+
+        const ema10 = emaSeries(closes, 10);
+        const ema20 = emaSeries(closes, 20);
+
+        const trueRanges = candles.map((row, i) => {
+          if (i === 0) return row.high - row.low;
+          const previousClose = closes[i - 1];
+          return Math.max(
+            row.high - row.low,
+            Math.abs(row.high - previousClose),
+            Math.abs(row.low - previousClose)
+          );
+        });
+
+        const atr20Series = rmaSeries(trueRanges, 20);
+        const atr20 = atr20Series[index];
+        if (!Number.isFinite(atr20) || atr20 <= 0) return null;
+
+        const high3 = windowMax(highs, index, 3);
+        const low3 = windowMin(lows, index, 3);
+        const vol5 = smaAt(volumes, index, 5);
+        const vol20 = smaAt(volumes, index, 20);
+        const high20 = windowMax(highs, index, 20);
+        const low20 = windowMin(lows, index, 20);
+        const priorHigh20 = windowMax(highs, index, 20, true);
+        const low50 = windowMin(lows, index, 50);
+
+        if ([high3, low3, vol5, vol20, high20, low20, priorHigh20, low50, ema20[index]]
+          .some(value => !Number.isFinite(value))) return null;
+
+        const maRange3ATR = (high3 - low3) / atr20;
+        const maVolumeRatio = vol20 > 0 ? vol5 / vol20 : null;
+
+        let barsSinceBelow10 = null;
+        for (let i = index; i >= 0; i -= 1) {
+          if (Number.isFinite(ema10[i]) && closes[i] <= ema10[i]) {
+            barsSinceBelow10 = index - i;
+            break;
+          }
+        }
+        const maResetAge = Math.min(barsSinceBelow10 == null ? 21 : barsSinceBelow10, 21);
+
+        let maHighAge = 0;
+        let highest = -Infinity;
+        for (let offset = 0; offset < 20; offset += 1) {
+          const value = highs[index - offset];
+          if (value > highest) {
+            highest = value;
+            maHighAge = offset;
+          }
+        }
+
+        const range20 = high20 - low20;
+        const maClosePosition20 = range20 > 0 ? (closes[index] - low20) / range20 : 0.5;
+        const maDistanceHighATR = (priorHigh20 - closes[index]) / atr20;
+
+        const maMomentum15 =
+          index >= 15 && closes[index - 15] !== 0
+            ? ((closes[index] / closes[index - 15]) - 1.0) * 100.0
+            : null;
+
+        const maEMA20DistanceATR = (closes[index] - ema20[index]) / atr20;
+        const maStretch50ATR = (closes[index] - low50) / atr20;
+
+        if (![maVolumeRatio, maMomentum15, maEMA20DistanceATR, maStretch50ATR]
+          .every(Number.isFinite)) return null;
+
+        const zRange3 = (maRange3ATR - 1.6053478743377458) / 0.4884305133688643;
+        const zVolume = (maVolumeRatio - 0.8587446273550717) / 0.2336522673244613;
+        const zResetAge = (maResetAge - 5.228070175438597) / 6.918111353312391;
+        const zHighAge = (maHighAge - 8.271929824561404) / 5.140627799258959;
+        const zPosition = (maClosePosition20 - 0.7042055314591412) / 0.19733635029076077;
+        const zDistance = (maDistanceHighATR - 1.5652731406790044) / 1.105743621784014;
+
+        const maLogit =
+          -0.0746060880381915 +
+          0.35814256501291186 * zRange3 +
+          0.15962122502434276 * zVolume +
+          -0.30038853716369424 * zResetAge +
+          0.005477613398225789 * zHighAge +
+          0.08267834158482865 * zPosition +
+          -0.03172365295762897 * zDistance;
+
+        const maProbability = 1.0 / (1.0 + Math.exp(-maLogit));
+        const maScore = maProbability * 100.0;
+
+        const weakMomentumFilter =
+          maMomentum15 <= 4.6 &&
+          maEMA20DistanceATR <= 0.72;
+
+        const longRunExhaustion =
+          maStretch50ATR > 11.5;
+
+        const normalMAGo =
+          maScore >= 41.0 &&
+          !weakMomentumFilter &&
+          !longRunExhaustion;
+
+        const exceptionalMAGo =
+          maScore >= 35.0 &&
+          maScore < 41.0 &&
+          maMomentum15 >= 20.0 &&
+          maEMA20DistanceATR >= 1.40 &&
+          !longRunExhaustion;
+
+        const maGo = normalMAGo || exceptionalMAGo;
+
+        return {
+          decision: maGo ? 'GO' : 'NO GO',
+          score: maScore,
+          route: normalMAGo ? 'Normal GO' : exceptionalMAGo ? 'Exceptional GO' : 'NO GO',
+          sourceDate: candles[index].date,
+          momentum15: maMomentum15,
+          ema20DistanceATR: maEMA20DistanceATR,
+          stretch50ATR: maStretch50ATR
+        };
+      }
+
+      function entryScreenAssessment(candles, entryDate) {
+        const index = candles.findIndex(candle => candle.date === isoDate(entryDate));
+        if (index < 0) return null;
+        return momentumArchitectureAtIndex(candles, index);
+      }
+
+      function candleChart(candles, trade, entryScreen) {
         const width = 1200, height = 600;
         const pad = { left: 20, right: 150, top: 28, bottom: 38 };
         const plotW = width - pad.left - pad.right;
@@ -611,6 +816,34 @@
         const closeX = closeIndex >= 0 ? x(closeIndex) : width - pad.right;
         const entryPrice = num(trade.avgEntry);
         const exitPrice = num(trade.avgExit);
+
+        const entryScreenSvg = (() => {
+          if (openIndex < 0) return '';
+          const badgeWidth = 118;
+          const badgeHeight = 35;
+          const badgeX = Math.max(pad.left + 2, Math.min(plotRight - badgeWidth - 2, openX - badgeWidth / 2));
+          const badgeY = pad.top + 5;
+          const decision = entryScreen?.decision || 'NO DATA';
+          const score = Number.isFinite(entryScreen?.score) ? entryScreen.score.toFixed(1) : '–';
+          const badgeClass =
+            decision === 'GO'
+              ? 'entry-screen-go'
+              : decision === 'NO GO'
+                ? 'entry-screen-nogo'
+                : 'entry-screen-na';
+
+          const title = entryScreen
+            ? `Entry day ${entryScreen.sourceDate}: ${decision}, Momentum Architecture score ${score}. Route: ${entryScreen.route}. 15D momentum ${entryScreen.momentum15.toFixed(1)}%, EMA20 distance ${entryScreen.ema20DistanceATR.toFixed(2)} ATR, 50D stretch ${entryScreen.stretch50ATR.toFixed(2)} ATR.`
+            : 'Not enough daily history to calculate the entry GO/NOGO score.';
+
+          return `<g>
+            <title>${escapeHtml(title)}</title>
+            <line class="entry-screen-line" x1="${openX}" x2="${openX}" y1="${badgeY + badgeHeight}" y2="${priceBottom}"/>
+            <rect class="${badgeClass}" x="${badgeX}" y="${badgeY}" width="${badgeWidth}" height="${badgeHeight}" rx="7"/>
+            <text class="entry-screen-title" x="${badgeX + badgeWidth / 2}" y="${badgeY + 14}" text-anchor="middle">ENTRY ${escapeHtml(decision)}</text>
+            <text class="entry-screen-score" x="${badgeX + badgeWidth / 2}" y="${badgeY + 27}" text-anchor="middle">SCORE ${escapeHtml(score)}</text>
+          </g>`;
+        })();
 
         const horizontalGrid = Array.from({ length: 6 }, (_, index) => {
           const fraction = index / 5;
@@ -662,6 +895,7 @@
         return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(trade.symbol)} daily candlestick chart with trade open and close markers">
           <rect class="trade-window" x="${Math.min(openX,closeX)}" y="${pad.top}" width="${Math.max(1,Math.abs(closeX-openX))}" height="${volumeBottom-pad.top}"/>
           ${horizontalGrid}
+          ${entryScreenSvg}
           <line class="axis-line" x1="${pad.left}" x2="${width-pad.right}" y1="${priceBottom}" y2="${priceBottom}"/>
           ${candleSvg}
           <line class="volume-separator" x1="${pad.left}" x2="${plotRight}" y1="${volumeTop}" y2="${volumeTop}"/>
@@ -686,14 +920,26 @@
         }
         el('chart').innerHTML = '<div class="chart-loading">Loading daily candles…</div>';
         try {
-          const candles = await fetchCandles(trade, controller.signal, (seconds, attempt) => {
+          const history = await fetchCandles(trade, controller.signal, (seconds, attempt) => {
             if (requestId !== state.chartRequest) return;
             el('chart').innerHTML = `<div class="chart-loading">Twelve Data limit reached while the market scan is running.<br>Retrying automatically in ${seconds} second${seconds === 1 ? '' : 's'}… <span class="muted">Attempt ${attempt + 1} of 4</span></div>`;
           });
           if (requestId !== state.chartRequest) return;
-          el('chart').innerHTML = candleChart(candles, trade);
+
+          const entryScreen = entryScreenAssessment(history, trade.entryDate);
+          const visibleStart = addMonths(trade.entryDate, -2);
+          const candles = history.filter(candle => candle.date >= visibleStart);
+
+          el('chart').innerHTML = candleChart(candles, trade, entryScreen);
+
           const postExit = candles.filter(candle => candle.date > isoDate(trade.exitDate)).length;
-          el('chartSubtitle').textContent = `${candles.length} daily candles · two months before entry · ${postExit} available after exit`;
+          const screenText =
+            entryScreen && Number.isFinite(entryScreen.score)
+              ? ` · Entry ${entryScreen.decision} ${entryScreen.score.toFixed(1)}`
+              : ' · Entry screen unavailable';
+
+          el('chartSubtitle').textContent =
+            `${candles.length} daily candles · two months before entry · ${postExit} available after exit${screenText}`;
         } catch (error) {
           if (error?.name === 'AbortError' || requestId !== state.chartRequest) return;
           el('chart').innerHTML = `<div class="chart-error">${escapeHtml(error.message || 'The candles could not be loaded.')}</div>`;
