@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-09-25T01:20:21.765006+00:00",
-  "as_of_market_date": "2026-09-24",
+  "generated_at_utc": "2026-09-26T01:20:10.213039+00:00",
+  "as_of_market_date": "2026-09-25",
   "source": "Alpaca IEX",
   "universe": {
     "exchanges": [
       "NASDAQ",
       "NYSE"
     ],
-    "catalogue_symbols": 5513,
-    "valid_history_symbols": 5511,
+    "catalogue_symbols": 5515,
+    "valid_history_symbols": 5513,
     "eligible_symbols": 3135,
     "failed_symbols": 2,
     "filters": {
@@ -17,44 +17,44 @@
       "min_avg_dollar_volume_20d": 250000.0,
       "min_daily_volume_for_4pct": 100000.0
     },
-    "valid_symbols": 5511,
+    "valid_symbols": 5513,
     "minimum_price": 3.0,
     "minimum_average_dollar_volume": 250000.0
   },
   "current": {
-    "date": "2026-09-24",
-    "coverage": 4771,
-    "eligible": 2796,
-    "up_4": 40,
-    "down_4": 77,
+    "date": "2026-09-25",
+    "coverage": 4720,
+    "eligible": 2791,
+    "up_4": 31,
+    "down_4": 24,
     "up_45_10": 13,
     "sp500_covered": 495,
-    "sp500_above_50ma": 127,
-    "sp500_pct_above_50ma": 25.66,
-    "up_25_quarter": 560,
-    "down_25_quarter": 579,
-    "bull_34_13": 438,
-    "bear_34_13": 1141,
-    "up_25_month": 45,
-    "down_25_month": 87,
-    "up_50_month": 8,
+    "sp500_above_50ma": 133,
+    "sp500_pct_above_50ma": 26.87,
+    "up_25_quarter": 547,
+    "down_25_quarter": 562,
+    "bull_34_13": 420,
+    "bear_34_13": 1078,
+    "up_25_month": 38,
+    "down_25_month": 85,
+    "up_50_month": 7,
     "down_50_month": 2,
-    "up_45_10_ma": 7.0,
-    "strong_buying_days_10": 3,
+    "up_45_10_ma": 7.9,
+    "strong_buying_days_10": 2,
     "strong_selling_days_10": 2
   },
   "ten_day_ratio": {
-    "date": "2026-09-24",
-    "up_total": 612,
-    "down_total": 647,
-    "ratio": 0.946,
+    "date": "2026-09-25",
+    "up_total": 587,
+    "down_total": 653,
+    "ratio": 0.899,
     "infinite": false
   },
   "oneq": {
     "symbol": "ONEQ",
-    "close": 106.145,
-    "ma10": 104.689,
-    "ma20": 104.27,
+    "close": 106.59,
+    "ma10": 104.963,
+    "ma20": 104.3702,
     "above": true
   },
   "condition": {
@@ -74,11 +74,6 @@
   },
   "history": {
     "daily_breadth": [
-      {
-        "date": "2026-05-18",
-        "up_4": 73,
-        "down_4": 97
-      },
       {
         "date": "2026-05-19",
         "up_4": 28,
@@ -226,7 +221,7 @@
       },
       {
         "date": "2026-07-01",
-        "up_4": 132,
+        "up_4": 133,
         "down_4": 98
       },
       {
@@ -281,7 +276,7 @@
       },
       {
         "date": "2026-07-17",
-        "up_4": 32,
+        "up_4": 33,
         "down_4": 48
       },
       {
@@ -301,7 +296,7 @@
       },
       {
         "date": "2026-07-23",
-        "up_4": 44,
+        "up_4": 45,
         "down_4": 100
       },
       {
@@ -517,83 +512,81 @@
       {
         "date": "2026-09-23",
         "up_4": 12,
-        "down_4": 126
+        "down_4": 127
       },
       {
         "date": "2026-09-24",
         "up_4": 40,
         "down_4": 77
+      },
+      {
+        "date": "2026-09-25",
+        "up_4": 31,
+        "down_4": 24
       }
     ],
     "ten_day_ratio": [
       {
-        "date": "2026-05-18",
-        "up_total": 73,
-        "down_total": 97,
-        "ratio": 0.753,
-        "infinite": false
-      },
-      {
         "date": "2026-05-19",
-        "up_total": 101,
-        "down_total": 169,
-        "ratio": 0.598,
+        "up_total": 28,
+        "down_total": 72,
+        "ratio": 0.389,
         "infinite": false
       },
       {
         "date": "2026-05-20",
-        "up_total": 278,
-        "down_total": 185,
-        "ratio": 1.503,
+        "up_total": 205,
+        "down_total": 88,
+        "ratio": 2.33,
         "infinite": false
       },
       {
         "date": "2026-05-21",
-        "up_total": 383,
-        "down_total": 216,
-        "ratio": 1.773,
+        "up_total": 310,
+        "down_total": 119,
+        "ratio": 2.605,
         "infinite": false
       },
       {
         "date": "2026-05-22",
-        "up_total": 473,
-        "down_total": 241,
-        "ratio": 1.963,
+        "up_total": 400,
+        "down_total": 144,
+        "ratio": 2.778,
         "infinite": false
       },
       {
         "date": "2026-05-26",
-        "up_total": 625,
-        "down_total": 278,
-        "ratio": 2.248,
+        "up_total": 552,
+        "down_total": 181,
+        "ratio": 3.05,
         "infinite": false
       },
       {
         "date": "2026-05-27",
-        "up_total": 720,
-        "down_total": 328,
-        "ratio": 2.195,
+        "up_total": 647,
+        "down_total": 231,
+        "ratio": 2.801,
         "infinite": false
       },
       {
         "date": "2026-05-28",
-        "up_total": 867,
-        "down_total": 359,
-        "ratio": 2.415,
+        "up_total": 794,
+        "down_total": 262,
+        "ratio": 3.031,
         "infinite": false
       },
       {
         "date": "2026-05-29",
-        "up_total": 982,
-        "down_total": 400,
-        "ratio": 2.455,
+        "up_total": 909,
+        "down_total": 303,
+        "ratio": 3.0,
         "infinite": false
       },
       {
         "date": "2026-06-01",
-        "up_total": 1170,
-        "down_total": 463,
-        "ratio": 2.527,
+        "up_total": 1097,
+        "down_total": 366,
+        "ratio": 2.997,
         "infinite": false
       },
       {
@@ -738,72 +731,72 @@
       },
       {
         "date": "2026-07-01",
-        "up_total": 1044,
+        "up_total": 1045,
         "down_total": 755,
-        "ratio": 1.383,
+        "ratio": 1.384,
         "infinite": false
       },
       {
         "date": "2026-07-02",
-        "up_total": 1076,
+        "up_total": 1077,
         "down_total": 753,
-        "ratio": 1.429,
+        "ratio": 1.43,
         "infinite": false
       },
       {
         "date": "2026-07-06",
-        "up_total": 999,
+        "up_total": 1000,
         "down_total": 735,
-        "ratio": 1.359,
+        "ratio": 1.361,
         "infinite": false
       },
       {
         "date": "2026-07-07",
-        "up_total": 967,
+        "up_total": 968,
         "down_total": 795,
-        "ratio": 1.216,
+        "ratio": 1.218,
         "infinite": false
       },
       {
         "date": "2026-07-08",
-        "up_total": 964,
+        "up_total": 965,
         "down_total": 779,
-        "ratio": 1.237,
+        "ratio": 1.239,
         "infinite": false
       },
       {
         "date": "2026-07-09",
-        "up_total": 897,
+        "up_total": 898,
         "down_total": 687,
-        "ratio": 1.306,
+        "ratio": 1.307,
         "infinite": false
       },
       {
         "date": "2026-07-10",
-        "up_total": 846,
+        "up_total": 847,
         "down_total": 652,
-        "ratio": 1.298,
+        "ratio": 1.299,
         "infinite": false
       },
       {
         "date": "2026-07-13",
-        "up_total": 710,
+        "up_total": 711,
         "down_total": 707,
-        "ratio": 1.004,
+        "ratio": 1.006,
         "infinite": false
       },
       {
         "date": "2026-07-14",
-        "up_total": 682,
+        "up_total": 683,
         "down_total": 715,
-        "ratio": 0.954,
+        "ratio": 0.955,
         "infinite": false
       },
       {
         "date": "2026-07-15",
-        "up_total": 665,
+        "up_total": 666,
         "down_total": 740,
-        "ratio": 0.899,
+        "ratio": 0.9,
         "infinite": false
       },
       {
@@ -815,100 +808,100 @@
       },
       {
         "date": "2026-07-17",
-        "up_total": 540,
+        "up_total": 541,
         "down_total": 728,
-        "ratio": 0.742,
+        "ratio": 0.743,
         "infinite": false
       },
       {
         "date": "2026-07-20",
-        "up_total": 531,
+        "up_total": 532,
         "down_total": 741,
-        "ratio": 0.717,
+        "ratio": 0.718,
         "infinite": false
       },
       {
         "date": "2026-07-21",
-        "up_total": 605,
+        "up_total": 606,
         "down_total": 627,
-        "ratio": 0.965,
+        "ratio": 0.967,
         "infinite": false
       },
       {
         "date": "2026-07-22",
-        "up_total": 596,
+        "up_total": 597,
         "down_total": 629,
-        "ratio": 0.948,
+        "ratio": 0.949,
         "infinite": false
       },
       {
         "date": "2026-07-23",
-        "up_total": 568,
+        "up_total": 570,
         "down_total": 712,
-        "ratio": 0.798,
+        "ratio": 0.801,
         "infinite": false
       },
       {
         "date": "2026-07-24",
-        "up_total": 600,
+        "up_total": 602,
         "down_total": 770,
-        "ratio": 0.779,
+        "ratio": 0.782,
         "infinite": false
       },
       {
         "date": "2026-07-27",
-        "up_total": 674,
+        "up_total": 676,
         "down_total": 706,
-        "ratio": 0.955,
+        "ratio": 0.958,
         "infinite": false
       },
       {
         "date": "2026-07-28",
-        "up_total": 739,
+        "up_total": 741,
         "down_total": 788,
-        "ratio": 0.938,
+        "ratio": 0.94,
         "infinite": false
       },
       {
         "date": "2026-07-29",
-        "up_total": 742,
+        "up_total": 744,
         "down_total": 912,
-        "ratio": 0.814,
+        "ratio": 0.816,
         "infinite": false
       },
       {
         "date": "2026-07-30",
-        "up_total": 824,
+        "up_total": 826,
         "down_total": 837,
-        "ratio": 0.984,
+        "ratio": 0.987,
         "infinite": false
       },
       {
         "date": "2026-07-31",
-        "up_total": 838,
+        "up_total": 839,
         "down_total": 848,
-        "ratio": 0.988,
+        "ratio": 0.989,
         "infinite": false
       },
       {
         "date": "2026-08-03",
-        "up_total": 956,
+        "up_total": 957,
         "down_total": 822,
-        "ratio": 1.163,
+        "ratio": 1.164,
         "infinite": false
       },
       {
         "date": "2026-08-04",
-        "up_total": 1054,
+        "up_total": 1055,
         "down_total": 823,
-        "ratio": 1.281,
+        "ratio": 1.282,
         "infinite": false
       },
       {
         "date": "2026-08-05",
-        "up_total": 1094,
+        "up_total": 1095,
         "down_total": 846,
-        "ratio": 1.293,
+        "ratio": 1.294,
         "infinite": false
       },
       {
@@ -1145,25 +1138,26 @@
       {
         "date": "2026-09-23",
         "up_total": 593,
-        "down_total": 656,
-        "ratio": 0.904,
+        "down_total": 657,
+        "ratio": 0.903,
         "infinite": false
       },
       {
         "date": "2026-09-24",
         "up_total": 612,
-        "down_total": 647,
-        "ratio": 0.946,
+        "down_total": 648,
+        "ratio": 0.944,
+        "infinite": false
+      },
+      {
+        "date": "2026-09-25",
+        "up_total": 587,
+        "down_total": 653,
+        "ratio": 0.899,
         "infinite": false
       }
     ],
     "sp500_above_50ma": [
-      {
-        "date": "2026-05-18",
-        "pct": 51.52,
-        "above": 254,
-        "covered": 493
-      },
       {
         "date": "2026-05-19",
         "pct": 47.67,
@@ -1697,14 +1691,15 @@
         "pct": 25.66,
         "above": 127,
         "covered": 495
+      },
+      {
+        "date": "2026-09-25",
+        "pct": 26.87,
+        "above": 133,
+        "covered": 495
       }
     ],
     "up_45_10_ma": [
-      {
-        "date": "2026-05-18",
-        "count": 32,
-        "ma10": 40.0
-      },
       {
         "date": "2026-05-19",
         "count": 25,
@@ -1852,73 +1847,73 @@
       },
       {
         "date": "2026-07-01",
-        "count": 23,
-        "ma10": 19.5
+        "count": 24,
+        "ma10": 19.6
       },
       {
         "date": "2026-07-02",
-        "count": 23,
-        "ma10": 20.9
+        "count": 24,
+        "ma10": 21.1
       },
       {
         "date": "2026-07-06",
-        "count": 18,
-        "ma10": 21.8
+        "count": 19,
+        "ma10": 22.1
       },
       {
         "date": "2026-07-07",
-        "count": 13,
-        "ma10": 20.8
+        "count": 14,
+        "ma10": 21.2
       },
       {
         "date": "2026-07-08",
-        "count": 11,
-        "ma10": 20.3
+        "count": 12,
+        "ma10": 20.8
       },
       {
         "date": "2026-07-09",
         "count": 13,
-        "ma10": 19.8
+        "ma10": 20.3
       },
       {
         "date": "2026-07-10",
         "count": 8,
-        "ma10": 18.3
+        "ma10": 18.8
       },
       {
         "date": "2026-07-13",
         "count": 7,
-        "ma10": 16.9
+        "ma10": 17.4
       },
       {
         "date": "2026-07-14",
         "count": 7,
-        "ma10": 15.0
+        "ma10": 15.5
       },
       {
         "date": "2026-07-15",
         "count": 7,
-        "ma10": 13.0
+        "ma10": 13.5
       },
       {
         "date": "2026-07-16",
         "count": 5,
-        "ma10": 11.2
+        "ma10": 11.6
       },
       {
         "date": "2026-07-17",
         "count": 5,
-        "ma10": 9.4
+        "ma10": 9.7
       },
       {
         "date": "2026-07-20",
         "count": 7,
-        "ma10": 8.3
+        "ma10": 8.5
       },
       {
         "date": "2026-07-21",
         "count": 6,
-        "ma10": 7.6
+        "ma10": 7.7
       },
       {
         "date": "2026-07-22",
@@ -2149,14 +2144,14 @@
         "date": "2026-09-24",
         "count": 13,
         "ma10": 7.0
+      },
+      {
+        "date": "2026-09-25",
+        "count": 13,
+        "ma10": 7.9
       }
     ],
     "primary_breadth": [
-      {
-        "date": "2026-05-18",
-        "up": 789,
-        "down": 446
-      },
       {
         "date": "2026-05-19",
         "up": 737,
@@ -2299,192 +2294,192 @@
       },
       {
         "date": "2026-06-30",
-        "up": 1119,
-        "down": 386
+        "up": 1120,
+        "down": 387
       },
       {
         "date": "2026-07-01",
-        "up": 1131,
+        "up": 1132,
         "down": 378
       },
       {
         "date": "2026-07-02",
-        "up": 1076,
+        "up": 1077,
         "down": 404
       },
       {
         "date": "2026-07-06",
-        "up": 1094,
+        "up": 1095,
         "down": 386
       },
       {
         "date": "2026-07-07",
-        "up": 1043,
+        "up": 1044,
         "down": 436
       },
       {
         "date": "2026-07-08",
-        "up": 965,
+        "up": 966,
         "down": 444
       },
       {
         "date": "2026-07-09",
-        "up": 997,
+        "up": 998,
         "down": 412
       },
       {
         "date": "2026-07-10",
-        "up": 947,
+        "up": 948,
         "down": 412
       },
       {
         "date": "2026-07-13",
-        "up": 902,
-        "down": 448
+        "up": 903,
+        "down": 449
       },
       {
         "date": "2026-07-14",
-        "up": 900,
-        "down": 436
+        "up": 901,
+        "down": 437
       },
       {
         "date": "2026-07-15",
-        "up": 886,
-        "down": 434
+        "up": 887,
+        "down": 435
       },
       {
         "date": "2026-07-16",
-        "up": 892,
-        "down": 471
+        "up": 893,
+        "down": 472
       },
       {
         "date": "2026-07-17",
-        "up": 842,
+        "up": 843,
         "down": 486
       },
       {
         "date": "2026-07-20",
-        "up": 781,
+        "up": 782,
         "down": 507
       },
       {
         "date": "2026-07-21",
-        "up": 808,
+        "up": 809,
         "down": 445
       },
       {
         "date": "2026-07-22",
-        "up": 755,
-        "down": 451
+        "up": 756,
+        "down": 452
       },
       {
         "date": "2026-07-23",
-        "up": 702,
+        "up": 703,
         "down": 483
       },
       {
         "date": "2026-07-24",
-        "up": 723,
+        "up": 724,
         "down": 501
       },
       {
         "date": "2026-07-27",
-        "up": 804,
+        "up": 805,
         "down": 466
       },
       {
         "date": "2026-07-28",
-        "up": 861,
+        "up": 862,
         "down": 495
       },
       {
         "date": "2026-07-29",
-        "up": 806,
+        "up": 807,
         "down": 539
       },
       {
         "date": "2026-07-30",
-        "up": 817,
+        "up": 818,
         "down": 476
       },
       {
         "date": "2026-07-31",
-        "up": 795,
+        "up": 796,
         "down": 504
       },
       {
         "date": "2026-08-03",
-        "up": 863,
+        "up": 864,
         "down": 454
       },
       {
         "date": "2026-08-04",
-        "up": 1009,
+        "up": 1010,
         "down": 386
       },
       {
         "date": "2026-08-05",
-        "up": 967,
+        "up": 968,
         "down": 406
       },
       {
         "date": "2026-08-06",
-        "up": 930,
+        "up": 931,
         "down": 428
       },
       {
         "date": "2026-08-07",
-        "up": 1006,
+        "up": 1007,
         "down": 402
       },
       {
         "date": "2026-08-10",
-        "up": 963,
+        "up": 964,
         "down": 395
       },
       {
         "date": "2026-08-11",
-        "up": 992,
+        "up": 993,
         "down": 399
       },
       {
         "date": "2026-08-12",
-        "up": 1018,
+        "up": 1019,
         "down": 379
       },
       {
         "date": "2026-08-13",
-        "up": 1042,
+        "up": 1043,
         "down": 369
       },
       {
         "date": "2026-08-14",
-        "up": 1053,
+        "up": 1054,
         "down": 351
       },
       {
         "date": "2026-08-17",
-        "up": 1010,
+        "up": 1011,
         "down": 361
       },
       {
         "date": "2026-08-18",
-        "up": 943,
+        "up": 944,
         "down": 392
       },
       {
         "date": "2026-08-19",
-        "up": 993,
+        "up": 994,
         "down": 387
       },
       {
         "date": "2026-08-20",
-        "up": 907,
+        "up": 908,
         "down": 427
       },
       {
         "date": "2026-08-21",
-        "up": 949,
+        "up": 950,
         "down": 404
       },
       {
@@ -2534,81 +2529,81 @@
       },
       {
         "date": "2026-09-04",
-        "up": 848,
+        "up": 849,
         "down": 414
       },
       {
         "date": "2026-09-08",
-        "up": 810,
+        "up": 811,
         "down": 407
       },
       {
         "date": "2026-09-09",
-        "up": 742,
+        "up": 743,
         "down": 445
       },
       {
         "date": "2026-09-10",
-        "up": 686,
+        "up": 687,
         "down": 500
       },
       {
         "date": "2026-09-11",
-        "up": 705,
+        "up": 706,
         "down": 474
       },
       {
         "date": "2026-09-14",
-        "up": 666,
+        "up": 667,
         "down": 506
       },
       {
         "date": "2026-09-15",
-        "up": 635,
+        "up": 636,
         "down": 548
       },
       {
         "date": "2026-09-16",
-        "up": 604,
+        "up": 605,
         "down": 562
       },
       {
         "date": "2026-09-17",
-        "up": 642,
+        "up": 643,
         "down": 528
       },
       {
         "date": "2026-09-18",
-        "up": 614,
+        "up": 615,
         "down": 544
       },
       {
         "date": "2026-09-21",
-        "up": 634,
+        "up": 635,
         "down": 504
       },
       {
         "date": "2026-09-22",
-        "up": 657,
+        "up": 658,
         "down": 485
       },
       {
         "date": "2026-09-23",
-        "up": 583,
+        "up": 584,
         "down": 547
       },
       {
         "date": "2026-09-24",
-        "up": 560,
+        "up": 561,
         "down": 579
+      },
+      {
+        "date": "2026-09-25",
+        "up": 547,
+        "down": 562
       }
     ],
     "fast_breadth": [
-      {
-        "date": "2026-05-18",
-        "bull": 979,
-        "bear": 892
-      },
       {
         "date": "2026-05-19",
         "bull": 889,
@@ -2751,192 +2746,192 @@
       },
       {
         "date": "2026-06-30",
-        "bull": 1358,
-        "bear": 704
+        "bull": 1359,
+        "bear": 705
       },
       {
         "date": "2026-07-01",
-        "bull": 1417,
-        "bear": 691
+        "bull": 1418,
+        "bear": 692
       },
       {
         "date": "2026-07-02",
-        "bull": 1414,
-        "bear": 738
+        "bull": 1415,
+        "bear": 739
       },
       {
         "date": "2026-07-06",
-        "bull": 1435,
-        "bear": 711
+        "bull": 1436,
+        "bear": 712
       },
       {
         "date": "2026-07-07",
-        "bull": 1321,
-        "bear": 749
+        "bull": 1322,
+        "bear": 750
       },
       {
         "date": "2026-07-08",
-        "bull": 1180,
-        "bear": 783
+        "bull": 1181,
+        "bear": 784
       },
       {
         "date": "2026-07-09",
-        "bull": 1201,
-        "bear": 716
+        "bull": 1202,
+        "bear": 717
       },
       {
         "date": "2026-07-10",
-        "bull": 1174,
-        "bear": 716
+        "bull": 1175,
+        "bear": 717
       },
       {
         "date": "2026-07-13",
-        "bull": 1177,
-        "bear": 757
+        "bull": 1178,
+        "bear": 758
       },
       {
         "date": "2026-07-14",
-        "bull": 1128,
-        "bear": 751
+        "bull": 1129,
+        "bear": 752
       },
       {
         "date": "2026-07-15",
-        "bull": 1182,
-        "bear": 735
+        "bull": 1183,
+        "bear": 736
       },
       {
         "date": "2026-07-16",
-        "bull": 1297,
-        "bear": 765
+        "bull": 1298,
+        "bear": 766
       },
       {
         "date": "2026-07-17",
-        "bull": 1202,
-        "bear": 774
+        "bull": 1203,
+        "bear": 775
       },
       {
         "date": "2026-07-20",
-        "bull": 1134,
-        "bear": 829
+        "bull": 1135,
+        "bear": 830
       },
       {
         "date": "2026-07-21",
-        "bull": 1215,
-        "bear": 729
+        "bull": 1216,
+        "bear": 730
       },
       {
         "date": "2026-07-22",
-        "bull": 1135,
-        "bear": 753
+        "bull": 1136,
+        "bear": 754
       },
       {
         "date": "2026-07-23",
-        "bull": 971,
+        "bull": 972,
         "bear": 833
       },
       {
         "date": "2026-07-24",
-        "bull": 985,
+        "bull": 986,
         "bear": 810
       },
       {
         "date": "2026-07-27",
-        "bull": 1085,
+        "bull": 1086,
         "bear": 737
       },
       {
         "date": "2026-07-28",
-        "bull": 1155,
+        "bull": 1156,
         "bear": 728
       },
       {
         "date": "2026-07-29",
-        "bull": 1052,
+        "bull": 1053,
         "bear": 824
       },
       {
         "date": "2026-07-30",
-        "bull": 1087,
+        "bull": 1088,
         "bear": 758
       },
       {
         "date": "2026-07-31",
-        "bull": 1047,
+        "bull": 1048,
         "bear": 781
       },
       {
         "date": "2026-08-03",
-        "bull": 1226,
+        "bull": 1227,
         "bear": 699
       },
       {
         "date": "2026-08-04",
-        "bull": 1431,
+        "bull": 1432,
         "bear": 596
       },
       {
         "date": "2026-08-05",
-        "bull": 1364,
+        "bull": 1365,
         "bear": 611
       },
       {
         "date": "2026-08-06",
-        "bull": 1305,
+        "bull": 1306,
         "bear": 670
       },
       {
         "date": "2026-08-07",
-        "bull": 1378,
+        "bull": 1379,
         "bear": 623
       },
       {
         "date": "2026-08-10",
-        "bull": 1299,
+        "bull": 1300,
         "bear": 638
       },
       {
         "date": "2026-08-11",
-        "bull": 1277,
+        "bull": 1278,
         "bear": 642
       },
       {
         "date": "2026-08-12",
-        "bull": 1295,
+        "bull": 1296,
         "bear": 622
       },
       {
         "date": "2026-08-13",
-        "bull": 1275,
+        "bull": 1276,
         "bear": 601
       },
       {
         "date": "2026-08-14",
-        "bull": 1288,
+        "bull": 1289,
         "bear": 559
       },
       {
         "date": "2026-08-17",
-        "bull": 1234,
+        "bull": 1235,
         "bear": 597
       },
       {
         "date": "2026-08-18",
-        "bull": 1140,
+        "bull": 1141,
         "bear": 656
       },
       {
         "date": "2026-08-19",
-        "bull": 1201,
+        "bull": 1202,
         "bear": 616
       },
       {
         "date": "2026-08-20",
-        "bull": 1115,
+        "bull": 1116,
         "bear": 732
       },
       {
         "date": "2026-08-21",
-        "bull": 1183,
+        "bull": 1184,
         "bear": 647
       },
       {
@@ -2986,12 +2981,12 @@
       },
       {
         "date": "2026-09-04",
-        "bull": 1022,
+        "bull": 1023,
         "bear": 734
       },
       {
         "date": "2026-09-08",
-        "bull": 959,
+        "bull": 960,
         "bear": 798
       },
       {
@@ -3052,18 +3047,16 @@
       {
         "date": "2026-09-24",
         "bull": 438,
-        "bear": 1141
+        "bear": 1143
+      },
+      {
+        "date": "2026-09-25",
+        "bull": 420,
+        "bear": 1078
       }
     ]
   },
   "ten_day_ratio_history": [
-    {
-      "date": "2026-05-18",
-      "up_total": 1004,
-      "down_total": 892,
-      "ratio": 1.126,
-      "infinite": false
-    },
     {
       "date": "2026-05-19",
       "up_total": 921,
@@ -3269,72 +3262,72 @@
     },
     {
       "date": "2026-07-01",
-      "up_total": 1044,
+      "up_total": 1045,
       "down_total": 755,
-      "ratio": 1.383,
+      "ratio": 1.384,
       "infinite": false
     },
     {
       "date": "2026-07-02",
-      "up_total": 1076,
+      "up_total": 1077,
       "down_total": 753,
-      "ratio": 1.429,
+      "ratio": 1.43,
       "infinite": false
     },
     {
       "date": "2026-07-06",
-      "up_total": 999,
+      "up_total": 1000,
       "down_total": 735,
-      "ratio": 1.359,
+      "ratio": 1.361,
       "infinite": false
     },
     {
       "date": "2026-07-07",
-      "up_total": 967,
+      "up_total": 968,
       "down_total": 795,
-      "ratio": 1.216,
+      "ratio": 1.218,
       "infinite": false
     },
     {
       "date": "2026-07-08",
-      "up_total": 964,
+      "up_total": 965,
       "down_total": 779,
-      "ratio": 1.237,
+      "ratio": 1.239,
       "infinite": false
     },
     {
       "date": "2026-07-09",
-      "up_total": 897,
+      "up_total": 898,
       "down_total": 687,
-      "ratio": 1.306,
+      "ratio": 1.307,
       "infinite": false
     },
     {
       "date": "2026-07-10",
-      "up_total": 846,
+      "up_total": 847,
       "down_total": 652,
-      "ratio": 1.298,
+      "ratio": 1.299,
       "infinite": false
     },
     {
       "date": "2026-07-13",
-      "up_total": 710,
+      "up_total": 711,
       "down_total": 707,
-      "ratio": 1.004,
+      "ratio": 1.006,
       "infinite": false
     },
     {
       "date": "2026-07-14",
-      "up_total": 682,
+      "up_total": 683,
       "down_total": 715,
-      "ratio": 0.954,
+      "ratio": 0.955,
       "infinite": false
     },
     {
       "date": "2026-07-15",
-      "up_total": 665,
+      "up_total": 666,
       "down_total": 740,
-      "ratio": 0.899,
+      "ratio": 0.9,
       "infinite": false
     },
     {
@@ -3346,100 +3339,100 @@
     },
     {
       "date": "2026-07-17",
-      "up_total": 540,
+      "up_total": 541,
       "down_total": 728,
-      "ratio": 0.742,
+      "ratio": 0.743,
       "infinite": false
     },
     {
       "date": "2026-07-20",
-      "up_total": 531,
+      "up_total": 532,
       "down_total": 741,
-      "ratio": 0.717,
+      "ratio": 0.718,
       "infinite": false
     },
     {
       "date": "2026-07-21",
-      "up_total": 605,
+      "up_total": 606,
       "down_total": 627,
-      "ratio": 0.965,
+      "ratio": 0.967,
       "infinite": false
     },
     {
       "date": "2026-07-22",
-      "up_total": 596,
+      "up_total": 597,
       "down_total": 629,
-      "ratio": 0.948,
+      "ratio": 0.949,
       "infinite": false
     },
     {
       "date": "2026-07-23",
-      "up_total": 568,
+      "up_total": 570,
       "down_total": 712,
-      "ratio": 0.798,
+      "ratio": 0.801,
       "infinite": false
     },
     {
       "date": "2026-07-24",
-      "up_total": 600,
+      "up_total": 602,
       "down_total": 770,
-      "ratio": 0.779,
+      "ratio": 0.782,
       "infinite": false
     },
     {
       "date": "2026-07-27",
-      "up_total": 674,
+      "up_total": 676,
       "down_total": 706,
-      "ratio": 0.955,
+      "ratio": 0.958,
       "infinite": false
     },
     {
       "date": "2026-07-28",
-      "up_total": 739,
+      "up_total": 741,
       "down_total": 788,
-      "ratio": 0.938,
+      "ratio": 0.94,
       "infinite": false
     },
     {
       "date": "2026-07-29",
-      "up_total": 742,
+      "up_total": 744,
       "down_total": 912,
-      "ratio": 0.814,
+      "ratio": 0.816,
       "infinite": false
     },
     {
       "date": "2026-07-30",
-      "up_total": 824,
+      "up_total": 826,
       "down_total": 837,
-      "ratio": 0.984,
+      "ratio": 0.987,
       "infinite": false
     },
     {
       "date": "2026-07-31",
-      "up_total": 838,
+      "up_total": 839,
       "down_total": 848,
-      "ratio": 0.988,
+      "ratio": 0.989,
       "infinite": false
     },
     {
       "date": "2026-08-03",
-      "up_total": 956,
+      "up_total": 957,
       "down_total": 822,
-      "ratio": 1.163,
+      "ratio": 1.164,
       "infinite": false
     },
     {
       "date": "2026-08-04",
-      "up_total": 1054,
+      "up_total": 1055,
       "down_total": 823,
-      "ratio": 1.281,
+      "ratio": 1.282,
       "infinite": false
     },
     {
       "date": "2026-08-05",
-      "up_total": 1094,
+      "up_total": 1095,
       "down_total": 846,
-      "ratio": 1.293,
+      "ratio": 1.294,
       "infinite": false
     },
     {
@@ -3676,15 +3669,22 @@
     {
       "date": "2026-09-23",
       "up_total": 593,
-      "down_total": 656,
-      "ratio": 0.904,
+      "down_total": 657,
+      "ratio": 0.903,
       "infinite": false
     },
     {
       "date": "2026-09-24",
       "up_total": 612,
-      "down_total": 647,
-      "ratio": 0.946,
+      "down_total": 648,
+      "ratio": 0.944,
+      "infinite": false
+    },
+    {
+      "date": "2026-09-25",
+      "up_total": 587,
+      "down_total": 653,
+      "ratio": 0.899,
       "infinite": false
     }
   ],
