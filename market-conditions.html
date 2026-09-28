@@ -235,7 +235,7 @@
     <div id="dashboard" class="hidden">
       <section class="status-shell" aria-label="Current market condition">
         <article class="panel condition-panel">
-          <div id="gauge" class="gauge"><div class="gauge-value"><span id="score">–</span><small>condition score</small></div></div>
+          <div id="gauge" class="gauge"><div class="gauge-value"><span id="score">–</span><small>RAG score</small></div></div>
           <div>
             <div id="stateLabel" class="state-label">Loading</div>
             <p id="stateAction" class="state-copy"></p>
@@ -245,7 +245,7 @@
 
         <article class="panel signal-panel">
           <div class="panel-heading">
-            <h2>Decision signals</h2>
+            <h2>RAG drivers</h2>
             <div id="signalCount" class="panel-sub"></div>
           </div>
           <div id="signalGrid" class="signal-grid"></div>
@@ -262,31 +262,31 @@
         </article>
 
         <article class="panel chart-panel">
-          <div class="panel-heading"><div><h2>10-day breadth ratio</h2><div class="panel-sub">Above 2.0 is a bullish thrust; below 0.5 is bearish</div></div></div>
+          <div class="panel-heading"><div><h2>10-day breadth ratio</h2><div class="panel-sub">RAG uses the 5-session direction; 2.0 / 0.5 remain useful context</div></div></div>
           <div class="legend"><span><i class="swatch"></i>10-day ratio</span></div>
           <div id="ratioChart" class="chart"></div>
         </article>
 
         <article class="panel chart-panel">
-          <div class="panel-heading"><div><h2>S&P 500 above 50-day MA</h2><div class="panel-sub">Percentage of S&P 500 stocks closing above their own 50-day average</div></div></div>
+          <div class="panel-heading"><div><h2>S&P 500 above 50-day MA</h2><div class="panel-sub">RAG uses the 5-session direction; below 30% caps Green at Amber</div></div></div>
           <div class="legend"><span><i class="swatch"></i>% above 50MA</span><span><i class="swatch green"></i>Healthy above 60%</span><span><i class="swatch red"></i>Risk below 40%</span></div>
           <div id="sp500Chart" class="chart"></div>
         </article>
 
         <article class="panel chart-panel">
-          <div class="panel-heading"><div><h2>45% in 10 sessions</h2><div class="panel-sub">10-session moving average of stocks up more than 45% over the prior 10 sessions</div></div></div>
+          <div class="panel-heading"><div><h2>45% in 10 sessions</h2><div class="panel-sub">Diagnostic only: 10-session moving average of stocks up more than 45% over the prior 10 sessions</div></div></div>
           <div class="legend"><span><i class="swatch green"></i>10-session MA</span><span><i class="swatch"></i>Daily count</span></div>
           <div id="highMomentumChart" class="chart"></div>
         </article>
 
         <article class="panel chart-panel">
-          <div class="panel-heading"><div><h2>Primary breadth</h2><div class="panel-sub">25% moves measured across 65 sessions</div></div></div>
+          <div class="panel-heading"><div><h2>Primary breadth</h2><div class="panel-sub">Diagnostic only: 25% moves measured across 65 sessions</div></div></div>
           <div class="legend"><span><i class="swatch green"></i>Up from 65-day low</span><span><i class="swatch red"></i>Down from 65-day high</span></div>
           <div id="primaryChart" class="chart"></div>
         </article>
 
         <article class="panel chart-panel">
-          <div class="panel-heading"><div><h2>Fast breadth</h2><div class="panel-sub">13% moves measured across 34 sessions</div></div></div>
+          <div class="panel-heading"><div><h2>Fast breadth</h2><div class="panel-sub">Diagnostic only: 13% moves measured across 34 sessions</div></div></div>
           <div class="legend"><span><i class="swatch green"></i>Bull 34/13</span><span><i class="swatch red"></i>Bear 34/13</span></div>
           <div id="fastChart" class="chart"></div>
         </article>
@@ -308,7 +308,7 @@
           <div id="methodology" class="methodology"></div>
         </details>
       </section>
-      <footer>Market breadth is a risk filter, not a prediction or an instruction to trade.</footer>
+      <footer>Market RAG describes the environment only. Green is not a buy signal; the stock setup, ORB PASS / Momentum Architecture and 30-minute ORH entry rules still govern every trade.</footer>
     </div>
   </main>
 
@@ -462,40 +462,88 @@ function sp500ParticipationChart(items) {
       }
 
       function render(data) {
-        const condition = data.condition;
-        const current = data.current;
-        const tests = condition.tests;
-        const ratio = data.ten_day_ratio;
-        const oneq = data.oneq;
-
-        document.body.dataset.state = condition.colour;
-        byId('score').textContent = condition.score;
-        byId('gauge').style.setProperty('--score', condition.score);
-        byId('stateLabel').textContent = condition.label;
-        byId('stateAction').textContent = condition.action;
-        byId('asOf').textContent = `Market data to ${fullDate(data.as_of_market_date)} · calculated ${updatedTime(data.generated_at_utc)}`;
-        byId('signalCount').textContent = `${condition.positive_signals} of ${condition.total_signals} positive`;
+        const condition = data.condition || {};
+        const current = data.current || {};
+        const tests = condition.tests || {};
+        const signals = condition.signals || {};
+        const ratio = data.ten_day_ratio || {};
+        const oneq = data.oneq || {};
         const sp500Pct = current.sp500_pct_above_50ma;
 
+        const points = Number(condition.points ?? Math.round(Number(condition.score || 0) * 6 / 100));
+        const maxPoints = Number(condition.max_points || 6);
+        const gaugePct = Number(condition.score ?? Math.round(points * 100 / maxPoints));
+        const state = String(condition.colour || 'amber').toLowerCase();
+
+        const oneqRet10 = Number(signals.oneq_ret10_pct ?? oneq.ret10_pct ?? 0);
+        const ratioNow = signals.ten_day_ratio_current ?? ratio.ratio;
+        const ratio5 = signals.ten_day_ratio_5_sessions_ago;
+        const ratioDelta5 = signals.ten_day_ratio_change_5;
+        const spNow = signals.sp500_pct_above_50ma_current ?? sp500Pct;
+        const sp5 = signals.sp500_pct_above_50ma_5_sessions_ago;
+        const spDelta5 = signals.sp500_pct_above_50ma_change_5;
+
+        const signed = (value, digits = 2, suffix = '') => {
+          const n = Number(value);
+          if (!Number.isFinite(n)) return 'n/a';
+          return `${n > 0 ? '+' : ''}${n.toFixed(digits)}${suffix}`;
+        };
+
+        document.body.dataset.state = state;
+        byId('score').textContent = `${points}/${maxPoints}`;
+        byId('gauge').style.setProperty('--score', gaugePct);
+        byId('stateLabel').textContent = String(condition.label || 'Amber').toUpperCase();
+
+        let action = condition.action || 'Market RAG describes the environment only; individual entry rules remain mandatory.';
+        if (condition.breadth_cap) {
+          action += ` Raw score was ${condition.raw_label || 'Green'}, but Green is capped because only ${Number(spNow || 0).toFixed(1)}% of S&P 500 stocks are above their 50-day MA.`;
+        }
+        byId('stateAction').textContent = action;
+        byId('asOf').textContent = `Market data to ${fullDate(data.as_of_market_date)} · calculated ${updatedTime(data.generated_at_utc)}`;
+        byId('signalCount').textContent = `${points}/${maxPoints} points${condition.breadth_cap ? ' · breadth cap active' : ''}`;
+
         byId('signalGrid').innerHTML = [
-          signalCard('Primary breadth', tests.primary_breadth, tests.primary_breadth ? 'Bullish' : 'Bearish', `${number(current.up_25_quarter)} up vs ${number(current.down_25_quarter)} down`),
-          signalCard('Fast breadth', tests.fast_breadth, tests.fast_breadth ? 'Bullish' : 'Bearish', `${number(current.bull_34_13)} bull vs ${number(current.bear_34_13)} bear`),
-          signalCard('10-day breadth', tests.ten_day_breadth, ratioLabel(ratio), tests.ten_day_breadth ? 'Buying breadth dominates' : 'Selling breadth dominates'),
-          signalCard('S&P 500 health', tests.sp500_50ma_health, sp500Pct == null ? 'n/a' : Number(sp500Pct).toFixed(1) + '% > 50MA', sp500Pct == null ? 'No constituent breadth data' : `${number(current.sp500_above_50ma)} of ${number(current.sp500_covered)} above 50-day MA`),
-          signalCard('ONEQ trend', tests.oneq_trend, tests.oneq_trend ? '10 MA > 20 MA' : '10 MA < 20 MA', `${Number(oneq.ma10).toFixed(2)} vs ${Number(oneq.ma20).toFixed(2)}`)
+          signalCard(
+            'ONEQ momentum · 2 pts',
+            !!tests.oneq_momentum,
+            signed(oneqRet10, 2, '%'),
+            tests.oneq_momentum ? '+2 · ONEQ is higher than 10 sessions ago' : '0 · ONEQ is not higher than 10 sessions ago'
+          ),
+          signalCard(
+            'Breadth momentum · 2 pts',
+            !!tests.ten_day_breadth_momentum,
+            ratioNow == null ? 'n/a' : Number(ratioNow).toFixed(2),
+            ratio5 == null ? '5-session comparison unavailable' : `${Number(ratio5).toFixed(2)} five sessions ago · ${tests.ten_day_breadth_momentum ? '+2' : '0'} points`
+          ),
+          signalCard(
+            'S&P participation trend · 1 pt',
+            !!tests.sp500_participation_trend,
+            spNow == null ? 'n/a' : Number(spNow).toFixed(1) + '%',
+            sp5 == null ? '5-session comparison unavailable' : `${Number(sp5).toFixed(1)}% five sessions ago · ${signed(spDelta5, 1, 'pp')} · ${tests.sp500_participation_trend ? '+1' : '0'} point`
+          ),
+          signalCard(
+            'ONEQ trend · 1 pt',
+            !!tests.oneq_trend,
+            tests.oneq_trend ? '10 MA > 20 MA' : '10 MA ≤ 20 MA',
+            `${Number(oneq.ma10 || 0).toFixed(2)} vs ${Number(oneq.ma20 || 0).toFixed(2)} · ${tests.oneq_trend ? '+1' : '0'} point`
+          )
         ].join('');
 
-        const dailyNet = current.up_4 - current.down_4;
+        const dailyNet = Number(current.up_4 || 0) - Number(current.down_4 || 0);
         const primaryRatio = current.down_25_quarter ? current.up_25_quarter / current.down_25_quarter : null;
+        const fastRatio = current.bear_34_13 ? current.bull_34_13 / current.bear_34_13 : null;
+        const rawState = condition.raw_label || condition.label || 'n/a';
+
         byId('metricGrid').innerHTML = [
-          metric('4% up today', number(current.up_4), 'High-volume movers', 'up'),
-          metric('4% down today', number(current.down_4), 'High-volume movers', 'down'),
-          metric('Daily breadth net', `${dailyNet > 0 ? '+' : ''}${number(dailyNet)}`, 'Up count less down count', dailyNet > 0 ? 'up' : dailyNet < 0 ? 'down' : 'neutral'),
-          metric('10-day ratio', ratioLabel(ratio), ratio.infinite || ratio.ratio >= 2 ? 'Bullish breadth thrust' : ratio.ratio != null && ratio.ratio < .5 ? 'Bearish breadth thrust' : 'No extreme thrust', tests.ten_day_breadth ? 'up' : 'down'),
-          metric('Primary ratio', primaryRatio == null ? '∞' : primaryRatio.toFixed(2), '65-session breadth', tests.primary_breadth ? 'up' : 'down'),
-          metric('S&P > 50MA', sp500Pct == null ? 'n/a' : Number(sp500Pct).toFixed(1) + '%', sp500Pct == null ? 'Waiting for S&P 500 breadth data' : `${number(current.sp500_above_50ma)} of ${number(current.sp500_covered)} stocks above 50-day MA`, sp500Pct >= 60 ? 'up' : sp500Pct < 40 ? 'down' : 'neutral'),
-          metric('45% / 10d MA', current.up_45_10_ma == null ? 'n/a' : Number(current.up_45_10_ma).toFixed(1), `${number(current.up_45_10)} stocks currently up 45%+ over 10 sessions`, current.up_45_10_ma >= 20 ? 'up' : current.up_45_10_ma >= 5 ? 'neutral' : ''),
-          metric('ONEQ trend', tests.oneq_trend ? 'Positive' : 'Negative', `10 MA ${Number(oneq.ma10).toFixed(2)} · 20 MA ${Number(oneq.ma20).toFixed(2)}`, tests.oneq_trend ? 'up' : 'down')
+          metric('Market RAG', `${points}/${maxPoints}`, condition.breadth_cap ? `Raw ${rawState}; capped by S&P breadth <30%` : `Raw and final state: ${rawState}`, state === 'green' ? 'up' : state === 'red' ? 'down' : 'neutral'),
+          metric('ONEQ 10-session', signed(oneqRet10, 2, '%'), '2-point momentum input', tests.oneq_momentum ? 'up' : 'down'),
+          metric('Breadth ratio Δ5', signed(ratioDelta5, 3), ratioNow == null ? '10-day ratio unavailable' : `Current ${Number(ratioNow).toFixed(2)}`, tests.ten_day_breadth_momentum ? 'up' : 'down'),
+          metric('S&P >50MA Δ5', signed(spDelta5, 2, 'pp'), spNow == null ? 'Participation unavailable' : `Current ${Number(spNow).toFixed(1)}%`, tests.sp500_participation_trend ? 'up' : 'down'),
+          metric('ONEQ trend', tests.oneq_trend ? 'Positive' : 'Negative', `10 MA ${Number(oneq.ma10 || 0).toFixed(2)} · 20 MA ${Number(oneq.ma20 || 0).toFixed(2)}`, tests.oneq_trend ? 'up' : 'down'),
+          metric('Daily 4% net', `${dailyNet > 0 ? '+' : ''}${number(dailyNet)}`, 'Diagnostic only', dailyNet > 0 ? 'up' : dailyNet < 0 ? 'down' : 'neutral'),
+          metric('Primary ratio', primaryRatio == null ? '∞' : primaryRatio.toFixed(2), 'Diagnostic only · 65-session breadth', primaryRatio != null && primaryRatio > 1 ? 'up' : 'down'),
+          metric('Fast ratio', fastRatio == null ? '∞' : fastRatio.toFixed(2), 'Diagnostic only · 34/13 breadth', fastRatio != null && fastRatio > 1 ? 'up' : 'down'),
+          metric('45% / 10d MA', current.up_45_10_ma == null ? 'n/a' : Number(current.up_45_10_ma).toFixed(1), `${number(current.up_45_10)} stocks currently up 45%+ over 10 sessions · diagnostic only`, current.up_45_10_ma >= 20 ? 'up' : current.up_45_10_ma >= 5 ? 'neutral' : '')
         ].join('');
 
         byId('dailyChart').innerHTML = breadthBars(data.history.daily_breadth, 'up_4', 'down_4');
@@ -527,7 +575,8 @@ function sp500ParticipationChart(items) {
         ].join('');
 
         const method = data.methodology || {};
-        byId('methodology').innerHTML = Object.entries(method).map(([key, value]) => `<p><strong>${escapeHtml(key.replaceAll('_',' '))}:</strong> ${escapeHtml(value)}</p>`).join('');
+        const ragIntro = '<p><strong>RAG purpose:</strong> This score measures the market environment only. It never overrides the stock-level setup or entry trigger.</p>';
+        byId('methodology').innerHTML = ragIntro + Object.entries(method).map(([key, value]) => `<p><strong>${escapeHtml(key.replaceAll('_',' '))}:</strong> ${escapeHtml(value)}</p>`).join('');
 
         byId('loading').classList.add('hidden');
         byId('dashboard').classList.remove('hidden');
