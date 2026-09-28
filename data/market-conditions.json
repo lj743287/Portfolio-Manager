@@ -1,78 +1,78 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-09-28T01:32:26.260202+00:00",
-  "as_of_market_date": "2026-09-25",
+  "generated_at_utc": "2026-09-28T22:02:51.115039+00:00",
+  "as_of_market_date": "2026-09-28",
   "source": "Alpaca IEX",
   "universe": {
     "exchanges": [
       "NASDAQ",
       "NYSE"
     ],
-    "catalogue_symbols": 5515,
-    "valid_history_symbols": 5513,
-    "eligible_symbols": 3136,
-    "failed_symbols": 2,
+    "catalogue_symbols": 5514,
+    "valid_history_symbols": 5510,
+    "eligible_symbols": 3137,
+    "failed_symbols": 4,
     "filters": {
-      "min_price": 3,
-      "min_avg_dollar_volume_20d": 250000,
-      "min_daily_volume_for_4pct": 100000
+      "min_price": 3.0,
+      "min_avg_dollar_volume_20d": 250000.0,
+      "min_daily_volume_for_4pct": 100000.0
     },
-    "valid_symbols": 5513,
-    "minimum_price": 3,
-    "minimum_average_dollar_volume": 250000
+    "valid_symbols": 5510,
+    "minimum_price": 3.0,
+    "minimum_average_dollar_volume": 250000.0
   },
   "current": {
-    "date": "2026-09-25",
-    "coverage": 5483,
-    "eligible": 2794,
-    "up_4": 31,
-    "down_4": 24,
-    "up_45_10": 13,
+    "date": "2026-09-28",
+    "coverage": 4762,
+    "eligible": 2789,
+    "up_4": 29,
+    "down_4": 81,
+    "up_45_10": 12,
     "sp500_covered": 495,
-    "sp500_above_50ma": 133,
-    "sp500_pct_above_50ma": 26.87,
-    "up_25_quarter": 547,
-    "down_25_quarter": 562,
-    "bull_34_13": 420,
-    "bear_34_13": 1078,
-    "up_25_month": 38,
-    "down_25_month": 85,
+    "sp500_above_50ma": 123,
+    "sp500_pct_above_50ma": 24.85,
+    "up_25_quarter": 477,
+    "down_25_quarter": 592,
+    "bull_34_13": 398,
+    "bear_34_13": 1182,
+    "up_25_month": 41,
+    "down_25_month": 81,
     "up_50_month": 7,
     "down_50_month": 2,
-    "up_45_10_ma": 8.2,
+    "up_45_10_ma": 9.0,
     "strong_buying_days_10": 2,
-    "strong_selling_days_10": 2
+    "strong_selling_days_10": 3
   },
   "ten_day_ratio": {
-    "date": "2026-09-25",
-    "up_total": 588,
-    "down_total": 653,
-    "ratio": 0.9,
+    "date": "2026-09-28",
+    "up_total": 523,
+    "down_total": 614,
+    "ratio": 0.852,
     "infinite": false
   },
   "oneq": {
     "symbol": "ONEQ",
-    "close": 106.59,
-    "ma10": 104.963,
-    "ma20": 104.3702,
-    "above": true,
-    "ret10_pct": 2.708
+    "close": 105.6,
+    "ma10": 105.189,
+    "ma20": 104.4447,
+    "ret10_pct": 2.187,
+    "above": true
   },
   "condition": {
     "label": "Amber",
-    "raw_label": "Green",
+    "raw_label": "Amber",
     "colour": "amber",
-    "score": 83,
-    "points": 5,
+    "score": 50,
+    "points": 3,
     "max_points": 6,
-    "positive_signals": 3,
+    "positive_signals": 2,
     "total_signals": 4,
     "action": "Market conditions are mixed or participation is too narrow for Green. Trade only when the stock setup and entry trigger are strong.",
-    "breadth_cap": true,
+    "breadth_cap": false,
     "breadth_cap_threshold": 30,
     "tests": {
       "oneq_momentum": true,
-      "ten_day_breadth_momentum": true,
+      "ten_day_breadth_momentum": false,
       "sp500_participation_trend": false,
       "oneq_trend": true
     },
@@ -83,22 +83,17 @@
       "oneq_trend": 1
     },
     "signals": {
-      "oneq_ret10_pct": 2.708,
-      "ten_day_ratio_current": 0.9,
-      "ten_day_ratio_5_sessions_ago": 0.853,
-      "ten_day_ratio_change_5": 0.047,
-      "sp500_pct_above_50ma_current": 26.87,
-      "sp500_pct_above_50ma_5_sessions_ago": 28.28,
-      "sp500_pct_above_50ma_change_5": -1.41
+      "oneq_ret10_pct": 2.187,
+      "ten_day_ratio_current": 0.852,
+      "ten_day_ratio_5_sessions_ago": 0.931,
+      "ten_day_ratio_change_5": -0.079,
+      "sp500_pct_above_50ma_current": 24.85,
+      "sp500_pct_above_50ma_5_sessions_ago": 31.11,
+      "sp500_pct_above_50ma_change_5": -6.26
     }
   },
   "history": {
     "daily_breadth": [
-      {
-        "date": "2026-05-19",
-        "up_4": 28,
-        "down_4": 72
-      },
       {
         "date": "2026-05-20",
         "up_4": 177,
@@ -543,77 +538,75 @@
         "date": "2026-09-25",
         "up_4": 31,
         "down_4": 24
+      },
+      {
+        "date": "2026-09-28",
+        "up_4": 29,
+        "down_4": 81
       }
     ],
     "ten_day_ratio": [
       {
-        "date": "2026-05-19",
-        "up_total": 28,
-        "down_total": 72,
-        "ratio": 0.389,
-        "infinite": false
-      },
-      {
         "date": "2026-05-20",
-        "up_total": 205,
-        "down_total": 88,
-        "ratio": 2.33,
+        "up_total": 177,
+        "down_total": 16,
+        "ratio": 11.062,
         "infinite": false
       },
       {
         "date": "2026-05-21",
-        "up_total": 310,
-        "down_total": 119,
-        "ratio": 2.605,
+        "up_total": 282,
+        "down_total": 47,
+        "ratio": 6.0,
         "infinite": false
       },
       {
         "date": "2026-05-22",
-        "up_total": 400,
-        "down_total": 144,
-        "ratio": 2.778,
+        "up_total": 372,
+        "down_total": 72,
+        "ratio": 5.167,
         "infinite": false
       },
       {
         "date": "2026-05-26",
-        "up_total": 552,
-        "down_total": 181,
-        "ratio": 3.05,
+        "up_total": 524,
+        "down_total": 109,
+        "ratio": 4.807,
         "infinite": false
       },
       {
         "date": "2026-05-27",
-        "up_total": 647,
-        "down_total": 231,
-        "ratio": 2.801,
+        "up_total": 619,
+        "down_total": 159,
+        "ratio": 3.893,
         "infinite": false
       },
       {
         "date": "2026-05-28",
-        "up_total": 794,
-        "down_total": 262,
-        "ratio": 3.031,
+        "up_total": 766,
+        "down_total": 190,
+        "ratio": 4.032,
         "infinite": false
       },
       {
         "date": "2026-05-29",
-        "up_total": 909,
-        "down_total": 303,
-        "ratio": 3,
+        "up_total": 881,
+        "down_total": 231,
+        "ratio": 3.814,
         "infinite": false
       },
       {
         "date": "2026-06-01",
-        "up_total": 1097,
-        "down_total": 366,
-        "ratio": 2.997,
+        "up_total": 1069,
+        "down_total": 294,
+        "ratio": 3.636,
         "infinite": false
       },
       {
         "date": "2026-06-02",
-        "up_total": 1193,
-        "down_total": 439,
-        "ratio": 2.718,
+        "up_total": 1165,
+        "down_total": 367,
+        "ratio": 3.174,
         "infinite": false
       },
       {
@@ -1175,15 +1168,16 @@
         "down_total": 653,
         "ratio": 0.9,
         "infinite": false
+      },
+      {
+        "date": "2026-09-28",
+        "up_total": 523,
+        "down_total": 614,
+        "ratio": 0.852,
+        "infinite": false
       }
     ],
     "sp500_above_50ma": [
-      {
-        "date": "2026-05-19",
-        "pct": 47.67,
-        "above": 235,
-        "covered": 493
-      },
       {
         "date": "2026-05-20",
         "pct": 52.74,
@@ -1717,14 +1711,15 @@
         "pct": 26.87,
         "above": 133,
         "covered": 495
+      },
+      {
+        "date": "2026-09-28",
+        "pct": 24.85,
+        "above": 123,
+        "covered": 495
       }
     ],
     "up_45_10_ma": [
-      {
-        "date": "2026-05-19",
-        "count": 25,
-        "ma10": 40.1
-      },
       {
         "date": "2026-05-20",
         "count": 28,
@@ -1748,7 +1743,7 @@
       {
         "date": "2026-05-27",
         "count": 36,
-        "ma10": 36
+        "ma10": 36.0
       },
       {
         "date": "2026-05-28",
@@ -1828,12 +1823,12 @@
       {
         "date": "2026-06-18",
         "count": 9,
-        "ma10": 9
+        "ma10": 9.0
       },
       {
         "date": "2026-06-22",
         "count": 23,
-        "ma10": 10
+        "ma10": 10.0
       },
       {
         "date": "2026-06-23",
@@ -1943,7 +1938,7 @@
       {
         "date": "2026-07-23",
         "count": 4,
-        "ma10": 6
+        "ma10": 6.0
       },
       {
         "date": "2026-07-24",
@@ -1953,7 +1948,7 @@
       {
         "date": "2026-07-27",
         "count": 1,
-        "ma10": 5
+        "ma10": 5.0
       },
       {
         "date": "2026-07-28",
@@ -1973,7 +1968,7 @@
       {
         "date": "2026-07-31",
         "count": 4,
-        "ma10": 4
+        "ma10": 4.0
       },
       {
         "date": "2026-08-03",
@@ -2169,14 +2164,14 @@
         "date": "2026-09-25",
         "count": 13,
         "ma10": 8.2
+      },
+      {
+        "date": "2026-09-28",
+        "count": 12,
+        "ma10": 9.0
       }
     ],
     "primary_breadth": [
-      {
-        "date": "2026-05-19",
-        "up": 737,
-        "down": 485
-      },
       {
         "date": "2026-05-20",
         "up": 806,
@@ -2621,14 +2616,14 @@
         "date": "2026-09-25",
         "up": 547,
         "down": 562
+      },
+      {
+        "date": "2026-09-28",
+        "up": 477,
+        "down": 592
       }
     ],
     "fast_breadth": [
-      {
-        "date": "2026-05-19",
-        "bull": 889,
-        "bear": 983
-      },
       {
         "date": "2026-05-20",
         "bull": 979,
@@ -3073,17 +3068,15 @@
         "date": "2026-09-25",
         "bull": 420,
         "bear": 1078
+      },
+      {
+        "date": "2026-09-28",
+        "bull": 398,
+        "bear": 1182
       }
     ]
   },
   "ten_day_ratio_history": [
-    {
-      "date": "2026-05-19",
-      "up_total": 921,
-      "down_total": 911,
-      "ratio": 1.011,
-      "infinite": false
-    },
     {
       "date": "2026-05-20",
       "up_total": 856,
@@ -3706,17 +3699,24 @@
       "down_total": 653,
       "ratio": 0.9,
       "infinite": false
+    },
+    {
+      "date": "2026-09-28",
+      "up_total": 523,
+      "down_total": 614,
+      "ratio": 0.852,
+      "infinite": false
     }
   ],
   "methodology": {
     "provider": "Alpaca",
     "feed": "IEX",
-    "high_momentum": "Close more than 45% above its close 10 sessions earlier.",
-    "sp500_50ma": "Percent of S&P 500 constituents closing above their own 50-session moving average.",
-    "note": "IEX is a single-exchange feed and may materially undercount volume-based breadth versus consolidated SIP data.",
     "rag_model": "Market RAG scores ONEQ 10-session momentum (2 points), five-session direction of the 10-day breadth ratio (2), five-session direction of S&P 500 50-day participation (1), and ONEQ 10MA above 20MA (1).",
     "rag_thresholds": "Green 5-6; Amber 3-4; Red 0-2. If fewer than 30% of S&P 500 constituents are above their 50-day MA, Green is capped at Amber.",
-    "entry_separation": "The market RAG describes the environment only. It does not authorise a trade; stock setup, Momentum Architecture/ORB PASS and the 30-minute ORH entry trigger remain separate requirements."
+    "entry_separation": "The market RAG describes the environment only. It does not authorise a trade; stock setup, Momentum Architecture/ORB PASS and the 30-minute ORH entry trigger remain separate requirements.",
+    "high_momentum": "Close more than 45% above its close 10 sessions earlier.",
+    "sp500_50ma": "Percent of S&P 500 constituents closing above their own 50-session moving average.",
+    "note": "IEX is a single-exchange feed and may materially undercount volume-based breadth versus consolidated SIP data."
   },
   "status": "ok"
 }
