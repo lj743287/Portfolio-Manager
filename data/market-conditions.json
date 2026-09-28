@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-09-27T01:15:28.169021+00:00",
+  "generated_at_utc": "2026-09-28T01:32:26.260202+00:00",
   "as_of_market_date": "2026-09-25",
   "source": "Alpaca IEX",
   "universe": {
@@ -10,7 +10,7 @@
     ],
     "catalogue_symbols": 5515,
     "valid_history_symbols": 5513,
-    "eligible_symbols": 3135,
+    "eligible_symbols": 3136,
     "failed_symbols": 2,
     "filters": {
       "min_price": 3.0,
@@ -39,15 +39,15 @@
     "down_25_month": 85,
     "up_50_month": 7,
     "down_50_month": 2,
-    "up_45_10_ma": 7.9,
+    "up_45_10_ma": 8.2,
     "strong_buying_days_10": 2,
     "strong_selling_days_10": 2
   },
   "ten_day_ratio": {
     "date": "2026-09-25",
-    "up_total": 587,
+    "up_total": 588,
     "down_total": 653,
-    "ratio": 0.899,
+    "ratio": 0.9,
     "infinite": false
   },
   "oneq": {
@@ -486,7 +486,7 @@
       },
       {
         "date": "2026-09-16",
-        "up_4": 36,
+        "up_4": 37,
         "down_4": 66
       },
       {
@@ -1102,58 +1102,58 @@
       },
       {
         "date": "2026-09-16",
-        "up_total": 569,
+        "up_total": 570,
         "down_total": 652,
-        "ratio": 0.873,
+        "ratio": 0.874,
         "infinite": false
       },
       {
         "date": "2026-09-17",
-        "up_total": 613,
+        "up_total": 614,
         "down_total": 651,
-        "ratio": 0.942,
+        "ratio": 0.943,
         "infinite": false
       },
       {
         "date": "2026-09-18",
-        "up_total": 583,
+        "up_total": 584,
         "down_total": 685,
-        "ratio": 0.851,
+        "ratio": 0.853,
         "infinite": false
       },
       {
         "date": "2026-09-21",
-        "up_total": 629,
+        "up_total": 630,
         "down_total": 677,
-        "ratio": 0.929,
+        "ratio": 0.931,
         "infinite": false
       },
       {
         "date": "2026-09-22",
-        "up_total": 609,
+        "up_total": 610,
         "down_total": 624,
-        "ratio": 0.976,
+        "ratio": 0.978,
         "infinite": false
       },
       {
         "date": "2026-09-23",
-        "up_total": 593,
+        "up_total": 594,
         "down_total": 657,
-        "ratio": 0.903,
+        "ratio": 0.904,
         "infinite": false
       },
       {
         "date": "2026-09-24",
-        "up_total": 612,
+        "up_total": 613,
         "down_total": 648,
-        "ratio": 0.944,
+        "ratio": 0.946,
         "infinite": false
       },
       {
         "date": "2026-09-25",
-        "up_total": 587,
+        "up_total": 588,
         "down_total": 653,
-        "ratio": 0.899,
+        "ratio": 0.9,
         "infinite": false
       }
     ],
@@ -2112,43 +2112,43 @@
       },
       {
         "date": "2026-09-16",
-        "count": 5,
-        "ma10": 4.1
+        "count": 6,
+        "ma10": 4.2
       },
       {
         "date": "2026-09-17",
-        "count": 7,
-        "ma10": 4.4
+        "count": 8,
+        "ma10": 4.6
       },
       {
         "date": "2026-09-18",
-        "count": 6,
-        "ma10": 4.5
+        "count": 7,
+        "ma10": 4.8
       },
       {
         "date": "2026-09-21",
         "count": 10,
-        "ma10": 4.9
+        "ma10": 5.2
       },
       {
         "date": "2026-09-22",
         "count": 8,
-        "ma10": 5.4
+        "ma10": 5.7
       },
       {
         "date": "2026-09-23",
         "count": 8,
-        "ma10": 6.0
+        "ma10": 6.3
       },
       {
         "date": "2026-09-24",
         "count": 13,
-        "ma10": 7.0
+        "ma10": 7.3
       },
       {
         "date": "2026-09-25",
         "count": 13,
-        "ma10": 7.9
+        "ma10": 8.2
       }
     ],
     "primary_breadth": [
@@ -2564,18 +2564,18 @@
       },
       {
         "date": "2026-09-16",
-        "up": 605,
+        "up": 606,
         "down": 562
       },
       {
         "date": "2026-09-17",
-        "up": 643,
-        "down": 528
+        "up": 644,
+        "down": 529
       },
       {
         "date": "2026-09-18",
-        "up": 615,
-        "down": 544
+        "up": 616,
+        "down": 545
       },
       {
         "date": "2026-09-21",
@@ -3016,18 +3016,18 @@
       },
       {
         "date": "2026-09-16",
-        "bull": 567,
+        "bull": 568,
         "bear": 1125
       },
       {
         "date": "2026-09-17",
-        "bull": 620,
-        "bear": 1051
+        "bull": 621,
+        "bear": 1052
       },
       {
         "date": "2026-09-18",
-        "bull": 554,
-        "bear": 1099
+        "bull": 555,
+        "bear": 1100
       },
       {
         "date": "2026-09-21",
@@ -3633,58 +3633,58 @@
     },
     {
       "date": "2026-09-16",
-      "up_total": 569,
+      "up_total": 570,
       "down_total": 652,
-      "ratio": 0.873,
+      "ratio": 0.874,
       "infinite": false
     },
     {
       "date": "2026-09-17",
-      "up_total": 613,
+      "up_total": 614,
       "down_total": 651,
-      "ratio": 0.942,
+      "ratio": 0.943,
       "infinite": false
     },
     {
       "date": "2026-09-18",
-      "up_total": 583,
+      "up_total": 584,
       "down_total": 685,
-      "ratio": 0.851,
+      "ratio": 0.853,
       "infinite": false
     },
     {
       "date": "2026-09-21",
-      "up_total": 629,
+      "up_total": 630,
       "down_total": 677,
-      "ratio": 0.929,
+      "ratio": 0.931,
       "infinite": false
     },
     {
       "date": "2026-09-22",
-      "up_total": 609,
+      "up_total": 610,
       "down_total": 624,
-      "ratio": 0.976,
+      "ratio": 0.978,
       "infinite": false
     },
     {
       "date": "2026-09-23",
-      "up_total": 593,
+      "up_total": 594,
       "down_total": 657,
-      "ratio": 0.903,
+      "ratio": 0.904,
       "infinite": false
     },
     {
       "date": "2026-09-24",
-      "up_total": 612,
+      "up_total": 613,
       "down_total": 648,
-      "ratio": 0.944,
+      "ratio": 0.946,
       "infinite": false
     },
     {
       "date": "2026-09-25",
-      "up_total": 587,
+      "up_total": 588,
       "down_total": 653,
-      "ratio": 0.899,
+      "ratio": 0.9,
       "infinite": false
     }
   ],
