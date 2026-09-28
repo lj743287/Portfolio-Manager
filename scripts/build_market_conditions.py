@@ -212,22 +212,76 @@ def ratio_record(items,index):
 
 def moving_average(values,period):return None if len(values)<period else sum(values[-period:])/period
 
-def final_state(current,current_ratio,oneq):
-    rv=current_ratio.get("ratio") if current_ratio else None
-    rp=bool(current_ratio.get("infinite")) or (rv is not None and rv>=1) if current_ratio else False
+def rag_state(current,current_ratio,oneq,history,ratio_history):
+    """Market-environment RAG calibrated to the user's closed-trade evidence.
+
+    This is deliberately not an entry signal. It scores market tailwind only:
+    ONEQ 10-session momentum (2), five-session change in 10-day breadth ratio
+    (2), five-session change in S&P 500 50MA participation (1), and ONEQ
+    10MA > 20MA trend (1). Fewer than 30% of S&P 500 stocks above their 50MA
+    caps an otherwise Green reading at Amber.
+    """
+    current_ratio_value=current_ratio.get("ratio") if current_ratio else None
+    ratio_5=ratio_history[-6].get("ratio") if len(ratio_history)>=6 else None
     sp500_pct=current.get("sp500_pct_above_50ma")
+    sp500_5=history[-6].get("sp500_pct_above_50ma") if len(history)>=6 else None
+    oneq_ret10=oneq.get("ret10_pct")
+    oneq_trend=bool(oneq.get("ma10") is not None and oneq.get("ma20") is not None and oneq["ma10"]>oneq["ma20"])
+
+    oneq_momentum=bool(oneq_ret10 is not None and oneq_ret10>0)
+    breadth_momentum=bool(current_ratio_value is not None and ratio_5 is not None and current_ratio_value>ratio_5)
+    sp500_participation_trend=bool(sp500_pct is not None and sp500_5 is not None and sp500_pct>sp500_5)
+
+    points=(2 if oneq_momentum else 0)+(2 if breadth_momentum else 0)+(1 if sp500_participation_trend else 0)+(1 if oneq_trend else 0)
+    raw_label="Green" if points>=5 else "Amber" if points>=3 else "Red"
+    label=raw_label
+    breadth_cap=bool(sp500_pct is not None and sp500_pct<30 and raw_label=="Green")
+    if breadth_cap:
+        label="Amber"
+    colour=label.lower()
+    score=round(points/6*100)
+    if label=="Green":
+        action="Market momentum and breadth impulse are supportive. This is an environment signal only; individual entries still require the full setup and ORH trigger."
+    elif label=="Amber":
+        action="Market conditions are mixed or participation is too narrow for Green. Trade only when the stock setup and entry trigger are strong."
+    else:
+        action="The market tailwind is weak. Be highly selective and require exceptional stock-level setup and entry confirmation."
+
     tests={
-        "primary_breadth":current["up_25_quarter"]>current["down_25_quarter"],
-        "fast_breadth":current["bull_34_13"]>current["bear_34_13"],
-        "ten_day_breadth":rp,
-        "oneq_trend":bool(oneq.get("ma10") is not None and oneq.get("ma20") is not None and oneq["ma10"]>oneq["ma20"]),
-        "sp500_50ma_health":bool(sp500_pct is not None and sp500_pct>=40),
+        "oneq_momentum":oneq_momentum,
+        "ten_day_breadth_momentum":breadth_momentum,
+        "sp500_participation_trend":sp500_participation_trend,
+        "oneq_trend":oneq_trend,
     }
-    positives=sum(1 for value in tests.values() if value); total=len(tests); score=round(positives*100/total)
-    if positives>=4: label,colour,action="Favourable","green","Normal long exposure is permitted, subject to setup quality, broad participation and your usual risk limits."
-    elif positives<=2: label,colour,action="Defensive","red","Protect capital. Avoid marginal breakouts and keep new long exposure very small."
-    else: label,colour,action="Selective","amber","Breadth is mixed. Take only the strongest setups and consider reduced total exposure."
-    return {"label":label,"colour":colour,"score":score,"positive_signals":positives,"total_signals":total,"action":action,"tests":tests}
+    return {
+        "label":label,
+        "raw_label":raw_label,
+        "colour":colour,
+        "score":score,
+        "points":points,
+        "max_points":6,
+        "positive_signals":sum(1 for value in tests.values() if value),
+        "total_signals":len(tests),
+        "action":action,
+        "breadth_cap":breadth_cap,
+        "breadth_cap_threshold":30,
+        "tests":tests,
+        "weights":{
+            "oneq_momentum":2,
+            "ten_day_breadth_momentum":2,
+            "sp500_participation_trend":1,
+            "oneq_trend":1,
+        },
+        "signals":{
+            "oneq_ret10_pct":oneq_ret10,
+            "ten_day_ratio_current":current_ratio_value,
+            "ten_day_ratio_5_sessions_ago":ratio_5,
+            "ten_day_ratio_change_5":None if current_ratio_value is None or ratio_5 is None else round(current_ratio_value-ratio_5,3),
+            "sp500_pct_above_50ma_current":sp500_pct,
+            "sp500_pct_above_50ma_5_sessions_ago":sp500_5,
+            "sp500_pct_above_50ma_change_5":None if sp500_pct is None or sp500_5 is None else round(sp500_pct-sp500_5,2),
+        },
+    }
 
 
 def build_output(api_key,api_secret,batch_size,requests_per_minute,max_symbols=0):
@@ -255,14 +309,15 @@ def build_output(api_key,api_secret,batch_size,requests_per_minute,max_symbols=0
     if valid_symbols<minimum_valid:raise RuntimeError(f"Coverage check failed: only {valid_symbols}/{len(universe)} symbols returned valid history")
     history=[counts[d] for d in target_dates]; ratio_history=[r for i in range(len(history)) if (r:=ratio_record(history,i))]; current=history[-1]; current_ratio=ratio_history[-1]
     oneq_closes=[b["close"] for b in oneq_bars]; ma10=moving_average(oneq_closes,10); ma20=moving_average(oneq_closes,20)
-    oneq={"symbol":"ONEQ","close":round(oneq_closes[-1],4),"ma10":round(ma10,4) if ma10 is not None else None,"ma20":round(ma20,4) if ma20 is not None else None,"above":bool(ma10 is not None and ma20 is not None and ma10>ma20)}
+    ret10=(oneq_closes[-1]/oneq_closes[-11]-1)*100 if len(oneq_closes)>=11 and oneq_closes[-11]>0 else None
+    oneq={"symbol":"ONEQ","close":round(oneq_closes[-1],4),"ma10":round(ma10,4) if ma10 is not None else None,"ma20":round(ma20,4) if ma20 is not None else None,"ret10_pct":round(ret10,3) if ret10 is not None else None,"above":bool(ma10 is not None and ma20 is not None and ma10>ma20)}
     for item in history:
         covered=item.get("sp500_covered",0) or 0
         item["sp500_pct_above_50ma"]=round((item.get("sp500_above_50ma",0)/covered)*100,2) if covered else None
     for i,item in enumerate(history):
         window=history[max(0,i-9):i+1]; item["up_45_10_ma"]=round(sum(x["up_45_10"] for x in window)/len(window),2)
-    state=final_state(current,current_ratio,oneq)
-    return {"schema_version":1,"generated_at_utc":datetime.now(timezone.utc).isoformat(),"as_of_market_date":current["date"],"source":"Alpaca IEX","universe":{"exchanges":list(EXCHANGES),"catalogue_symbols":len(universe),"valid_history_symbols":valid_symbols,"eligible_symbols":len(eligible_symbols),"failed_symbols":failed_symbols,"filters":{"min_price":MIN_PRICE,"min_avg_dollar_volume_20d":MIN_AVG_DOLLAR_VOLUME,"min_daily_volume_for_4pct":MIN_DAILY_VOLUME}},"current":current,"ten_day_ratio":current_ratio,"oneq":oneq,"condition":state,"history":history[-DISPLAY_SESSIONS:],"ten_day_ratio_history":ratio_history[-DISPLAY_SESSIONS:],"methodology":{"provider":"Alpaca","feed":"IEX","high_momentum":"Close more than 45% above its close 10 sessions earlier.","sp500_50ma":"Percent of S&P 500 constituents closing above their own 50-session moving average.","note":"IEX is a single-exchange feed and may materially undercount volume-based breadth versus consolidated SIP data."}}
+    state=rag_state(current,current_ratio,oneq,history,ratio_history)
+    return {"schema_version":1,"generated_at_utc":datetime.now(timezone.utc).isoformat(),"as_of_market_date":current["date"],"source":"Alpaca IEX","universe":{"exchanges":list(EXCHANGES),"catalogue_symbols":len(universe),"valid_history_symbols":valid_symbols,"eligible_symbols":len(eligible_symbols),"failed_symbols":failed_symbols,"filters":{"min_price":MIN_PRICE,"min_avg_dollar_volume_20d":MIN_AVG_DOLLAR_VOLUME,"min_daily_volume_for_4pct":MIN_DAILY_VOLUME}},"current":current,"ten_day_ratio":current_ratio,"oneq":oneq,"condition":state,"history":history[-DISPLAY_SESSIONS:],"ten_day_ratio_history":ratio_history[-DISPLAY_SESSIONS:],"methodology":{"provider":"Alpaca","feed":"IEX","rag_model":"Market RAG scores ONEQ 10-session momentum (2 points), five-session direction of the 10-day breadth ratio (2), five-session direction of S&P 500 50-day participation (1), and ONEQ 10MA above 20MA (1).","rag_thresholds":"Green 5-6; Amber 3-4; Red 0-2. If fewer than 30% of S&P 500 constituents are above their 50-day MA, Green is capped at Amber.","entry_separation":"The market RAG describes the environment only. It does not authorise a trade; stock setup, Momentum Architecture/ORB PASS and the 30-minute ORH entry trigger remain separate requirements.","high_momentum":"Close more than 45% above its close 10 sessions earlier.","sp500_50ma":"Percent of S&P 500 constituents closing above their own 50-session moving average.","note":"IEX is a single-exchange feed and may materially undercount volume-based breadth versus consolidated SIP data."}}
 
 
 def main():
