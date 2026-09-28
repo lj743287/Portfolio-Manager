@@ -12,6 +12,13 @@ def patch_builder() -> None:
     script_path = Path("scripts/build_market_conditions.py")
     script = script_path.read_text()
 
+    # The current builder already contains the S&P participation logic and the
+    # evidence-based RAG model. Do not overwrite it with the legacy five-vote
+    # condition calculation.
+    if "def rag_state(" in script:
+        script_path.write_text(script)
+        return
+
     if "SP500_URL" not in script:
         script = script.replace(
             "import urllib.request\nfrom datetime",
@@ -150,6 +157,12 @@ def patch_builder() -> None:
 def patch_dashboard() -> None:
     html_path = Path("market-conditions.html")
     html = html_path.read_text()
+
+    # The redesigned dashboard already contains S&P participation and the new
+    # RAG drivers. Leave it intact rather than re-inserting legacy signal cards.
+    if "ONEQ momentum · 2 pts" in html:
+        html_path.write_text(html)
+        return
 
     if '<h2>S&P 500 above 50-day MA</h2>' not in html:
         old = '''        <article class="panel chart-panel">
