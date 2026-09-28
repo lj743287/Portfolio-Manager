@@ -13,13 +13,13 @@
     "eligible_symbols": 3136,
     "failed_symbols": 2,
     "filters": {
-      "min_price": 3.0,
-      "min_avg_dollar_volume_20d": 250000.0,
-      "min_daily_volume_for_4pct": 100000.0
+      "min_price": 3,
+      "min_avg_dollar_volume_20d": 250000,
+      "min_daily_volume_for_4pct": 100000
     },
     "valid_symbols": 5513,
-    "minimum_price": 3.0,
-    "minimum_average_dollar_volume": 250000.0
+    "minimum_price": 3,
+    "minimum_average_dollar_volume": 250000
   },
   "current": {
     "date": "2026-09-25",
@@ -55,21 +55,41 @@
     "close": 106.59,
     "ma10": 104.963,
     "ma20": 104.3702,
-    "above": true
+    "above": true,
+    "ret10_pct": 2.708
   },
   "condition": {
-    "label": "Defensive",
-    "colour": "red",
-    "score": 20,
-    "positive_signals": 1,
-    "total_signals": 5,
-    "action": "Protect capital. Avoid marginal breakouts and keep new long exposure very small.",
+    "label": "Amber",
+    "raw_label": "Green",
+    "colour": "amber",
+    "score": 83,
+    "points": 5,
+    "max_points": 6,
+    "positive_signals": 3,
+    "total_signals": 4,
+    "action": "Market conditions are mixed or participation is too narrow for Green. Trade only when the stock setup and entry trigger are strong.",
+    "breadth_cap": true,
+    "breadth_cap_threshold": 30,
     "tests": {
-      "primary_breadth": false,
-      "fast_breadth": false,
-      "ten_day_breadth": false,
-      "oneq_trend": true,
-      "sp500_50ma_health": false
+      "oneq_momentum": true,
+      "ten_day_breadth_momentum": true,
+      "sp500_participation_trend": false,
+      "oneq_trend": true
+    },
+    "weights": {
+      "oneq_momentum": 2,
+      "ten_day_breadth_momentum": 2,
+      "sp500_participation_trend": 1,
+      "oneq_trend": 1
+    },
+    "signals": {
+      "oneq_ret10_pct": 2.708,
+      "ten_day_ratio_current": 0.9,
+      "ten_day_ratio_5_sessions_ago": 0.853,
+      "ten_day_ratio_change_5": 0.047,
+      "sp500_pct_above_50ma_current": 26.87,
+      "sp500_pct_above_50ma_5_sessions_ago": 28.28,
+      "sp500_pct_above_50ma_change_5": -1.41
     }
   },
   "history": {
@@ -579,7 +599,7 @@
         "date": "2026-05-29",
         "up_total": 909,
         "down_total": 303,
-        "ratio": 3.0,
+        "ratio": 3,
         "infinite": false
       },
       {
@@ -1728,7 +1748,7 @@
       {
         "date": "2026-05-27",
         "count": 36,
-        "ma10": 36.0
+        "ma10": 36
       },
       {
         "date": "2026-05-28",
@@ -1808,12 +1828,12 @@
       {
         "date": "2026-06-18",
         "count": 9,
-        "ma10": 9.0
+        "ma10": 9
       },
       {
         "date": "2026-06-22",
         "count": 23,
-        "ma10": 10.0
+        "ma10": 10
       },
       {
         "date": "2026-06-23",
@@ -1923,7 +1943,7 @@
       {
         "date": "2026-07-23",
         "count": 4,
-        "ma10": 6.0
+        "ma10": 6
       },
       {
         "date": "2026-07-24",
@@ -1933,7 +1953,7 @@
       {
         "date": "2026-07-27",
         "count": 1,
-        "ma10": 5.0
+        "ma10": 5
       },
       {
         "date": "2026-07-28",
@@ -1953,7 +1973,7 @@
       {
         "date": "2026-07-31",
         "count": 4,
-        "ma10": 4.0
+        "ma10": 4
       },
       {
         "date": "2026-08-03",
@@ -3693,7 +3713,10 @@
     "feed": "IEX",
     "high_momentum": "Close more than 45% above its close 10 sessions earlier.",
     "sp500_50ma": "Percent of S&P 500 constituents closing above their own 50-session moving average.",
-    "note": "IEX is a single-exchange feed and may materially undercount volume-based breadth versus consolidated SIP data."
+    "note": "IEX is a single-exchange feed and may materially undercount volume-based breadth versus consolidated SIP data.",
+    "rag_model": "Market RAG scores ONEQ 10-session momentum (2 points), five-session direction of the 10-day breadth ratio (2), five-session direction of S&P 500 50-day participation (1), and ONEQ 10MA above 20MA (1).",
+    "rag_thresholds": "Green 5-6; Amber 3-4; Red 0-2. If fewer than 30% of S&P 500 constituents are above their 50-day MA, Green is capped at Amber.",
+    "entry_separation": "The market RAG describes the environment only. It does not authorise a trade; stock setup, Momentum Architecture/ORB PASS and the 30-minute ORH entry trigger remain separate requirements."
   },
   "status": "ok"
 }
