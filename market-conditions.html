@@ -156,6 +156,57 @@
     .signal-card.positive .dot { background: var(--green); box-shadow: 0 0 14px rgba(34,197,94,.55); }
     .signal-value { margin-top: 9px; font-size: 20px; font-weight: 850; }
     .signal-detail { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .posture-panel {
+      margin-bottom: 16px;
+      padding: 18px;
+      border-color: color-mix(in srgb, var(--state) 38%, var(--line));
+      background: linear-gradient(145deg, var(--state-soft), rgba(12,20,35,.96) 72%);
+    }
+    .posture-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 13px;
+    }
+    .posture-kicker {
+      color: var(--state);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+    }
+    .posture-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .posture-card {
+      min-height: 106px;
+      padding: 13px;
+      border: 1px solid rgba(45,58,80,.9);
+      border-radius: 13px;
+      background: rgba(7,16,31,.52);
+    }
+    .posture-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+    .posture-value {
+      margin-top: 8px;
+      color: var(--state);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -.015em;
+    }
+    .posture-detail { margin-top: 4px; color: #b9c7d9; font-size: 11px; line-height: 1.4; }
+    .posture-note {
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid rgba(45,58,80,.72);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
     .metric-grid { display: grid; grid-template-columns: repeat(6, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .metric { min-height: 112px; padding: 15px; }
     .metric-label { color: var(--muted); font-size: 10px; font-weight: 850; text-transform: uppercase; letter-spacing: .075em; }
@@ -198,6 +249,7 @@
     @media (max-width: 1120px) {
       .metric-grid { grid-template-columns: repeat(3, 1fr); }
       .status-shell { grid-template-columns: 1fr; }
+      .posture-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 760px) {
       .topbar, main { padding-left: 14px; padding-right: 14px; }
@@ -205,13 +257,13 @@
       .gauge { width: 110px; }
       .gauge::before { inset: 9px; }
       .gauge-value { font-size: 27px; }
-      .metric-grid, .signal-grid, .chart-grid, .insight-grid { grid-template-columns: 1fr 1fr; }
+      .metric-grid, .signal-grid, .chart-grid, .insight-grid, .posture-grid { grid-template-columns: 1fr 1fr; }
       .chart-panel { grid-column: 1 / -1; }
     }
     @media (max-width: 520px) {
       .condition-panel { grid-template-columns: 1fr; text-align: center; }
       .gauge { margin: auto; }
-      .metric-grid, .signal-grid, .insight-grid { grid-template-columns: 1fr; }
+      .metric-grid, .signal-grid, .insight-grid, .posture-grid { grid-template-columns: 1fr; }
       .topbar { align-items: flex-start; }
       .back span { display: none; }
     }
@@ -250,6 +302,18 @@
           </div>
           <div id="signalGrid" class="signal-grid"></div>
         </article>
+      </section>
+
+      <section class="panel posture-panel" aria-label="Trading posture for current market conditions">
+        <div class="posture-head">
+          <div>
+            <div class="posture-kicker">Trading posture</div>
+            <h2 id="postureTitle">How to trade this environment</h2>
+          </div>
+          <div id="postureState" class="panel-sub"></div>
+        </div>
+        <div id="postureGrid" class="posture-grid"></div>
+        <div class="posture-note">The RAG changes aggression, not the entry rules. A trade still needs the stock-level setup, ORB PASS / Momentum Architecture and the 30-minute ORH trigger.</div>
       </section>
 
       <section id="metricGrid" class="metric-grid" aria-label="Current breadth readings"></section>
@@ -461,6 +525,38 @@ function sp500ParticipationChart(items) {
         return `<div class="insight-row"><span>${escapeHtml(label)}</span><strong class="${tone}">${escapeHtml(value)}</strong></div>`;
       }
 
+      function postureCard(label, value, detail) {
+        return `<article class="posture-card"><div class="posture-label">${escapeHtml(label)}</div><div class="posture-value">${escapeHtml(value)}</div><div class="posture-detail">${escapeHtml(detail)}</div></article>`;
+      }
+
+      function tradingPosture(state) {
+        if (state === 'green') {
+          return {
+            title: 'Supportive market: deploy the strategy normally',
+            selection: ['Normal high-quality setups', 'Keep the full stock-level criteria. Green does not justify lower-quality entries.'],
+            risk: ['Full normal risk', 'Use your standard planned risk when the setup and ORH trigger are valid.'],
+            profits: ['Normal profit-taking', 'Avoid clipping good trades too early. Let the normal management rules do their job.'],
+            runners: ['Give winners room', 'Favour the right-hand tail and allow strong positions more time to develop.']
+          };
+        }
+        if (state === 'red') {
+          return {
+            title: 'Weak market tailwind: protect capital first',
+            selection: ['Exceptional setups only', 'Demand the cleanest architecture and strongest ORH confirmation. Skip marginal names.'],
+            risk: ['Minimum risk', 'Use smaller position risk and keep aggregate exposure tight.'],
+            profits: ['Take profits earlier', 'De-risk sooner when a trade extends rather than assuming follow-through will persist.'],
+            runners: ['Less tolerance', 'Keep a runner only while price action remains clearly constructive.']
+          };
+        }
+        return {
+          title: 'Mixed market: be selective and reduce aggression',
+          selection: ['Be pickier', 'Prioritise the strongest setups and reject marginal ORH opportunities.'],
+          risk: ['Reduced risk', 'Use less than full normal risk while the broader market remains mixed.'],
+          profits: ['Protect profits earlier', 'De-risk sooner on strength, while still leaving room for a genuine outlier winner.'],
+          runners: ['Keep the best runners', 'Let strong positions continue, but require cleaner behaviour than in Green conditions.']
+        };
+      }
+
       function render(data) {
         const condition = data.condition || {};
         const current = data.current || {};
@@ -501,6 +597,16 @@ function sp500ParticipationChart(items) {
         byId('stateAction').textContent = action;
         byId('asOf').textContent = `Market data to ${fullDate(data.as_of_market_date)} · calculated ${updatedTime(data.generated_at_utc)}`;
         byId('signalCount').textContent = `${points}/${maxPoints} points${condition.breadth_cap ? ' · breadth cap active' : ''}`;
+
+        const posture = tradingPosture(state);
+        byId('postureTitle').textContent = posture.title;
+        byId('postureState').textContent = `${String(condition.label || 'Amber').toUpperCase()} operating mode`;
+        byId('postureGrid').innerHTML = [
+          postureCard('Trade selection', posture.selection[0], posture.selection[1]),
+          postureCard('Position risk', posture.risk[0], posture.risk[1]),
+          postureCard('Profit management', posture.profits[0], posture.profits[1]),
+          postureCard('Winner management', posture.runners[0], posture.runners[1])
+        ].join('');
 
         byId('signalGrid').innerHTML = [
           signalCard(
