@@ -1,9 +1,9 @@
 {
   "scan_id": "orb",
   "label": "ORB Continuation",
-  "generated_utc": "2026-10-15T00:36:11Z",
+  "generated_utc": "2026-10-16T00:29:04Z",
   "status": "ok",
-  "count": 24,
+  "count": 22,
   "columns": [
     "adr",
     "runup",
@@ -22,31 +22,44 @@
       "runup_max": 1000.0,
       "liquidity_filter": false
     },
-    "universe": 5762
+    "universe": 5766
   },
   "rows": [
     {
-      "symbol": "FRSH",
+      "symbol": "SNPS",
       "exchange": "",
-      "close": 13.7,
+      "close": 468.04,
       "extra": {
-        "adr": 3.51,
-        "runup": 46.9,
-        "base_depth": 11.6,
-        "ext10": 1.0,
-        "dvolM": 6.9,
+        "adr": 3.52,
+        "runup": 41.1,
+        "base_depth": 11.1,
+        "ext10": -5.2,
+        "dvolM": 56.8,
+        "trend200": "yes"
+      }
+    },
+    {
+      "symbol": "NTAP",
+      "exchange": "",
+      "close": 214.68,
+      "extra": {
+        "adr": 3.55,
+        "runup": 48.5,
+        "base_depth": 12.7,
+        "ext10": -6.6,
+        "dvolM": 30.5,
         "trend200": "yes"
       }
     },
     {
       "symbol": "ACB",
       "exchange": "",
-      "close": 4.17,
+      "close": 4.09,
       "extra": {
-        "adr": 3.52,
+        "adr": 3.59,
         "runup": 76.9,
-        "base_depth": 17.3,
-        "ext10": -3.2,
+        "base_depth": 17.0,
+        "ext10": -5.4,
         "dvolM": 0.4,
         "trend200": "yes"
       }
@@ -54,286 +67,247 @@
     {
       "symbol": "CRL",
       "exchange": "",
-      "close": 301.9,
+      "close": 306.48,
       "extra": {
-        "adr": 3.56,
-        "runup": 53.1,
-        "base_depth": 14.1,
-        "ext10": 0.7,
+        "adr": 3.61,
+        "runup": 49.5,
+        "base_depth": 13.9,
+        "ext10": 1.6,
         "dvolM": 21.2,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "OPRX",
-      "exchange": "",
-      "close": 8.26,
-      "extra": {
-        "adr": 3.62,
-        "runup": 57.0,
-        "base_depth": 9.5,
-        "ext10": -2.5,
-        "dvolM": 0.1,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "TASK",
-      "exchange": "",
-      "close": 8.14,
-      "extra": {
-        "adr": 3.63,
-        "runup": 59.5,
-        "base_depth": 7.9,
-        "ext10": 1.0,
-        "dvolM": 0.3,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "MH",
-      "exchange": "",
-      "close": 13.3,
-      "extra": {
-        "adr": 3.64,
-        "runup": 53.9,
-        "base_depth": 9.2,
-        "ext10": 1.0,
-        "dvolM": 0.5,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "WK",
-      "exchange": "",
-      "close": 72.64,
-      "extra": {
-        "adr": 3.69,
-        "runup": 50.0,
-        "base_depth": 10.9,
-        "ext10": 1.0,
-        "dvolM": 5.1,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "ACN",
-      "exchange": "",
-      "close": 214.99,
-      "extra": {
-        "adr": 3.72,
-        "runup": 67.3,
-        "base_depth": 15.3,
-        "ext10": 4.5,
-        "dvolM": 70.0,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "RNG",
-      "exchange": "",
-      "close": 75.23,
-      "extra": {
-        "adr": 3.74,
-        "runup": 119.6,
-        "base_depth": 9.0,
-        "ext10": -3.4,
-        "dvolM": 6.7,
         "trend200": "yes"
       }
     },
     {
       "symbol": "LIND",
       "exchange": "",
-      "close": 35.2,
+      "close": 35.48,
       "extra": {
-        "adr": 3.83,
+        "adr": 3.72,
         "runup": 49.7,
-        "base_depth": 15.4,
-        "ext10": -0.7,
+        "base_depth": 6.6,
+        "ext10": -0.4,
         "dvolM": 1.7,
         "trend200": "yes"
       }
     },
     {
-      "symbol": "SPCX",
+      "symbol": "CVI",
       "exchange": "",
-      "close": 152.25,
+      "close": 61.71,
       "extra": {
-        "adr": 3.84,
-        "runup": 68.1,
-        "base_depth": 16.1,
-        "ext10": -5.6,
-        "dvolM": 413.7,
-        "trend200": "n/a"
+        "adr": 4.12,
+        "runup": 111.3,
+        "base_depth": 16.4,
+        "ext10": 4.7,
+        "dvolM": 2.3,
+        "trend200": "yes"
       }
     },
     {
       "symbol": "IOT",
       "exchange": "",
-      "close": 40.8,
+      "close": 42.57,
       "extra": {
-        "adr": 3.98,
+        "adr": 4.13,
         "runup": 40.3,
-        "base_depth": 13.9,
-        "ext10": -1.0,
-        "dvolM": 9.5,
+        "base_depth": 9.2,
+        "ext10": 2.6,
+        "dvolM": 9.3,
+        "trend200": "yes"
+      }
+    },
+    {
+      "symbol": "PXS",
+      "exchange": "",
+      "close": 7.55,
+      "extra": {
+        "adr": 4.13,
+        "runup": 86.3,
+        "base_depth": 8.5,
+        "ext10": -3.9,
+        "dvolM": 0.0,
         "trend200": "yes"
       }
     },
     {
       "symbol": "XP",
       "exchange": "",
-      "close": 30.5,
+      "close": 30.05,
       "extra": {
-        "adr": 4.22,
+        "adr": 4.23,
         "runup": 112.6,
-        "base_depth": 37.6,
-        "ext10": 6.2,
-        "dvolM": 23.8,
+        "base_depth": 37.2,
+        "ext10": 1.5,
+        "dvolM": 24.5,
         "trend200": "yes"
       }
     },
     {
       "symbol": "ZH",
       "exchange": "",
-      "close": 3.4,
+      "close": 3.5,
       "extra": {
         "adr": 4.24,
-        "runup": 43.3,
-        "base_depth": 7.8,
-        "ext10": -1.2,
+        "runup": 40.5,
+        "base_depth": 5.5,
+        "ext10": 1.8,
         "dvolM": 0.2,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "AMPL",
-      "exchange": "",
-      "close": 15.29,
-      "extra": {
-        "adr": 4.3,
-        "runup": 114.8,
-        "base_depth": 13.9,
-        "ext10": 1.5,
-        "dvolM": 1.6,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "FTRE",
-      "exchange": "",
-      "close": 21.33,
-      "extra": {
-        "adr": 4.57,
-        "runup": 45.2,
-        "base_depth": 18.4,
-        "ext10": 3.4,
-        "dvolM": 1.9,
         "trend200": "yes"
       }
     },
     {
       "symbol": "RCEL",
       "exchange": "",
-      "close": 13.08,
+      "close": 13.39,
       "extra": {
-        "adr": 4.7,
+        "adr": 4.56,
         "runup": 220.6,
-        "base_depth": 14.3,
-        "ext10": 0.4,
+        "base_depth": 12.1,
+        "ext10": 1.7,
         "dvolM": 0.2,
         "trend200": "yes"
       }
     },
     {
-      "symbol": "CLF",
+      "symbol": "DK",
       "exchange": "",
-      "close": 12.59,
+      "close": 76.83,
       "extra": {
-        "adr": 4.91,
-        "runup": 41.4,
-        "base_depth": 17.9,
-        "ext10": 2.5,
-        "dvolM": 10.8,
+        "adr": 4.57,
+        "runup": 43.9,
+        "base_depth": 11.6,
+        "ext10": 0.3,
+        "dvolM": 6.8,
+        "trend200": "yes"
+      }
+    },
+    {
+      "symbol": "FTRE",
+      "exchange": "",
+      "close": 22.77,
+      "extra": {
+        "adr": 4.67,
+        "runup": 45.2,
+        "base_depth": 16.6,
+        "ext10": 8.6,
+        "dvolM": 1.9,
+        "trend200": "yes"
+      }
+    },
+    {
+      "symbol": "ZETA",
+      "exchange": "",
+      "close": 33.56,
+      "extra": {
+        "adr": 4.67,
+        "runup": 83.1,
+        "base_depth": 10.2,
+        "ext10": 1.2,
+        "dvolM": 10.1,
         "trend200": "yes"
       }
     },
     {
       "symbol": "GRDX",
       "exchange": "",
-      "close": 4.44,
+      "close": 4.19,
       "extra": {
-        "adr": 4.96,
+        "adr": 5.08,
         "runup": 92.3,
-        "base_depth": 31.7,
-        "ext10": 3.7,
+        "base_depth": 31.1,
+        "ext10": -3.8,
         "dvolM": 0.0,
+        "trend200": "yes"
+      }
+    },
+    {
+      "symbol": "FOSL",
+      "exchange": "",
+      "close": 6.88,
+      "extra": {
+        "adr": 5.45,
+        "runup": 86.8,
+        "base_depth": 12.1,
+        "ext10": -2.3,
+        "dvolM": 0.3,
         "trend200": "yes"
       }
     },
     {
       "symbol": "AZTA",
       "exchange": "",
-      "close": 37.19,
+      "close": 36.52,
       "extra": {
-        "adr": 5.34,
-        "runup": 76.8,
-        "base_depth": 26.1,
-        "ext10": -1.6,
+        "adr": 5.5,
+        "runup": 70.5,
+        "base_depth": 24.6,
+        "ext10": -3.9,
         "dvolM": 2.3,
         "trend200": "yes"
       }
     },
     {
-      "symbol": "ASAN",
+      "symbol": "PICS",
       "exchange": "",
-      "close": 9.82,
+      "close": 13.26,
       "extra": {
-        "adr": 5.89,
-        "runup": 62.5,
-        "base_depth": 19.0,
-        "ext10": 3.6,
-        "dvolM": 4.7,
+        "adr": 5.64,
+        "runup": 70.7,
+        "base_depth": 40.0,
+        "ext10": 6.5,
+        "dvolM": 0.4,
+        "trend200": "n/a"
+      }
+    },
+    {
+      "symbol": "XERS",
+      "exchange": "",
+      "close": 10.08,
+      "extra": {
+        "adr": 5.96,
+        "runup": 50.1,
+        "base_depth": 14.8,
+        "ext10": 0.2,
+        "dvolM": 2.0,
         "trend200": "yes"
       }
     },
     {
       "symbol": "PCVX",
       "exchange": "",
-      "close": 67.57,
+      "close": 65.21,
       "extra": {
-        "adr": 5.9,
+        "adr": 5.97,
         "runup": 71.6,
         "base_depth": 38.0,
-        "ext10": 2.1,
-        "dvolM": 11.8,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "XERS",
-      "exchange": "",
-      "close": 9.78,
-      "extra": {
-        "adr": 6.04,
-        "runup": 50.1,
-        "base_depth": 14.8,
-        "ext10": -2.0,
-        "dvolM": 2.0,
+        "ext10": -2.8,
+        "dvolM": 12.2,
         "trend200": "yes"
       }
     },
     {
       "symbol": "OABI",
       "exchange": "",
-      "close": 4.56,
+      "close": 4.73,
       "extra": {
-        "adr": 6.54,
+        "adr": 6.52,
         "runup": 166.1,
         "base_depth": 16.9,
-        "ext10": -3.3,
-        "dvolM": 0.5,
+        "ext10": 0.9,
+        "dvolM": 0.4,
+        "trend200": "yes"
+      }
+    },
+    {
+      "symbol": "IOVA",
+      "exchange": "",
+      "close": 14.73,
+      "extra": {
+        "adr": 6.78,
+        "runup": 278.7,
+        "base_depth": 17.6,
+        "ext10": 5.1,
+        "dvolM": 12.1,
         "trend200": "yes"
       }
     }
