@@ -1,61 +1,61 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-15T01:19:57.691612+00:00",
-  "as_of_market_date": "2026-10-14",
+  "generated_at_utc": "2026-10-16T01:08:16.807688+00:00",
+  "as_of_market_date": "2026-10-15",
   "source": "Alpaca IEX",
   "universe": {
     "exchanges": [
       "NASDAQ",
       "NYSE"
     ],
-    "catalogue_symbols": 5501,
-    "valid_history_symbols": 5498,
-    "eligible_symbols": 3141,
-    "failed_symbols": 3,
+    "catalogue_symbols": 5504,
+    "valid_history_symbols": 5502,
+    "eligible_symbols": 3139,
+    "failed_symbols": 2,
     "filters": {
       "min_price": 3.0,
       "min_avg_dollar_volume_20d": 250000.0,
       "min_daily_volume_for_4pct": 100000.0
     },
-    "valid_symbols": 5498,
+    "valid_symbols": 5502,
     "minimum_price": 3.0,
     "minimum_average_dollar_volume": 250000.0
   },
   "current": {
-    "date": "2026-10-14",
-    "coverage": 4737,
-    "eligible": 2790,
-    "up_4": 15,
-    "down_4": 224,
-    "up_45_10": 6,
+    "date": "2026-10-15",
+    "coverage": 4731,
+    "eligible": 2794,
+    "up_4": 171,
+    "down_4": 34,
+    "up_45_10": 4,
     "sp500_covered": 494,
-    "sp500_above_50ma": 170,
-    "sp500_pct_above_50ma": 34.41,
-    "up_25_quarter": 398,
-    "down_25_quarter": 703,
-    "bull_34_13": 381,
-    "bear_34_13": 1115,
-    "up_25_month": 42,
-    "down_25_month": 117,
-    "up_50_month": 8,
-    "down_50_month": 6,
-    "up_45_10_ma": 5.5,
-    "strong_buying_days_10": 3,
+    "sp500_above_50ma": 216,
+    "sp500_pct_above_50ma": 43.72,
+    "up_25_quarter": 437,
+    "down_25_quarter": 637,
+    "bull_34_13": 505,
+    "bear_34_13": 989,
+    "up_25_month": 40,
+    "down_25_month": 111,
+    "up_50_month": 5,
+    "down_50_month": 5,
+    "up_45_10_ma": 5.1,
+    "strong_buying_days_10": 4,
     "strong_selling_days_10": 4
   },
   "ten_day_ratio": {
-    "date": "2026-10-14",
-    "up_total": 513,
-    "down_total": 722,
-    "ratio": 0.711,
+    "date": "2026-10-15",
+    "up_total": 622,
+    "down_total": 708,
+    "ratio": 0.879,
     "infinite": false
   },
   "oneq": {
     "symbol": "ONEQ",
-    "close": 105.19,
-    "ma10": 107.315,
-    "ma20": 106.601,
-    "ret10_pct": -1.007,
+    "close": 105.37,
+    "ma10": 107.263,
+    "ma20": 106.6593,
+    "ret10_pct": -0.491,
     "above": true
   },
   "condition": {
@@ -83,22 +83,17 @@
       "oneq_trend": 1
     },
     "signals": {
-      "oneq_ret10_pct": -1.007,
-      "ten_day_ratio_current": 0.711,
-      "ten_day_ratio_5_sessions_ago": 1.027,
-      "ten_day_ratio_change_5": -0.316,
-      "sp500_pct_above_50ma_current": 34.41,
-      "sp500_pct_above_50ma_5_sessions_ago": 28.95,
-      "sp500_pct_above_50ma_change_5": 5.46
+      "oneq_ret10_pct": -0.491,
+      "ten_day_ratio_current": 0.879,
+      "ten_day_ratio_5_sessions_ago": 1.05,
+      "ten_day_ratio_change_5": -0.171,
+      "sp500_pct_above_50ma_current": 43.72,
+      "sp500_pct_above_50ma_5_sessions_ago": 31.98,
+      "sp500_pct_above_50ma_change_5": 11.74
     }
   },
   "history": {
     "daily_breadth": [
-      {
-        "date": "2026-06-08",
-        "up_4": 59,
-        "down_4": 25
-      },
       {
         "date": "2026-06-09",
         "up_4": 107,
@@ -543,77 +538,75 @@
         "date": "2026-10-14",
         "up_4": 15,
         "down_4": 224
+      },
+      {
+        "date": "2026-10-15",
+        "up_4": 171,
+        "down_4": 34
       }
     ],
     "ten_day_ratio": [
       {
-        "date": "2026-06-08",
-        "up_total": 59,
-        "down_total": 25,
-        "ratio": 2.36,
-        "infinite": false
-      },
-      {
         "date": "2026-06-09",
-        "up_total": 166,
-        "down_total": 139,
-        "ratio": 1.194,
+        "up_total": 107,
+        "down_total": 114,
+        "ratio": 0.939,
         "infinite": false
       },
       {
         "date": "2026-06-10",
-        "up_total": 206,
-        "down_total": 235,
-        "ratio": 0.877,
+        "up_total": 147,
+        "down_total": 210,
+        "ratio": 0.7,
         "infinite": false
       },
       {
         "date": "2026-06-11",
-        "up_total": 432,
-        "down_total": 256,
-        "ratio": 1.688,
+        "up_total": 373,
+        "down_total": 231,
+        "ratio": 1.615,
         "infinite": false
       },
       {
         "date": "2026-06-12",
-        "up_total": 488,
-        "down_total": 287,
-        "ratio": 1.7,
+        "up_total": 429,
+        "down_total": 262,
+        "ratio": 1.637,
         "infinite": false
       },
       {
         "date": "2026-06-15",
-        "up_total": 620,
-        "down_total": 332,
-        "ratio": 1.867,
+        "up_total": 561,
+        "down_total": 307,
+        "ratio": 1.827,
         "infinite": false
       },
       {
         "date": "2026-06-16",
-        "up_total": 656,
-        "down_total": 400,
-        "ratio": 1.64,
+        "up_total": 597,
+        "down_total": 375,
+        "ratio": 1.592,
         "infinite": false
       },
       {
         "date": "2026-06-17",
-        "up_total": 720,
-        "down_total": 513,
-        "ratio": 1.404,
+        "up_total": 661,
+        "down_total": 488,
+        "ratio": 1.355,
         "infinite": false
       },
       {
         "date": "2026-06-18",
-        "up_total": 850,
-        "down_total": 558,
-        "ratio": 1.523,
+        "up_total": 791,
+        "down_total": 533,
+        "ratio": 1.484,
         "infinite": false
       },
       {
         "date": "2026-06-22",
-        "up_total": 937,
-        "down_total": 642,
-        "ratio": 1.46,
+        "up_total": 878,
+        "down_total": 617,
+        "ratio": 1.423,
         "infinite": false
       },
       {
@@ -1175,15 +1168,16 @@
         "down_total": 722,
         "ratio": 0.711,
         "infinite": false
+      },
+      {
+        "date": "2026-10-15",
+        "up_total": 622,
+        "down_total": 708,
+        "ratio": 0.879,
+        "infinite": false
       }
     ],
     "sp500_above_50ma": [
-      {
-        "date": "2026-06-08",
-        "pct": 51.83,
-        "above": 255,
-        "covered": 492
-      },
       {
         "date": "2026-06-09",
         "pct": 57.93,
@@ -1717,14 +1711,15 @@
         "pct": 34.41,
         "above": 170,
         "covered": 494
+      },
+      {
+        "date": "2026-10-15",
+        "pct": 43.72,
+        "above": 216,
+        "covered": 494
       }
     ],
     "up_45_10_ma": [
-      {
-        "date": "2026-06-08",
-        "count": 14,
-        "ma10": 35.9
-      },
       {
         "date": "2026-06-09",
         "count": 11,
@@ -2169,14 +2164,14 @@
         "date": "2026-10-14",
         "count": 6,
         "ma10": 5.5
+      },
+      {
+        "date": "2026-10-15",
+        "count": 4,
+        "ma10": 5.1
       }
     ],
     "primary_breadth": [
-      {
-        "date": "2026-06-08",
-        "up": 849,
-        "down": 404
-      },
       {
         "date": "2026-06-09",
         "up": 885,
@@ -2621,14 +2616,14 @@
         "date": "2026-10-14",
         "up": 398,
         "down": 703
+      },
+      {
+        "date": "2026-10-15",
+        "up": 437,
+        "down": 637
       }
     ],
     "fast_breadth": [
-      {
-        "date": "2026-06-08",
-        "bull": 926,
-        "bear": 970
-      },
       {
         "date": "2026-06-09",
         "bull": 976,
@@ -3073,17 +3068,15 @@
         "date": "2026-10-14",
         "bull": 381,
         "bear": 1115
+      },
+      {
+        "date": "2026-10-15",
+        "bull": 505,
+        "bear": 989
       }
     ]
   },
   "ten_day_ratio_history": [
-    {
-      "date": "2026-06-08",
-      "up_total": 1023,
-      "down_total": 757,
-      "ratio": 1.351,
-      "infinite": false
-    },
     {
       "date": "2026-06-09",
       "up_total": 978,
@@ -3705,6 +3698,13 @@
       "up_total": 513,
       "down_total": 722,
       "ratio": 0.711,
+      "infinite": false
+    },
+    {
+      "date": "2026-10-15",
+      "up_total": 622,
+      "down_total": 708,
+      "ratio": 0.879,
       "infinite": false
     }
   ],
