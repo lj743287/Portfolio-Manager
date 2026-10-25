@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-10-24T01:29:22.133775+00:00",
+  "generated_at_utc": "2026-10-25T00:57:55.561623+00:00",
   "as_of_market_date": "2026-10-23",
   "source": "Alpaca IEX",
   "universe": {
@@ -23,7 +23,7 @@
   },
   "current": {
     "date": "2026-10-23",
-    "coverage": 4673,
+    "coverage": 5472,
     "eligible": 2763,
     "up_4": 45,
     "down_4": 50,
