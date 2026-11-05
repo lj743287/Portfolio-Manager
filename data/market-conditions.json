@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-11-04T02:59:46.978601+00:00",
-  "as_of_market_date": "2026-11-03",
+  "generated_at_utc": "2026-11-05T03:22:40.422544+00:00",
+  "as_of_market_date": "2026-11-04",
   "source": "Alpaca IEX",
   "universe": {
     "exchanges": [
@@ -10,7 +10,7 @@
     ],
     "catalogue_symbols": 5496,
     "valid_history_symbols": 5493,
-    "eligible_symbols": 3135,
+    "eligible_symbols": 3134,
     "failed_symbols": 3,
     "filters": {
       "min_price": 3.0,
@@ -22,40 +22,40 @@
     "minimum_average_dollar_volume": 250000.0
   },
   "current": {
-    "date": "2026-11-03",
-    "coverage": 4697,
-    "eligible": 2749,
-    "up_4": 84,
-    "down_4": 55,
-    "up_45_10": 6,
-    "sp500_covered": 493,
-    "sp500_above_50ma": 322,
-    "sp500_pct_above_50ma": 65.31,
-    "up_25_quarter": 422,
-    "down_25_quarter": 623,
-    "bull_34_13": 939,
-    "bear_34_13": 795,
-    "up_25_month": 83,
-    "down_25_month": 189,
-    "up_50_month": 12,
+    "date": "2026-11-04",
+    "coverage": 4686,
+    "eligible": 2756,
+    "up_4": 424,
+    "down_4": 225,
+    "up_45_10": 9,
+    "sp500_covered": 494,
+    "sp500_above_50ma": 353,
+    "sp500_pct_above_50ma": 71.46,
+    "up_25_quarter": 561,
+    "down_25_quarter": 573,
+    "bull_34_13": 1190,
+    "bear_34_13": 768,
+    "up_25_month": 176,
+    "down_25_month": 190,
+    "up_50_month": 21,
     "down_50_month": 4,
-    "up_45_10_ma": 7.8,
-    "strong_buying_days_10": 3,
+    "up_45_10_ma": 8.1,
+    "strong_buying_days_10": 2,
     "strong_selling_days_10": 1
   },
   "ten_day_ratio": {
-    "date": "2026-11-03",
-    "up_total": 956,
-    "down_total": 893,
-    "ratio": 1.071,
+    "date": "2026-11-04",
+    "up_total": 1311,
+    "down_total": 1087,
+    "ratio": 1.206,
     "infinite": false
   },
   "oneq": {
     "symbol": "ONEQ",
-    "close": 100.0,
-    "ma10": 102.4585,
-    "ma20": 104.2085,
-    "ret10_pct": -3.957,
+    "close": 101.47,
+    "ma10": 102.0815,
+    "ma20": 103.863,
+    "ret10_pct": -3.582,
     "above": false
   },
   "condition": {
@@ -83,22 +83,17 @@
       "oneq_trend": 1
     },
     "signals": {
-      "oneq_ret10_pct": -3.957,
-      "ten_day_ratio_current": 1.071,
-      "ten_day_ratio_5_sessions_ago": 1.146,
-      "ten_day_ratio_change_5": -0.075,
-      "sp500_pct_above_50ma_current": 65.31,
-      "sp500_pct_above_50ma_5_sessions_ago": 59.84,
-      "sp500_pct_above_50ma_change_5": 5.47
+      "oneq_ret10_pct": -3.582,
+      "ten_day_ratio_current": 1.206,
+      "ten_day_ratio_5_sessions_ago": 1.653,
+      "ten_day_ratio_change_5": -0.447,
+      "sp500_pct_above_50ma_current": 71.46,
+      "sp500_pct_above_50ma_5_sessions_ago": 58.1,
+      "sp500_pct_above_50ma_change_5": 13.36
     }
   },
   "history": {
     "daily_breadth": [
-      {
-        "date": "2026-06-29",
-        "up_4": 88,
-        "down_4": 40
-      },
       {
         "date": "2026-06-30",
         "up_4": 84,
@@ -217,7 +212,7 @@
       {
         "date": "2026-08-03",
         "up_4": 161,
-        "down_4": 13
+        "down_4": 14
       },
       {
         "date": "2026-08-04",
@@ -543,77 +538,75 @@
         "date": "2026-11-03",
         "up_4": 84,
         "down_4": 55
+      },
+      {
+        "date": "2026-11-04",
+        "up_4": 424,
+        "down_4": 225
       }
     ],
     "ten_day_ratio": [
       {
-        "date": "2026-06-29",
-        "up_total": 88,
-        "down_total": 40,
-        "ratio": 2.2,
-        "infinite": false
-      },
-      {
         "date": "2026-06-30",
-        "up_total": 172,
-        "down_total": 78,
-        "ratio": 2.205,
+        "up_total": 84,
+        "down_total": 38,
+        "ratio": 2.211,
         "infinite": false
       },
       {
         "date": "2026-07-01",
-        "up_total": 304,
-        "down_total": 176,
-        "ratio": 1.727,
+        "up_total": 216,
+        "down_total": 136,
+        "ratio": 1.588,
         "infinite": false
       },
       {
         "date": "2026-07-02",
-        "up_total": 400,
-        "down_total": 287,
-        "ratio": 1.394,
+        "up_total": 312,
+        "down_total": 247,
+        "ratio": 1.263,
         "infinite": false
       },
       {
         "date": "2026-07-06",
-        "up_total": 453,
-        "down_total": 314,
-        "ratio": 1.443,
+        "up_total": 365,
+        "down_total": 274,
+        "ratio": 1.332,
         "infinite": false
       },
       {
         "date": "2026-07-07",
-        "up_total": 508,
-        "down_total": 458,
-        "ratio": 1.109,
+        "up_total": 420,
+        "down_total": 418,
+        "ratio": 1.005,
         "infinite": false
       },
       {
         "date": "2026-07-08",
-        "up_total": 555,
-        "down_total": 524,
-        "ratio": 1.059,
+        "up_total": 467,
+        "down_total": 484,
+        "ratio": 0.965,
         "infinite": false
       },
       {
         "date": "2026-07-09",
-        "up_total": 627,
-        "down_total": 541,
-        "ratio": 1.159,
+        "up_total": 539,
+        "down_total": 501,
+        "ratio": 1.076,
         "infinite": false
       },
       {
         "date": "2026-07-10",
-        "up_total": 651,
-        "down_total": 586,
-        "ratio": 1.111,
+        "up_total": 563,
+        "down_total": 546,
+        "ratio": 1.031,
         "infinite": false
       },
       {
         "date": "2026-07-13",
-        "up_total": 709,
-        "down_total": 707,
-        "ratio": 1.003,
+        "up_total": 621,
+        "down_total": 667,
+        "ratio": 0.931,
         "infinite": false
       },
       {
@@ -717,71 +710,71 @@
       {
         "date": "2026-08-03",
         "up_total": 951,
-        "down_total": 819,
-        "ratio": 1.161,
+        "down_total": 820,
+        "ratio": 1.16,
         "infinite": false
       },
       {
         "date": "2026-08-04",
         "up_total": 1049,
-        "down_total": 820,
-        "ratio": 1.279,
+        "down_total": 821,
+        "ratio": 1.278,
         "infinite": false
       },
       {
         "date": "2026-08-05",
         "up_total": 1090,
-        "down_total": 843,
-        "ratio": 1.293,
+        "down_total": 844,
+        "ratio": 1.291,
         "infinite": false
       },
       {
         "date": "2026-08-06",
         "up_total": 1141,
-        "down_total": 851,
-        "ratio": 1.341,
+        "down_total": 852,
+        "ratio": 1.339,
         "infinite": false
       },
       {
         "date": "2026-08-07",
         "up_total": 1263,
-        "down_total": 794,
-        "ratio": 1.591,
+        "down_total": 795,
+        "ratio": 1.589,
         "infinite": false
       },
       {
         "date": "2026-08-10",
         "up_total": 1209,
-        "down_total": 805,
-        "ratio": 1.502,
+        "down_total": 806,
+        "ratio": 1.5,
         "infinite": false
       },
       {
         "date": "2026-08-11",
         "up_total": 1138,
-        "down_total": 726,
-        "ratio": 1.567,
+        "down_total": 727,
+        "ratio": 1.565,
         "infinite": false
       },
       {
         "date": "2026-08-12",
         "up_total": 1158,
-        "down_total": 570,
-        "ratio": 2.032,
+        "down_total": 571,
+        "ratio": 2.028,
         "infinite": false
       },
       {
         "date": "2026-08-13",
         "up_total": 1125,
-        "down_total": 539,
-        "ratio": 2.087,
+        "down_total": 540,
+        "ratio": 2.083,
         "infinite": false
       },
       {
         "date": "2026-08-14",
         "up_total": 1139,
-        "down_total": 506,
-        "ratio": 2.251,
+        "down_total": 507,
+        "ratio": 2.247,
         "infinite": false
       },
       {
@@ -1175,556 +1168,558 @@
         "down_total": 893,
         "ratio": 1.071,
         "infinite": false
+      },
+      {
+        "date": "2026-11-04",
+        "up_total": 1311,
+        "down_total": 1087,
+        "ratio": 1.206,
+        "infinite": false
       }
     ],
     "sp500_above_50ma": [
       {
-        "date": "2026-06-29",
-        "pct": 63.75,
-        "above": 313,
-        "covered": 491
-      },
-      {
         "date": "2026-06-30",
-        "pct": 61.3,
-        "above": 301,
-        "covered": 491
+        "pct": 61.38,
+        "above": 302,
+        "covered": 492
       },
       {
         "date": "2026-07-01",
-        "pct": 63.14,
-        "above": 310,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-02",
-        "pct": 66.4,
-        "above": 326,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-06",
-        "pct": 67.41,
-        "above": 331,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-07",
-        "pct": 67.21,
-        "above": 330,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-08",
-        "pct": 62.73,
-        "above": 308,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-09",
-        "pct": 63.75,
-        "above": 313,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-10",
-        "pct": 67.62,
-        "above": 332,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-13",
-        "pct": 64.56,
-        "above": 317,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-14",
-        "pct": 63.34,
-        "above": 311,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-15",
-        "pct": 61.51,
-        "above": 302,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-16",
-        "pct": 66.4,
-        "above": 326,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-17",
-        "pct": 63.34,
-        "above": 311,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-20",
-        "pct": 60.49,
-        "above": 297,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-21",
-        "pct": 58.45,
-        "above": 287,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-22",
-        "pct": 61.1,
-        "above": 300,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-23",
-        "pct": 57.64,
-        "above": 283,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-24",
-        "pct": 64.77,
-        "above": 318,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-27",
-        "pct": 67.62,
-        "above": 332,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-28",
-        "pct": 71.28,
-        "above": 350,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-29",
-        "pct": 64.97,
-        "above": 319,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-30",
-        "pct": 63.14,
-        "above": 310,
-        "covered": 491
-      },
-      {
-        "date": "2026-07-31",
-        "pct": 61.51,
-        "above": 302,
-        "covered": 491
-      },
-      {
-        "date": "2026-08-03",
-        "pct": 63.54,
-        "above": 312,
-        "covered": 491
-      },
-      {
-        "date": "2026-08-04",
-        "pct": 67.82,
-        "above": 333,
-        "covered": 491
-      },
-      {
-        "date": "2026-08-05",
-        "pct": 66.4,
-        "above": 326,
-        "covered": 491
-      },
-      {
-        "date": "2026-08-06",
-        "pct": 64.36,
-        "above": 316,
-        "covered": 491
-      },
-      {
-        "date": "2026-08-07",
-        "pct": 65.58,
-        "above": 322,
-        "covered": 491
-      },
-      {
-        "date": "2026-08-10",
-        "pct": 65.17,
-        "above": 320,
-        "covered": 491
-      },
-      {
-        "date": "2026-08-11",
         "pct": 63.21,
         "above": 311,
         "covered": 492
       },
       {
-        "date": "2026-08-12",
+        "date": "2026-07-02",
+        "pct": 66.46,
+        "above": 327,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-06",
+        "pct": 67.48,
+        "above": 332,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-07",
+        "pct": 67.28,
+        "above": 331,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-08",
+        "pct": 62.8,
+        "above": 309,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-09",
+        "pct": 63.82,
+        "above": 314,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-10",
+        "pct": 67.68,
+        "above": 333,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-13",
         "pct": 64.63,
         "above": 318,
         "covered": 492
       },
       {
-        "date": "2026-08-13",
-        "pct": 68.29,
-        "above": 336,
+        "date": "2026-07-14",
+        "pct": 63.41,
+        "above": 312,
         "covered": 492
+      },
+      {
+        "date": "2026-07-15",
+        "pct": 61.59,
+        "above": 303,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-16",
+        "pct": 66.46,
+        "above": 327,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-17",
+        "pct": 63.41,
+        "above": 312,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-20",
+        "pct": 60.57,
+        "above": 298,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-21",
+        "pct": 58.54,
+        "above": 288,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-22",
+        "pct": 61.18,
+        "above": 301,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-23",
+        "pct": 57.72,
+        "above": 284,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-24",
+        "pct": 64.84,
+        "above": 319,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-27",
+        "pct": 67.68,
+        "above": 333,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-28",
+        "pct": 71.34,
+        "above": 351,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-29",
+        "pct": 65.04,
+        "above": 320,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-30",
+        "pct": 63.21,
+        "above": 311,
+        "covered": 492
+      },
+      {
+        "date": "2026-07-31",
+        "pct": 61.59,
+        "above": 303,
+        "covered": 492
+      },
+      {
+        "date": "2026-08-03",
+        "pct": 63.62,
+        "above": 313,
+        "covered": 492
+      },
+      {
+        "date": "2026-08-04",
+        "pct": 67.89,
+        "above": 334,
+        "covered": 492
+      },
+      {
+        "date": "2026-08-05",
+        "pct": 66.46,
+        "above": 327,
+        "covered": 492
+      },
+      {
+        "date": "2026-08-06",
+        "pct": 64.43,
+        "above": 317,
+        "covered": 492
+      },
+      {
+        "date": "2026-08-07",
+        "pct": 65.65,
+        "above": 323,
+        "covered": 492
+      },
+      {
+        "date": "2026-08-10",
+        "pct": 65.24,
+        "above": 321,
+        "covered": 492
+      },
+      {
+        "date": "2026-08-11",
+        "pct": 63.29,
+        "above": 312,
+        "covered": 493
+      },
+      {
+        "date": "2026-08-12",
+        "pct": 64.71,
+        "above": 319,
+        "covered": 493
+      },
+      {
+        "date": "2026-08-13",
+        "pct": 68.36,
+        "above": 337,
+        "covered": 493
       },
       {
         "date": "2026-08-14",
-        "pct": 69.72,
-        "above": 343,
-        "covered": 492
+        "pct": 69.78,
+        "above": 344,
+        "covered": 493
       },
       {
         "date": "2026-08-17",
-        "pct": 63.01,
-        "above": 310,
-        "covered": 492
+        "pct": 63.08,
+        "above": 311,
+        "covered": 493
       },
       {
         "date": "2026-08-18",
-        "pct": 60.37,
-        "above": 297,
-        "covered": 492
-      },
-      {
-        "date": "2026-08-19",
-        "pct": 60.16,
-        "above": 296,
-        "covered": 492
-      },
-      {
-        "date": "2026-08-20",
-        "pct": 54.88,
-        "above": 270,
-        "covered": 492
-      },
-      {
-        "date": "2026-08-21",
-        "pct": 58.13,
-        "above": 286,
-        "covered": 492
-      },
-      {
-        "date": "2026-08-24",
-        "pct": 59.76,
-        "above": 294,
-        "covered": 492
-      },
-      {
-        "date": "2026-08-25",
-        "pct": 58.94,
-        "above": 290,
-        "covered": 492
-      },
-      {
-        "date": "2026-08-26",
-        "pct": 59.03,
-        "above": 291,
-        "covered": 493
-      },
-      {
-        "date": "2026-08-27",
-        "pct": 54.16,
-        "above": 267,
-        "covered": 493
-      },
-      {
-        "date": "2026-08-28",
-        "pct": 53.55,
-        "above": 264,
-        "covered": 493
-      },
-      {
-        "date": "2026-08-31",
-        "pct": 50.51,
-        "above": 249,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-01",
-        "pct": 46.04,
-        "above": 227,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-02",
-        "pct": 47.87,
-        "above": 236,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-03",
-        "pct": 51.72,
-        "above": 255,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-04",
-        "pct": 47.87,
-        "above": 236,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-08",
-        "pct": 43.2,
-        "above": 213,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-09",
-        "pct": 37.93,
-        "above": 187,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-10",
-        "pct": 34.08,
-        "above": 168,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-11",
-        "pct": 39.76,
-        "above": 196,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-14",
-        "pct": 38.95,
-        "above": 192,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-15",
-        "pct": 35.5,
-        "above": 175,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-16",
-        "pct": 32.05,
-        "above": 158,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-17",
-        "pct": 31.64,
-        "above": 156,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-18",
-        "pct": 28.4,
-        "above": 140,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-21",
-        "pct": 31.24,
-        "above": 154,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-22",
-        "pct": 30.43,
-        "above": 150,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-23",
-        "pct": 29.21,
-        "above": 144,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-24",
-        "pct": 25.76,
-        "above": 127,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-25",
-        "pct": 26.98,
-        "above": 133,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-28",
-        "pct": 24.95,
-        "above": 123,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-29",
-        "pct": 25.15,
-        "above": 124,
-        "covered": 493
-      },
-      {
-        "date": "2026-09-30",
-        "pct": 21.3,
-        "above": 105,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-01",
-        "pct": 23.12,
-        "above": 114,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-02",
-        "pct": 24.95,
-        "above": 123,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-05",
-        "pct": 26.98,
-        "above": 133,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-06",
-        "pct": 29.82,
-        "above": 147,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-07",
-        "pct": 29.01,
-        "above": 143,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-08",
-        "pct": 32.05,
-        "above": 158,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-09",
-        "pct": 35.09,
-        "above": 173,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-12",
-        "pct": 36.71,
-        "above": 181,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-13",
-        "pct": 37.93,
-        "above": 187,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-14",
-        "pct": 34.48,
-        "above": 170,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-15",
-        "pct": 43.61,
-        "above": 215,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-16",
-        "pct": 44.83,
-        "above": 221,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-19",
-        "pct": 43.41,
-        "above": 214,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-20",
-        "pct": 51.93,
-        "above": 256,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-21",
-        "pct": 54.77,
-        "above": 270,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-22",
         "pct": 60.45,
         "above": 298,
         "covered": 493
       },
       {
-        "date": "2026-10-23",
-        "pct": 57.81,
-        "above": 285,
+        "date": "2026-08-19",
+        "pct": 60.24,
+        "above": 297,
         "covered": 493
       },
       {
-        "date": "2026-10-26",
-        "pct": 59.03,
-        "above": 291,
+        "date": "2026-08-20",
+        "pct": 54.77,
+        "above": 270,
         "covered": 493
       },
       {
-        "date": "2026-10-27",
-        "pct": 59.84,
-        "above": 295,
-        "covered": 493
-      },
-      {
-        "date": "2026-10-28",
+        "date": "2026-08-21",
         "pct": 58.01,
         "above": 286,
         "covered": 493
       },
       {
-        "date": "2026-10-29",
-        "pct": 64.5,
-        "above": 318,
+        "date": "2026-08-24",
+        "pct": 59.63,
+        "above": 294,
         "covered": 493
+      },
+      {
+        "date": "2026-08-25",
+        "pct": 58.82,
+        "above": 290,
+        "covered": 493
+      },
+      {
+        "date": "2026-08-26",
+        "pct": 58.91,
+        "above": 291,
+        "covered": 494
+      },
+      {
+        "date": "2026-08-27",
+        "pct": 54.25,
+        "above": 268,
+        "covered": 494
+      },
+      {
+        "date": "2026-08-28",
+        "pct": 53.64,
+        "above": 265,
+        "covered": 494
+      },
+      {
+        "date": "2026-08-31",
+        "pct": 50.61,
+        "above": 250,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-01",
+        "pct": 46.15,
+        "above": 228,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-02",
+        "pct": 47.98,
+        "above": 237,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-03",
+        "pct": 51.82,
+        "above": 256,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-04",
+        "pct": 47.98,
+        "above": 237,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-08",
+        "pct": 43.32,
+        "above": 214,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-09",
+        "pct": 38.06,
+        "above": 188,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-10",
+        "pct": 34.21,
+        "above": 169,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-11",
+        "pct": 39.88,
+        "above": 197,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-14",
+        "pct": 39.07,
+        "above": 193,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-15",
+        "pct": 35.63,
+        "above": 176,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-16",
+        "pct": 32.19,
+        "above": 159,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-17",
+        "pct": 31.78,
+        "above": 157,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-18",
+        "pct": 28.54,
+        "above": 141,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-21",
+        "pct": 31.38,
+        "above": 155,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-22",
+        "pct": 30.57,
+        "above": 151,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-23",
+        "pct": 29.35,
+        "above": 145,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-24",
+        "pct": 25.91,
+        "above": 128,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-25",
+        "pct": 27.13,
+        "above": 134,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-28",
+        "pct": 25.1,
+        "above": 124,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-29",
+        "pct": 25.3,
+        "above": 125,
+        "covered": 494
+      },
+      {
+        "date": "2026-09-30",
+        "pct": 21.46,
+        "above": 106,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-01",
+        "pct": 23.28,
+        "above": 115,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-02",
+        "pct": 25.1,
+        "above": 124,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-05",
+        "pct": 27.13,
+        "above": 134,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-06",
+        "pct": 29.96,
+        "above": 148,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-07",
+        "pct": 29.15,
+        "above": 144,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-08",
+        "pct": 32.19,
+        "above": 159,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-09",
+        "pct": 35.22,
+        "above": 174,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-12",
+        "pct": 36.84,
+        "above": 182,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-13",
+        "pct": 38.06,
+        "above": 188,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-14",
+        "pct": 34.62,
+        "above": 171,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-15",
+        "pct": 43.72,
+        "above": 216,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-16",
+        "pct": 44.94,
+        "above": 222,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-19",
+        "pct": 43.52,
+        "above": 215,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-20",
+        "pct": 52.02,
+        "above": 257,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-21",
+        "pct": 54.86,
+        "above": 271,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-22",
+        "pct": 60.53,
+        "above": 299,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-23",
+        "pct": 57.89,
+        "above": 286,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-26",
+        "pct": 59.11,
+        "above": 292,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-27",
+        "pct": 59.92,
+        "above": 296,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-28",
+        "pct": 58.1,
+        "above": 287,
+        "covered": 494
+      },
+      {
+        "date": "2026-10-29",
+        "pct": 64.57,
+        "above": 319,
+        "covered": 494
       },
       {
         "date": "2026-10-30",
-        "pct": 59.84,
-        "above": 295,
-        "covered": 493
+        "pct": 59.92,
+        "above": 296,
+        "covered": 494
       },
       {
         "date": "2026-11-02",
-        "pct": 66.33,
+        "pct": 66.19,
         "above": 327,
-        "covered": 493
+        "covered": 494
       },
       {
         "date": "2026-11-03",
-        "pct": 65.31,
+        "pct": 65.18,
         "above": 322,
-        "covered": 493
+        "covered": 494
+      },
+      {
+        "date": "2026-11-04",
+        "pct": 71.46,
+        "above": 353,
+        "covered": 494
       }
     ],
     "up_45_10_ma": [
-      {
-        "date": "2026-06-29",
-        "count": 25,
-        "ma10": 15.6
-      },
       {
         "date": "2026-06-30",
         "count": 27,
@@ -2169,77 +2164,77 @@
         "date": "2026-11-03",
         "count": 6,
         "ma10": 7.8
+      },
+      {
+        "date": "2026-11-04",
+        "count": 9,
+        "ma10": 8.1
       }
     ],
     "primary_breadth": [
       {
-        "date": "2026-06-29",
-        "up": 1098,
-        "down": 403
-      },
-      {
         "date": "2026-06-30",
-        "up": 1108,
+        "up": 1109,
         "down": 387
       },
       {
         "date": "2026-07-01",
-        "up": 1120,
+        "up": 1121,
         "down": 378
       },
       {
         "date": "2026-07-02",
-        "up": 1066,
+        "up": 1067,
         "down": 404
       },
       {
         "date": "2026-07-06",
-        "up": 1084,
+        "up": 1085,
         "down": 386
       },
       {
         "date": "2026-07-07",
-        "up": 1033,
+        "up": 1034,
         "down": 436
       },
       {
         "date": "2026-07-08",
-        "up": 955,
+        "up": 956,
         "down": 444
       },
       {
         "date": "2026-07-09",
-        "up": 987,
+        "up": 988,
         "down": 412
       },
       {
         "date": "2026-07-10",
-        "up": 937,
+        "up": 938,
         "down": 412
       },
       {
         "date": "2026-07-13",
-        "up": 892,
+        "up": 893,
         "down": 449
       },
       {
         "date": "2026-07-14",
-        "up": 890,
+        "up": 891,
         "down": 437
       },
       {
         "date": "2026-07-15",
-        "up": 876,
+        "up": 877,
         "down": 435
       },
       {
         "date": "2026-07-16",
-        "up": 882,
+        "up": 883,
         "down": 472
       },
       {
         "date": "2026-07-17",
-        "up": 832,
+        "up": 833,
         "down": 486
       },
       {
@@ -2249,17 +2244,17 @@
       },
       {
         "date": "2026-07-21",
-        "up": 798,
+        "up": 799,
         "down": 445
       },
       {
         "date": "2026-07-22",
-        "up": 745,
+        "up": 746,
         "down": 452
       },
       {
         "date": "2026-07-23",
-        "up": 692,
+        "up": 693,
         "down": 483
       },
       {
@@ -2621,37 +2616,37 @@
         "date": "2026-11-03",
         "up": 422,
         "down": 623
+      },
+      {
+        "date": "2026-11-04",
+        "up": 561,
+        "down": 573
       }
     ],
     "fast_breadth": [
       {
-        "date": "2026-06-29",
-        "bull": 1317,
-        "bear": 735
-      },
-      {
         "date": "2026-06-30",
-        "bull": 1348,
+        "bull": 1349,
         "bear": 703
       },
       {
         "date": "2026-07-01",
-        "bull": 1406,
+        "bull": 1407,
         "bear": 689
       },
       {
         "date": "2026-07-02",
-        "bull": 1404,
+        "bull": 1405,
         "bear": 736
       },
       {
         "date": "2026-07-06",
-        "bull": 1425,
+        "bull": 1426,
         "bear": 708
       },
       {
         "date": "2026-07-07",
-        "bull": 1313,
+        "bull": 1314,
         "bear": 746
       },
       {
@@ -2661,52 +2656,52 @@
       },
       {
         "date": "2026-07-09",
-        "bull": 1193,
+        "bull": 1194,
         "bear": 713
       },
       {
         "date": "2026-07-10",
-        "bull": 1166,
+        "bull": 1167,
         "bear": 713
       },
       {
         "date": "2026-07-13",
-        "bull": 1169,
+        "bull": 1170,
         "bear": 754
       },
       {
         "date": "2026-07-14",
-        "bull": 1121,
+        "bull": 1122,
         "bear": 748
       },
       {
         "date": "2026-07-15",
-        "bull": 1175,
+        "bull": 1176,
         "bear": 733
       },
       {
         "date": "2026-07-16",
-        "bull": 1288,
+        "bull": 1289,
         "bear": 763
       },
       {
         "date": "2026-07-17",
-        "bull": 1194,
+        "bull": 1195,
         "bear": 772
       },
       {
         "date": "2026-07-20",
-        "bull": 1126,
+        "bull": 1127,
         "bear": 827
       },
       {
         "date": "2026-07-21",
-        "bull": 1207,
+        "bull": 1208,
         "bear": 728
       },
       {
         "date": "2026-07-22",
-        "bull": 1125,
+        "bull": 1126,
         "bear": 750
       },
       {
@@ -2752,7 +2747,7 @@
       {
         "date": "2026-08-04",
         "bull": 1421,
-        "bear": 595
+        "bear": 594
       },
       {
         "date": "2026-08-05",
@@ -2801,7 +2796,7 @@
       },
       {
         "date": "2026-08-18",
-        "bull": 1132,
+        "bull": 1131,
         "bear": 656
       },
       {
@@ -2837,37 +2832,37 @@
       {
         "date": "2026-08-27",
         "bull": 1106,
-        "bear": 634
+        "bear": 635
       },
       {
         "date": "2026-08-28",
         "bull": 1023,
-        "bear": 719
+        "bear": 720
       },
       {
         "date": "2026-08-31",
         "bull": 990,
-        "bear": 767
+        "bear": 768
       },
       {
         "date": "2026-09-01",
         "bull": 917,
-        "bear": 876
+        "bear": 877
       },
       {
         "date": "2026-09-02",
         "bull": 990,
-        "bear": 796
+        "bear": 797
       },
       {
         "date": "2026-09-03",
         "bull": 1026,
-        "bear": 753
+        "bear": 754
       },
       {
         "date": "2026-09-04",
         "bull": 1016,
-        "bear": 732
+        "bear": 733
       },
       {
         "date": "2026-09-08",
@@ -2912,7 +2907,7 @@
       {
         "date": "2026-09-18",
         "bull": 550,
-        "bear": 1100
+        "bear": 1099
       },
       {
         "date": "2026-09-21",
@@ -2957,12 +2952,12 @@
       {
         "date": "2026-10-01",
         "bull": 404,
-        "bear": 1239
+        "bear": 1238
       },
       {
         "date": "2026-10-02",
         "bull": 449,
-        "bear": 1172
+        "bear": 1171
       },
       {
         "date": "2026-10-05",
@@ -3012,7 +3007,7 @@
       {
         "date": "2026-10-16",
         "bull": 441,
-        "bear": 1052
+        "bear": 1051
       },
       {
         "date": "2026-10-19",
@@ -3073,17 +3068,15 @@
         "date": "2026-11-03",
         "bull": 939,
         "bear": 795
+      },
+      {
+        "date": "2026-11-04",
+        "bull": 1190,
+        "bear": 768
       }
     ]
   },
   "ten_day_ratio_history": [
-    {
-      "date": "2026-06-29",
-      "up_total": 991,
-      "down_total": 732,
-      "ratio": 1.354,
-      "infinite": false
-    },
     {
       "date": "2026-06-30",
       "up_total": 943,
@@ -3248,71 +3241,71 @@
     {
       "date": "2026-08-03",
       "up_total": 951,
-      "down_total": 819,
-      "ratio": 1.161,
+      "down_total": 820,
+      "ratio": 1.16,
       "infinite": false
     },
     {
       "date": "2026-08-04",
       "up_total": 1049,
-      "down_total": 820,
-      "ratio": 1.279,
+      "down_total": 821,
+      "ratio": 1.278,
       "infinite": false
     },
     {
       "date": "2026-08-05",
       "up_total": 1090,
-      "down_total": 843,
-      "ratio": 1.293,
+      "down_total": 844,
+      "ratio": 1.291,
       "infinite": false
     },
     {
       "date": "2026-08-06",
       "up_total": 1141,
-      "down_total": 851,
-      "ratio": 1.341,
+      "down_total": 852,
+      "ratio": 1.339,
       "infinite": false
     },
     {
       "date": "2026-08-07",
       "up_total": 1263,
-      "down_total": 794,
-      "ratio": 1.591,
+      "down_total": 795,
+      "ratio": 1.589,
       "infinite": false
     },
     {
       "date": "2026-08-10",
       "up_total": 1209,
-      "down_total": 805,
-      "ratio": 1.502,
+      "down_total": 806,
+      "ratio": 1.5,
       "infinite": false
     },
     {
       "date": "2026-08-11",
       "up_total": 1138,
-      "down_total": 726,
-      "ratio": 1.567,
+      "down_total": 727,
+      "ratio": 1.565,
       "infinite": false
     },
     {
       "date": "2026-08-12",
       "up_total": 1158,
-      "down_total": 570,
-      "ratio": 2.032,
+      "down_total": 571,
+      "ratio": 2.028,
       "infinite": false
     },
     {
       "date": "2026-08-13",
       "up_total": 1125,
-      "down_total": 539,
-      "ratio": 2.087,
+      "down_total": 540,
+      "ratio": 2.083,
       "infinite": false
     },
     {
       "date": "2026-08-14",
       "up_total": 1139,
-      "down_total": 506,
-      "ratio": 2.251,
+      "down_total": 507,
+      "ratio": 2.247,
       "infinite": false
     },
     {
@@ -3705,6 +3698,13 @@
       "up_total": 956,
       "down_total": 893,
       "ratio": 1.071,
+      "infinite": false
+    },
+    {
+      "date": "2026-11-04",
+      "up_total": 1311,
+      "down_total": 1087,
+      "ratio": 1.206,
       "infinite": false
     }
   ],
