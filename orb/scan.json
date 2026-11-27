@@ -1,9 +1,9 @@
 {
   "scan_id": "orb",
   "label": "ORB Continuation",
-  "generated_utc": "2026-11-26T04:13:01Z",
+  "generated_utc": "2026-11-27T04:20:01Z",
   "status": "ok",
-  "count": 24,
+  "count": 23,
   "columns": [
     "adr",
     "runup",
@@ -295,19 +295,6 @@
         "base_depth": 26.9,
         "ext10": -2.0,
         "dvolM": 0.2,
-        "trend200": "yes"
-      }
-    },
-    {
-      "symbol": "ZJYL",
-      "exchange": "",
-      "close": 3.98,
-      "extra": {
-        "adr": 7.1,
-        "runup": 152.7,
-        "base_depth": 31.8,
-        "ext10": 5.7,
-        "dvolM": 0.0,
         "trend200": "yes"
       }
     },
